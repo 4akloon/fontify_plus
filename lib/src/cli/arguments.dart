@@ -8,7 +8,7 @@ import '../utils/enum_class.dart';
 import '../utils/logger.dart';
 import 'formatter.dart';
 
-const _kDefaultConfigPathList = ['pubspec.yaml', 'fontify.yaml'];
+const _kDefaultConfigPathList = ['pubspec.yaml', 'fontify_plus.yaml'];
 const _kPositionalArguments = [CliArgument.svgDir, CliArgument.fontFile];
 
 const _kArgAllowedTypes = <CliArgument, List<Type>>{
@@ -158,7 +158,9 @@ class CliArguments {
 ///
 /// Returns an instance of [CliArguments] containing all parsed data.
 Map<CliArgument, dynamic> parseArguments(
-    ArgParser argParser, List<String> args) {
+  ArgParser argParser,
+  List<String> args,
+) {
   late final ArgResults argResults;
   try {
     argResults = argParser.parse(args);
@@ -205,7 +207,7 @@ MapEntry<CliArgument, dynamic>? _mapConfigKeyEntry(
 /// Parses config file.
 ///
 /// Returns an instance of [CliArguments] containing all parsed data or null,
-/// if 'fontify' key is not present in config file.
+/// if 'fontify_plus' key is not present in config file.
 Map<CliArgument, dynamic>? parseConfig(String config) {
   final dynamic yamlMap = loadYaml(config);
 
@@ -213,7 +215,7 @@ Map<CliArgument, dynamic>? parseConfig(String config) {
     return null;
   }
 
-  final dynamic fontifyYamlMap = yamlMap['fontify'];
+  final dynamic fontifyYamlMap = yamlMap['fontify_plus'];
 
   if (fontifyYamlMap is! YamlMap) {
     return null;
@@ -227,7 +229,7 @@ Map<CliArgument, dynamic>? parseConfig(String config) {
 }
 
 /// Parses argument list and config file, validates parsed data.
-/// Config is used, if it contains 'fontify' section.
+/// Config is used, if it contains 'fontify_plus' section.
 ///
 /// Throws [CliHelpException], if 'help' option is present.
 /// Throws [CliArgumentException], if there is an error in arg parsing.
@@ -237,7 +239,7 @@ CliArguments parseArgsAndConfig(ArgParser argParser, List<String> args) {
 
   final configList = <String>[
     if (configFile is String) configFile,
-    ..._kDefaultConfigPathList
+    ..._kDefaultConfigPathList,
   ].map((e) => File(e));
 
   for (final configFile in configList) {
@@ -274,11 +276,11 @@ extension CliArgumentMapExtension on Map<CliArgument, dynamic> {
     // Validating types
     for (final e in _kArgAllowedTypes.entries) {
       final arg = e.key;
-      final argType = this[arg].runtimeType;
+      final argType = (this[arg] as Object?).runtimeType;
       final allowedTypes = e.value;
 
       if (argType != Null && !allowedTypes.contains(argType)) {
-        throw CliArgumentException("'${argumentNames[arg]}' argument\'s type "
+        throw CliArgumentException("'${argumentNames[arg]}' argument's type "
             'must be one of following: $allowedTypes, '
             "instead got '$argType'.");
       }
@@ -305,12 +307,14 @@ extension CliArgumentMapExtension on Map<CliArgument, dynamic> {
 
     if (svgDir.statSync().type != FileSystemEntityType.directory) {
       throw CliArgumentException(
-          "The input directory is not a directory or it doesn't exist.");
+        "The input directory is not a directory or it doesn't exist.",
+      );
     }
 
     if (indent != null && indent < 0) {
       throw CliArgumentException(
-          'indent must be a non-negative integer, was $indent.');
+        'indent must be a non-negative integer, was $indent.',
+      );
     }
   }
 

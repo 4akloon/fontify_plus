@@ -11,10 +11,13 @@ import 'operand.dart';
 import 'operator.dart';
 
 class CharStringOperand extends CFFOperand {
-  CharStringOperand(num? value, [int? size]) : super(value, size);
+  CharStringOperand(super.value, [super.size]);
 
   factory CharStringOperand.fromByteData(
-      ByteData byteData, int offset, int b0) {
+    ByteData byteData,
+    int offset,
+    int b0,
+  ) {
     if (b0 == 255) {
       final value = byteData.getUint32(0);
       return CharStringOperand(value / 0x10000, 5);
@@ -50,8 +53,10 @@ class CharStringOperand extends CFFOperand {
 
 class CharStringCommand implements BinaryCodable {
   CharStringCommand(this.operator, this.operandList)
-      : assert(operator.context == CFFOperatorContext.charString,
-            "Operator's context must be CharString");
+      : assert(
+          operator.context == CFFOperatorContext.charString,
+          "Operator's context must be CharString",
+        );
 
   factory CharStringCommand.hmoveto(int dx) {
     return CharStringCommand(hmoveto, _getOperandList([dx]));
@@ -213,8 +218,9 @@ class CharStringInterpreter {
 
   void _pushCommand(Iterable<num?> operandValues, int opB0, [int? opB1]) {
     final command = CharStringCommand(
-        CFFOperator(CFFOperatorContext.charString, opB0, opB1),
-        operandValues.map((e) => CharStringOperand(e)).toList());
+      CFFOperator(CFFOperatorContext.charString, opB0, opB1),
+      operandValues.map((e) => CharStringOperand(e)).toList(),
+    );
 
     _commandList.add(command);
   }
@@ -240,13 +246,11 @@ class CharStringInterpreter {
           case 18: // hstemhm
           case 23: // vstemhm
             _stack.clear();
-            OTFDebugger.debugUnsupportedFeature('CFF hinting not supported');
-            break;
+            debuggerOTF.debugUnsupportedFeature('CFF hinting not supported');
 
           case 4: // vmoveto
             final dy = _stack.removeFirstOrZero();
             _pushCommand([dy], op);
-            break;
 
           case 5: // rlineto
             final arguments = <num?>[];
@@ -259,7 +263,6 @@ class CharStringInterpreter {
             }
 
             _pushCommand(arguments, op);
-            break;
 
           case 6: // hlineto
           case 7: // vlineto
@@ -279,7 +282,6 @@ class CharStringInterpreter {
             }
 
             _pushCommand(arguments, op);
-            break;
 
           case 8: // rrcurveto
             final arguments = <num?>[];
@@ -296,40 +298,35 @@ class CharStringInterpreter {
             }
 
             _pushCommand(arguments, op);
-            break;
 
           case 10: // callsubr
           case 29: // callgsubr
             _stack.clear();
-            OTFDebugger.debugUnsupportedFeature('CFF subrs not supported');
-            break;
+            debuggerOTF.debugUnsupportedFeature('CFF subrs not supported');
 
           case 16:
             {
               // blend
               _stack.clear();
-              OTFDebugger.debugUnsupportedFeature('CFF blending not supported');
+              debuggerOTF.debugUnsupportedFeature('CFF blending not supported');
               break;
             }
 
           case 19: // hintmask
           case 20: // cntrmask
             _stack.clear();
-            OTFDebugger.debugUnsupportedFeature('CFF hinting not supported');
-            break;
+            debuggerOTF.debugUnsupportedFeature('CFF hinting not supported');
 
           case 21: // rmoveto
             final dx = _stack.removeFirstOrZero();
             final dy = _stack.removeFirstOrZero();
 
             _pushCommand([dx, dy], op);
-            break;
 
           case 22: // hmoveto
             final dx = _stack.removeFirstOrZero();
 
             _pushCommand([dx], op);
-            break;
 
           case 24: // rcurveline
             final arguments = <num?>[];
@@ -349,7 +346,6 @@ class CharStringInterpreter {
             final dy = _stack.removeFirstOrZero();
 
             _pushCommand([...arguments, dx, dy], op);
-            break;
 
           case 25: // rlinecurve
             final arguments = <num?>[];
@@ -369,7 +365,6 @@ class CharStringInterpreter {
             final dy = _stack.removeFirstOrZero();
 
             _pushCommand([...arguments, dxc1, dyc1, dxc2, dyc2, dx, dy], op);
-            break;
 
           case 26: // vvcurveto
             final arguments = <num?>[];
@@ -390,7 +385,6 @@ class CharStringInterpreter {
             }
 
             _pushCommand(arguments, op);
-            break;
 
           case 27: // hhcurveto
             final arguments = <num?>[];
@@ -411,7 +405,6 @@ class CharStringInterpreter {
             }
 
             _pushCommand(arguments, op);
-            break;
 
           case 30: // vhcurveto
           case 31: // hvcurveto
@@ -443,7 +436,6 @@ class CharStringInterpreter {
             }
 
             _pushCommand(arguments, op);
-            break;
           case 12:
             {
               op = byteData.getUint8(offset++);
@@ -451,19 +443,16 @@ class CharStringInterpreter {
               switch (op) {
                 case 34: // hflex
                   _pushCommand(_stack.toList().sublist(0, 7), 12, op);
-                  break;
                 case 35: // flex
                   _pushCommand(_stack.toList().sublist(0, 13), 12, op);
-                  break;
                 case 36: // hflex1
                   _pushCommand(_stack.toList().sublist(0, 9), 12, op);
-                  break;
                 case 37: // flex1
                   _pushCommand(_stack.toList().sublist(0, 11), 12, op);
-                  break;
                 default:
-                  OTFDebugger.debugUnsupportedFeature(
-                      'Unknown charString op: 12 $op');
+                  debuggerOTF.debugUnsupportedFeature(
+                    'Unknown charString op: 12 $op',
+                  );
                   _stack.clear();
               }
 
@@ -471,7 +460,7 @@ class CharStringInterpreter {
             }
 
           default:
-            OTFDebugger.debugUnsupportedFeature('Unknown charString op: $op');
+            debuggerOTF.debugUnsupportedFeature('Unknown charString op: $op');
             _stack.clear();
         }
       }

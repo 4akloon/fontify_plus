@@ -1,10 +1,14 @@
-part of fontify.otf.cff;
+part of fontify_plus.otf.cff;
 
 const _kCFF2HeaderSize = 5;
 
 class CFF2TableHeader implements BinaryCodable {
-  CFF2TableHeader(this.majorVersion, this.minorVersion, this.headerSize,
-      this.topDictLength);
+  CFF2TableHeader(
+    this.majorVersion,
+    this.minorVersion,
+    this.headerSize,
+    this.topDictLength,
+  );
 
   factory CFF2TableHeader.fromByteData(ByteData byteData) {
     return CFF2TableHeader(
@@ -38,7 +42,7 @@ class CFF2TableHeader implements BinaryCodable {
 
 class CFF2Table extends CFFTable implements CalculatableOffsets {
   CFF2Table(
-    TableRecordEntry? entry,
+    super.entry,
     this.header,
     this.topDict,
     this.globalSubrsData,
@@ -47,7 +51,7 @@ class CFF2Table extends CFFTable implements CalculatableOffsets {
     this.fontDictList,
     this.privateDictList,
     this.localSubrsDataList,
-  ) : super.fromTableRecordEntry(entry);
+  ) : super.fromTableRecordEntry();
 
   factory CFF2Table.fromByteData(
     ByteData byteData,
@@ -57,15 +61,19 @@ class CFF2Table extends CFFTable implements CalculatableOffsets {
     var fixedOffset = entry.offset;
 
     final header = CFF2TableHeader.fromByteData(
-        byteData.sublistView(fixedOffset, _kCFF2HeaderSize));
+      byteData.sublistView(fixedOffset, _kCFF2HeaderSize),
+    );
     fixedOffset += _kCFF2HeaderSize;
 
     final topDict = CFFDict.fromByteData(
-        byteData.sublistView(fixedOffset, header.topDictLength!));
+      byteData.sublistView(fixedOffset, header.topDictLength!),
+    );
     fixedOffset += header.topDictLength!;
 
     final globalSubrsData = CFFIndexWithData<Uint8List>.fromByteData(
-        byteData.sublistView(fixedOffset), false);
+      byteData.sublistView(fixedOffset),
+      false,
+    );
     fixedOffset += globalSubrsData.index!.size;
 
     /// CharStrings INDEX
@@ -76,7 +84,9 @@ class CFF2Table extends CFFTable implements CalculatableOffsets {
         byteData.sublistView(entry.offset + charStringsIndexOffset);
 
     final charStringsData = CFFIndexWithData<Uint8List>.fromByteData(
-        charStringsIndexByteData, false);
+      charStringsIndexByteData,
+      false,
+    );
 
     /// VariationStore
     final vstoreEntry = topDict.getEntryForOperator(op.vstore);
@@ -133,8 +143,17 @@ class CFF2Table extends CFFTable implements CalculatableOffsets {
       }
     }
 
-    return CFF2Table(entry, header, topDict, globalSubrsData, charStringsData,
-        vstoreData, fontDictList, privateDictList, localSubrsDataList);
+    return CFF2Table(
+      entry,
+      header,
+      topDict,
+      globalSubrsData,
+      charStringsData,
+      vstoreData,
+      fontDictList,
+      privateDictList,
+      localSubrsDataList,
+    );
   }
 
   factory CFF2Table.create(List<GenericGlyph> glyphList) {
@@ -173,16 +192,16 @@ class CFF2Table extends CFFTable implements CalculatableOffsets {
     final localSubrsDataList = <CFFIndexWithData<Uint8List>>[];
 
     final table = CFF2Table(
-        null,
-        header,
-        topDict,
-        globalSubrsData,
-        charStringsData,
-        vstoreData,
-        fontDictList,
-        privateDictList,
-        localSubrsDataList)
-      ..recalculateOffsets();
+      null,
+      header,
+      topDict,
+      globalSubrsData,
+      charStringsData,
+      vstoreData,
+      fontDictList,
+      privateDictList,
+      localSubrsDataList,
+    )..recalculateOffsets();
 
     return table;
   }
@@ -268,7 +287,7 @@ class CFF2Table extends CFFTable implements CalculatableOffsets {
 
       final newOperands = [
         CFFOperand.fromValue(privateDict.size),
-        CFFOperand.fromValue(0)
+        CFFOperand.fromValue(0),
       ];
       privateEntry.operandList
         ..clear()

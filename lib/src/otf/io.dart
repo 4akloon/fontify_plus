@@ -21,7 +21,8 @@ void writeToFile(String path, OpenTypeFont font) {
 
   if (extension != '.otf' && font.isOpenType) {
     logger.w(
-        'A font that contains only CFF outline data should have an .OTF extension.');
+      'A font that contains only CFF outline data should have an .OTF extension.',
+    );
   }
 
   file.writeAsBytesSync(byteData.buffer.asUint8List());

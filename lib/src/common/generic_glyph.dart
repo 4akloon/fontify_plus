@@ -64,11 +64,12 @@ class GenericGlyph {
     final outlines = [
       for (var i = 1; i < endPoints.length; i++)
         Outline(
-            glyph.pointList.sublist(endPoints[i - 1] + 1, endPoints[i] + 1),
-            isOnCurveList.sublist(endPoints[i - 1] + 1, endPoints[i] + 1),
-            true,
-            true,
-            FillRule.nonzero)
+          glyph.pointList.sublist(endPoints[i - 1] + 1, endPoints[i] + 1),
+          isOnCurveList.sublist(endPoints[i - 1] + 1, endPoints[i] + 1),
+          true,
+          true,
+          FillRule.nonzero,
+        ),
     ];
 
     final bounds = math.Rectangle(
@@ -85,7 +86,7 @@ class GenericGlyph {
     final pathList = svg.elementList.whereType<PathElement>();
 
     final outlines = [
-      for (final p in pathList) ...PathToOutlineConverter(svg, p).convert()
+      for (final p in pathList) ...PathToOutlineConverter(svg, p).convert(),
     ];
 
     final metadata = GenericGlyphMetadata(
@@ -133,8 +134,10 @@ class GenericGlyph {
       }
 
       if (outline.fillRule == FillRule.evenodd) {
-        logger.logOnce(Level.warning,
-            'Some of the outlines are using even-odd fill rule. Make sure using a non-zero winding number fill rule for OpenType outlines.');
+        logger.logOnce(
+          Level.warning,
+          'Some of the outlines are using even-odd fill rule. Make sure using a non-zero winding number fill rule for OpenType outlines.',
+        );
       }
     }
 
@@ -160,7 +163,7 @@ class GenericGlyph {
 
       if (!isOnCurveList[i] && !isOnCurveList[i + 1]) {
         final points = [
-          for (var p = 0; p < 3; p++) ...[relX[i + p], relY[i + p]]
+          for (var p = 0; p < 3; p++) ...[relX[i + p], relY[i + p]],
         ];
 
         commandList.add(CharStringCommand.curveto(points));
@@ -197,7 +200,10 @@ class GenericGlyph {
     final flags = [
       for (var i = 0; i < pointList.length; i++)
         SimpleGlyphFlag.createForPoint(
-            relXcoordinates[i], relYcoordinates[i], isOnCurveList[i])
+          relXcoordinates[i],
+          relYcoordinates[i],
+          isOnCurveList[i],
+        ),
     ];
 
     // TODO: compact flags: repeat & not short same flag
@@ -287,7 +293,10 @@ class GenericGlyph {
       return GenericGlyphMetrics.empty();
     }
 
-    var xMin = kInt32Max, yMin = kInt32Max, xMax = kInt32Min, yMax = kInt32Min;
+    var xMin = kInt32Max;
+    var yMin = kInt32Max;
+    var xMax = kInt32Min;
+    var yMax = kInt32Min;
 
     for (final p in points) {
       xMin = math.min(xMin, p.x.toInt());

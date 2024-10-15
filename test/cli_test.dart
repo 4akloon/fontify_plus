@@ -1,19 +1,21 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:fontify/src/cli/arguments.dart';
-import 'package:fontify/src/cli/options.dart';
+import 'package:fontify_plus/src/cli/arguments.dart';
+import 'package:fontify_plus/src/cli/options.dart';
 import 'package:test/test.dart';
 
 void main() {
-  final _argParser = ArgParser(allowTrailingOptions: true);
+  final argParser = ArgParser(allowTrailingOptions: true);
 
   group('Arguments', () {
-    defineOptions(_argParser);
+    defineOptions(argParser);
 
     void expectCliArgumentException(List<String> args) {
-      expect(() => parseArgsAndConfig(_argParser, args),
-          throwsA(const TypeMatcher<CliArgumentException>()));
+      expect(
+        () => parseArgsAndConfig(argParser, args),
+        throwsA(const TypeMatcher<CliArgumentException>()),
+      );
     }
 
     test('No positional args', () {
@@ -54,7 +56,7 @@ void main() {
         '--package=test_package',
       ];
 
-      final parsedArgs = parseArgsAndConfig(_argParser, args);
+      final parsedArgs = parseArgsAndConfig(argParser, args);
 
       expect(parsedArgs.svgDir.path, args.first);
       expect(parsedArgs.fontFile.path, args[1]);
@@ -78,7 +80,7 @@ void main() {
         '--ignore-shapes',
       ];
 
-      final parsedArgs = parseArgsAndConfig(_argParser, args);
+      final parsedArgs = parseArgsAndConfig(argParser, args);
 
       expect(parsedArgs.svgDir.path, args.first);
       expect(parsedArgs.fontFile.path, args[1]);
@@ -96,8 +98,10 @@ void main() {
 
     test('Help', () {
       void expectCliHelpException(List<String> args) {
-        expect(() => parseArgsAndConfig(_argParser, args),
-            throwsA(const TypeMatcher<CliHelpException>()));
+        expect(
+          () => parseArgsAndConfig(argParser, args),
+          throwsA(const TypeMatcher<CliHelpException>()),
+        );
       }
 
       expectCliHelpException(['-h']);
@@ -137,7 +141,7 @@ void main() {
         '--config-file=test/assets/test_config.yaml',
       ];
 
-      final parsedArgs = parseArgsAndConfig(_argParser, args);
+      final parsedArgs = parseArgsAndConfig(argParser, args);
 
       expect(parsedArgs.svgDir.path, './');
       expect(parsedArgs.fontFile.path, 'generated_font.otf');
@@ -158,7 +162,7 @@ void main() {
         '--config-file=test/assets/test_config.yaml',
       ];
 
-      final parsedArgs = parseArgsAndConfig(_argParser, args);
+      final parsedArgs = parseArgsAndConfig(argParser, args);
 
       expect(parsedArgs.svgDir.path, './');
       expect(parsedArgs.fontFile.path, 'generated_font.otf');
@@ -176,23 +180,25 @@ void main() {
   });
 
   group('Config', () {
-    final _configFile = File('fontify.yaml');
+    final configFile = File('fontify_plus.yaml');
 
-    tearDown(_configFile.deleteSync);
+    tearDown(configFile.deleteSync);
 
-    CliArguments _parseConfig(String config) {
-      _configFile.writeAsStringSync(config);
-      return parseArgsAndConfig(_argParser, []);
+    CliArguments parseConfig(String config) {
+      configFile.writeAsStringSync(config);
+      return parseArgsAndConfig(argParser, []);
     }
 
     void expectCliArgumentException(String cfg) {
-      expect(() => _parseConfig(cfg),
-          throwsA(const TypeMatcher<CliArgumentException>()));
+      expect(
+        () => parseConfig(cfg),
+        throwsA(const TypeMatcher<CliArgumentException>()),
+      );
     }
 
     test('No required', () {
       expectCliArgumentException('''
-fontify:  
+fontify_plus:  
   output_class_file: lib/test_font.dart
   class_name: MyCoolIcons
   indent: 4
@@ -204,7 +210,7 @@ fontify:
     test('Positional args validation', () {
       // dir doesn't exist
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: asdasdasasdsd/
   output_font_file: asdasdasd
       ''');
@@ -213,25 +219,25 @@ fontify:
     test('Options validation', () {
       // indent is positive integer
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: asdasdasd
   indent: -1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: asdasdasd
   indent: asdasdasd
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: asdasdasd
   indent: 1e-1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: asdasdasd
   indent: 1.1
@@ -239,8 +245,8 @@ fontify:
     });
 
     test('All arguments with non-defaults', () {
-      final rawParsedArgs = _parseConfig('''
-fontify:
+      final rawParsedArgs = parseConfig('''
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   
@@ -272,8 +278,8 @@ fontify:
     });
 
     test('All arguments with defaults', () {
-      final rawParsedArgs = _parseConfig('''
-fontify:
+      final rawParsedArgs = parseConfig('''
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
       ''');
@@ -294,49 +300,49 @@ fontify:
 
     test('Type validation', () {
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   output_class_file: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   class_name: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   font_name: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   normalize: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   ignore_shapes: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   recursive: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   verbose: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   package: 1

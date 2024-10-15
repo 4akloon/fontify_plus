@@ -1,3 +1,11 @@
+# Changelog
+
+## 0.4.0
+
+* Update Dart SDK constraint to `>=3.0.0 <4.0.0`
+* Update dependencies
+* Refactor codebase with lints package
+
 ## 0.3.0-nullsafety.1
 
 * Fix regression related to CLI options (#13)
@@ -10,8 +18,8 @@
 ## 0.2.0
 
 * **IMPORTANT:** 'CFF' table is generated now instead of 'CFF2'.
-It shouldn't affect glyphs in newly generated fonts. 
-To learn more, refer to the issue: <https://github.com/westracer/fontify/issues/8>
+It shouldn't affect glyphs in newly generated fonts.
+To learn more, refer to the issue: <https://github.com/4akloon/fontify_plus/issues/8>
 * PostScript name record in the 'name' table now only contains allowed characters.
 * Added CharString optimization to remove some NOOP commands.
 

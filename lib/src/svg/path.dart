@@ -5,9 +5,13 @@ import '../utils/exception.dart';
 import 'element.dart';
 
 class PathElement extends SvgElement {
-  PathElement(this.fillRule, this.data, SvgElement? parent, XmlElement? element,
-      {Matrix3? transform})
-      : super(parent, element, transform: transform);
+  PathElement(
+    this.fillRule,
+    this.data,
+    SvgElement? parent,
+    XmlElement? element, {
+    Matrix3? transform,
+  }) : super(parent, element, transform: transform);
 
   factory PathElement.fromXmlElement(SvgElement? parent, XmlElement element) {
     final dAttr = element.getAttribute('d');

@@ -1,4 +1,4 @@
-library fontify.otf;
+library fontify_plus.otf;
 
 export 'otf/otf.dart';
 export 'otf/reader.dart';

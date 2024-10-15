@@ -1,9 +1,7 @@
 import 'dart:io';
 
-import 'package:fontify/src/common/generic_glyph.dart';
-import 'package:fontify/src/otf/defaults.dart';
-import 'package:fontify/src/otf/otf.dart';
-import 'package:fontify/src/svg/svg.dart';
+import 'package:fontify_plus/fontify_plus.dart';
+import 'package:fontify_plus/src/otf/defaults.dart';
 import 'package:test/test.dart';
 
 import 'constant.dart';
@@ -16,7 +14,7 @@ const _kTestCompSvgPathList = [
 
 void main() {
   group('Normalization', () {
-    List<GenericGlyph> _createGlyphList() {
+    List<GenericGlyph> createGlyphList() {
       final svgFileList = _kTestCompSvgPathList.map((e) => File(e));
       final svgList =
           svgFileList.map((e) => Svg.parse(e.path, e.readAsStringSync()));
@@ -25,7 +23,9 @@ void main() {
 
     test('Metrics, normalization is off', () {
       final font = OpenTypeFont.createFromGlyphs(
-          glyphList: _createGlyphList(), normalize: false);
+        glyphList: createGlyphList(),
+        normalize: false,
+      );
       final widthList = font.hmtx.hMetrics.map((e) => e.advanceWidth);
       final unitsPerEm = kDefaultOpenTypeUnitsPerEm;
 
@@ -36,7 +36,9 @@ void main() {
 
     test('Metrics, normalization is on', () {
       final font = OpenTypeFont.createFromGlyphs(
-          glyphList: _createGlyphList(), normalize: true);
+        glyphList: createGlyphList(),
+        normalize: true,
+      );
       final widthList = font.hmtx.hMetrics.map((e) => e.advanceWidth);
 
       expect(widthList, [298, 333, 362, 270, 208]);

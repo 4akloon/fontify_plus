@@ -1,9 +1,9 @@
-# Fontify
+# fontify_plus
 
-[![pub package](https://img.shields.io/pub/v/fontify.svg)](https://pub.dartlang.org/packages/fontify)
+[![pub package](https://img.shields.io/pub/v/fontify_plus.svg)](https://pub.dartlang.org/packages/fontify_plus)
 
-The Fontify package provides an easy way to convert SVG icons to OpenType font
-and generate Flutter-compatible class that contains identifiers for the icons 
+The fontify_plus package provides an easy way to convert SVG icons to OpenType font
+and generate Flutter-compatible class that contains identifiers for the icons
 (just like [CupertinoIcons][] or [Icons][] classes).
 
 The package is written fully in Dart and doesn't require any external dependency.
@@ -12,29 +12,31 @@ Compatible with dart2js and dart2native.
 [CupertinoIcons]: https://api.flutter.dev/flutter/cupertino/CupertinoIcons-class.html
 [Icons]: https://api.flutter.dev/flutter/material/Icons-class.html
 
-# Using CLI tool
+## Using CLI tool
 
 [Globally activate][] the package:
 
 [globally activate]: https://dart.dev/tools/pub/cmd/pub-global
 
-```
-$ pub global activate fontify
+```sh
+pub global activate fontify_plus
 ```
 
 And it's ready to go:
 
-```
-$ fontify <input-svg-dir> <output-font-file> [options]
+```sh
+fontify_plus <input-svg-dir> <output-font-file> [options]
 ```
 
 Required positional arguments:
+
 - `<input-svg-dir>`
 Path to the input directory that contains .svg files.
 - `<output-font-file>`
 Path to the output font file. Should have .otf extension.
 
 Flutter class options:
+
 - `-o` or `--output-class-file=<path>`
 Output path for Flutter-compatible class that contains identifiers for the icons.
 - `-i` or `--indent=<indent>`
@@ -46,6 +48,7 @@ Name for a generated class.
 Name of a package that provides a font. Used to provide a font through package dependency.
 
 Font options:
+
 - `-f` or `--font-name=<name>`
 Name for a generated font.
 - `--[no-]normalize`
@@ -57,9 +60,10 @@ Disables SVG shape-to-path conversion (circle, rect, etc.).
 (defaults to on)
 
 Other options:
+
 - `-z` or `--config-file=<path>`
-Path to Fontify yaml configuration file.
-pubspec.yaml and fontify.yaml files are used by default.
+Path to fontify_plus yaml configuration file.
+pubspec.yaml and fontify_plus.yaml files are used by default.
 - `-r` or `--recursive`
 Recursively look for .svg files.
 - `-v` or `--verbose`
@@ -69,8 +73,8 @@ Shows usage information.
 
 *Usage example:*
 
-```
-$ fontify assets/svg/ fonts/my_icons_font.otf --output-class-file=lib/my_icons.dart --indent=4 -r
+```sh
+fontify_plus assets/svg/ fonts/my_icons_font.otf --output-class-file=lib/my_icons.dart --indent=4 -r
 ```
 
 Updated Flutter project's pubspec.yaml:
@@ -80,18 +84,18 @@ Updated Flutter project's pubspec.yaml:
 
 flutter:
   fonts:
-    - family: Fontify Icons
+    - family: fontify_plus Icons
       fonts:
         - asset: fonts/my_icons_font.otf
 ```
 
-# CLI tool config file
+## CLI tool config file
 
-Fontify's configuration can also be placed in yaml file.
-Add _fontify_ section to either `pubspec.yaml` or `fontify.yaml` file:
+fontify_plus's configuration can also be placed in yaml file.
+Add *fontify_plus* section to either `pubspec.yaml` or `fontify_plus.yaml` file:
 
 ```yaml
-fontify:
+fontify_plus:
   input_svg_dir: "assets/svg/"
   output_font_file: "fonts/my_icons_font.otf"
   
@@ -111,17 +115,17 @@ fontify:
 `input_svg_dir` and `output_font_file` keys are required.
 It's possible to specify any other config file by using `--config-file` option.
 
-# Using API
+## Using API
 
 [svgToOtf][] and [generateFlutterClass][] functions can be used for generating font and Flutter class.
 
 The example of API usage is located in [example folder][].
 
-[example folder]: https://github.com/westracer/fontify/tree/master/example/example.dart
-[svgToOtf]: https://pub.dev/documentation/fontify/latest/fontify/svgToOtf.html
-[generateFlutterClass]: https://pub.dev/documentation/fontify/latest/fontify/generateFlutterClass.html
+[example folder]: https://github.com/4akloon/fontify_plus/tree/master/example/example.dart
+[svgToOtf]: https://pub.dev/documentation/fontify_plus/latest/fontify_plus/svgToOtf.html
+[generateFlutterClass]: https://pub.dev/documentation/fontify_plus/latest/fontify_plus/generateFlutterClass.html
 
-# Notes
+## Notes
 
 - Generated OpenType font is using CFF table.
 - Generated font is using PostScript Table (post) of version 3.0, i.e., it doesn't contain glyph names.
@@ -144,16 +148,16 @@ Suffix '_{i+1}' is added, if name already exists.
 
 [Non-zero fill rule]: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/fill-rule
 
-# Planned
+## Planned
 
 - Support svg-to-ttf conversion (cubic-to-quad curves approximation needs to be done).
 - Support ligatures.
 - Support font variations.
 
-# Contributing
+## Contributing
 
 Any suggestions, issues, pull requests are welcomed.
 
-# License
+## License
 
-[MIT](https://github.com/westracer/fontify/blob/master/LICENSE)
+[MIT](https://github.com/4akloon/fontify_plus/blob/master/LICENSE)

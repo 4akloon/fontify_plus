@@ -18,7 +18,7 @@ const _kTransformNameMap = EnumClass<TransformType, String>({
 final _joinedTransformNames = _kTransformNameMap.values.join('|');
 
 // Taken from svgicons2svgfont
-final _transformRegExp = RegExp('($_joinedTransformNames)\s*\(([^)]*)\)\s*');
+final _transformRegExp = RegExp('($_joinedTransformNames)s*(([^)]*))s*');
 final _transformParameterRegExp = RegExp(r'[\w.-]+');
 
 class Transform {
@@ -52,7 +52,8 @@ class Transform {
     switch (type) {
       case TransformType.matrix:
         return Matrix3.fromList(
-            [...parameterList, ...List.filled(9 - parameterList.length, 0)]);
+          [...parameterList, ...List.filled(9 - parameterList.length, 0)],
+        );
       case TransformType.translate:
         final dx = parameterList[0];
         final dy = [...parameterList, .0][1];

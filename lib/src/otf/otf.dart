@@ -9,9 +9,7 @@ import '../utils/otf.dart';
 
 import 'defaults.dart';
 import 'reader.dart';
-import 'table/abstract.dart';
 import 'table/all.dart';
-import 'table/offset.dart';
 
 /// Ordered list of table tags for encoding (Optimized Table Ordering)
 const _kTableTagsToEncode = {
@@ -27,7 +25,7 @@ const _kTableTagsToEncode = {
   kPostTag,
   kCFFTag,
   kCFF2Tag,
-  kGSUBTag
+  kGSUBTag,
 };
 
 /// An OpenType font.
@@ -113,7 +111,9 @@ class OpenTypeFont implements BinaryCodable {
     final customGlyphMetricsList = normalize
         ? resizedGlyphList.map((g) => g.metrics).toList()
         : List.filled(
-            resizedGlyphList.length, GenericGlyphMetrics.square(unitsPerEm));
+            resizedGlyphList.length,
+            GenericGlyphMetrics.square(unitsPerEm),
+          );
 
     final glyphMetricsList = [
       ...defaultGlyphMetricsList,
@@ -128,7 +128,11 @@ class OpenTypeFont implements BinaryCodable {
         : IndexToLocationTable.create(head.indexToLocFormat, glyf!);
     final hmtx = HorizontalMetricsTable.create(glyphMetricsList, unitsPerEm);
     final hhea = HorizontalHeaderTable.create(
-        glyphMetricsList, hmtx, ascender, descender);
+      glyphMetricsList,
+      hmtx,
+      ascender,
+      descender,
+    );
     final post = PostScriptTable.create(resizedGlyphList, usePostV2);
     final name = NamingTable.create(fontName, description, revision);
 
@@ -212,10 +216,17 @@ class OpenTypeFont implements BinaryCodable {
 
       table.encodeToBinary(byteData.sublistView(currentTableOffset, tableSize));
       final encodedTable = ByteData.sublistView(
-          byteData, currentTableOffset, currentTableOffset + tableSize);
+        byteData,
+        currentTableOffset,
+        currentTableOffset + tableSize,
+      );
 
-      table.entry = TableRecordEntry(tag, calculateTableChecksum(encodedTable),
-          currentTableOffset, tableSize);
+      table.entry = TableRecordEntry(
+        tag,
+        calculateTableChecksum(encodedTable),
+        currentTableOffset,
+        tableSize,
+      );
       entryList.add(table.entry!);
 
       currentTableOffset += getPaddedTableSize(tableSize);

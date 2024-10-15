@@ -8,23 +8,26 @@ import 'coverage.dart';
 const kLookupListTableSize = 4;
 
 const _kDefaultSubtableList = [
-  LigatureSubstitutionSubtable(1, 6, 0, [], kDefaultCoverageTable)
+  LigatureSubstitutionSubtable(1, 6, 0, [], kDefaultCoverageTable),
 ];
 
 const _kDefaultLookupTableList = [
-  LookupTable(4, 0, 1, [8], null, _kDefaultSubtableList)
+  LookupTable(4, 0, 1, [8], null, _kDefaultSubtableList),
 ];
 
 abstract class SubstitutionSubtable implements BinaryCodable {
   const SubstitutionSubtable();
 
   static SubstitutionSubtable? fromByteData(
-      ByteData byteData, int offset, int lookupType) {
+    ByteData byteData,
+    int offset,
+    int lookupType,
+  ) {
     switch (lookupType) {
       case 4:
         return LigatureSubstitutionSubtable.fromByteData(byteData, offset);
       default:
-        OTFDebugger.debugUnsupportedTableFormat('Lookup', lookupType);
+        debuggerOTF.debugUnsupportedTableFormat('Lookup', lookupType);
         return null;
     }
   }
@@ -42,11 +45,15 @@ class LigatureSubstitutionSubtable extends SubstitutionSubtable {
   );
 
   factory LigatureSubstitutionSubtable.fromByteData(
-      ByteData byteData, int offset) {
+    ByteData byteData,
+    int offset,
+  ) {
     final coverageOffset = byteData.getUint16(offset + 2);
     final ligatureSetCount = byteData.getUint16(offset + 4);
     final subtableOffsets = List.generate(
-        ligatureSetCount, (i) => byteData.getUint16(offset + 6 + 2 * i));
+      ligatureSetCount,
+      (i) => byteData.getUint16(offset + 6 + 2 * i),
+    );
 
     final coverageTable =
         CoverageTable.fromByteData(byteData, offset + coverageOffset);
@@ -90,7 +97,8 @@ class LigatureSubstitutionSubtable extends SubstitutionSubtable {
     }
 
     coverageTable?.encodeToBinary(
-        byteData.sublistView(coverageOffset, coverageTable!.size));
+      byteData.sublistView(coverageOffset, coverageTable!.size),
+    );
   }
 }
 
@@ -109,16 +117,20 @@ class LookupTable implements BinaryCodable {
     final lookupFlag = byteData.getUint16(offset + 2);
     final subTableCount = byteData.getUint16(offset + 4);
     final subtableOffsets = List.generate(
-        subTableCount, (i) => byteData.getUint16(offset + 6 + 2 * i));
+      subTableCount,
+      (i) => byteData.getUint16(offset + 6 + 2 * i),
+    );
     final useMarkFilteringSet = _useMarkFilteringSet(lookupFlag);
     final markFilteringSetOffset = offset + 6 + 2 * subTableCount;
 
     final subtables = List.generate(
-            subTableCount,
-            (i) => SubstitutionSubtable.fromByteData(
-                byteData, offset + subtableOffsets[i], lookupType))
-        .whereType<SubstitutionSubtable>()
-        .toList();
+      subTableCount,
+      (i) => SubstitutionSubtable.fromByteData(
+        byteData,
+        offset + subtableOffsets[i],
+        lookupType,
+      ),
+    ).whereType<SubstitutionSubtable>().toList();
 
     return LookupTable(
       lookupType,
@@ -160,7 +172,8 @@ class LookupTable implements BinaryCodable {
 
     for (final subtable in subtables) {
       subtable.encodeToBinary(
-          byteData.sublistView(currentRelativeOffset, subtable.size));
+        byteData.sublistView(currentRelativeOffset, subtable.size),
+      );
       subtableOffsetList.add(currentRelativeOffset);
       currentRelativeOffset += subtable.size;
     }
@@ -183,9 +196,13 @@ class LookupListTable implements BinaryCodable {
   factory LookupListTable.fromByteData(ByteData byteData, int offset) {
     final lookupCount = byteData.getUint16(offset);
     final lookups = List.generate(
-        lookupCount, (i) => byteData.getUint16(offset + 2 + 2 * i));
-    final lookupTables = List.generate(lookupCount,
-        (i) => LookupTable.fromByteData(byteData, offset + lookups[i]));
+      lookupCount,
+      (i) => byteData.getUint16(offset + 2 + 2 * i),
+    );
+    final lookupTables = List.generate(
+      lookupCount,
+      (i) => LookupTable.fromByteData(byteData, offset + lookups[i]),
+    );
 
     return LookupListTable(lookupCount, lookups, lookupTables);
   }
@@ -214,7 +231,8 @@ class LookupListTable implements BinaryCodable {
     for (var i = 0; i < lookupCount; i++) {
       final subtable = lookupTables[i];
       subtable.encodeToBinary(
-          byteData.sublistView(tableRelativeOffset, subtable.size));
+        byteData.sublistView(tableRelativeOffset, subtable.size),
+      );
 
       byteData.setUint16(2 + 2 * i, tableRelativeOffset);
       tableRelativeOffset += subtable.size;

@@ -9,7 +9,9 @@ class CharStringOptimizer {
 
   /// Returns true, if commands were compacted
   bool _tryToCompactSameOperator(
-      CharStringCommand prev, CharStringCommand next) {
+    CharStringCommand prev,
+    CharStringCommand next,
+  ) {
     final prevOpnds = prev.operandList;
     final currOpnds = next.operandList;
 
@@ -67,7 +69,8 @@ class CharStringOptimizer {
   }
 
   static List<CharStringCommand> _optimizeEmpty(
-      List<CharStringCommand> commandList) {
+    List<CharStringCommand> commandList,
+  ) {
     return commandList.where((e) {
       final everyOperandIsZero = e.operandList.every((o) => o.value == 0);
       final isCurveToOperator = [
@@ -75,7 +78,7 @@ class CharStringOptimizer {
         vvcurveto,
         hhcurveto,
         vhcurveto,
-        hvcurveto
+        hvcurveto,
       ].contains(e.operator);
 
       if (isCurveToOperator) {
@@ -87,7 +90,8 @@ class CharStringOptimizer {
   }
 
   List<CharStringCommand> _optimizeCommandsWithSameOperators(
-      List<CharStringCommand> commandList) {
+    List<CharStringCommand> commandList,
+  ) {
     if (commandList.isEmpty) {
       return [];
     }

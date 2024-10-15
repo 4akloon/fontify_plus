@@ -60,11 +60,17 @@ class PathToOutlineConverter extends PathProxy {
 
   @override
   void cubicTo(
-      double x1, double y1, double x2, double y2, double x3, double y3) {
+    double x1,
+    double y1,
+    double x2,
+    double y2,
+    double x3,
+    double y3,
+  ) {
     final curvePoints = [
       math.Point<num>(x1, y1),
       math.Point<num>(x2, y2),
-      math.Point<num>(x3, y3)
+      math.Point<num>(x3, y3),
     ];
 
     _points.addAll(curvePoints);

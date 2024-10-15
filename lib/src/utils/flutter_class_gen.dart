@@ -1,5 +1,5 @@
-import 'package:recase/recase.dart';
 import 'package:path/path.dart' as p;
+import 'package:recase/recase.dart';
 
 import '../common/constant.dart';
 import '../common/generic_glyph.dart';
@@ -7,8 +7,8 @@ import '../otf/defaults.dart';
 
 const _kUnnamedIconName = 'unnamed';
 const _kDefaultIndent = 2;
-const _kDefaultClassName = 'FontifyIcons';
-const _kDefaultFontFileName = 'fontify_icons.otf';
+const _kDefaultClassName = 'fontify_plusIcons';
+const _kDefaultFontFileName = 'fontify_plus_icons.otf';
 
 /// Removes any characters that are not valid for variable name.
 ///
@@ -105,7 +105,7 @@ class FlutterClassGenerator {
 
     final posParamList = [
       'fontFamily: iconFontFamily',
-      if (_hasPackage) 'fontPackage: iconFontPackage'
+      if (_hasPackage) 'fontPackage: iconFontPackage',
     ];
 
     final posParamString = posParamList.join(', ');
@@ -113,7 +113,7 @@ class FlutterClassGenerator {
     return [
       '',
       '/// $iconName',
-      'static const IconData $varName = IconData(0x$hexCode, $posParamString);'
+      'static const IconData $varName = IconData(0x$hexCode, $posParamString);',
     ];
   }
 

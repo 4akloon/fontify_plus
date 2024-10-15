@@ -20,12 +20,15 @@ class SimpleGlyph implements BinaryCodable {
   }
 
   factory SimpleGlyph.fromByteData(
-      ByteData byteData, GlyphHeader header, int glyphOffset) {
+    ByteData byteData,
+    GlyphHeader header,
+    int glyphOffset,
+  ) {
     var offset = glyphOffset + header.size;
 
     final endPtsOfContours = [
       for (var i = 0; i < header.numberOfContours; i++)
-        byteData.getUint16(offset + i * 2)
+        byteData.getUint16(offset + i * 2),
     ];
     offset += header.numberOfContours * 2;
 
@@ -33,7 +36,7 @@ class SimpleGlyph implements BinaryCodable {
     offset += 2;
 
     final instructions = [
-      for (var i = 0; i < instructionLength; i++) byteData.getUint8(offset + i)
+      for (var i = 0; i < instructionLength; i++) byteData.getUint8(offset + i),
     ];
     offset += instructionLength;
 
@@ -93,7 +96,7 @@ class SimpleGlyph implements BinaryCodable {
 
     final points = [
       for (var i = 0; i < xAbsCoordinates.length; i++)
-        math.Point<num>(xAbsCoordinates[i], yAbsCoordinates[i])
+        math.Point<num>(xAbsCoordinates[i], yAbsCoordinates[i]),
     ];
 
     return SimpleGlyph(

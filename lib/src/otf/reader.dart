@@ -84,10 +84,18 @@ class OTFReader {
         return MaximumProfileTable.fromByteData(_byteData, entry);
       case kLocaTag:
         return IndexToLocationTable.fromByteData(
-            _byteData, entry, _indexToLocFormat, numGlyphs);
+          _byteData,
+          entry,
+          _indexToLocFormat,
+          numGlyphs,
+        );
       case kGlyfTag:
         return GlyphDataTable.fromByteData(
-            _byteData, entry, _font.loca, numGlyphs);
+          _byteData,
+          entry,
+          _font.loca,
+          numGlyphs,
+        );
       case kGSUBTag:
         return GlyphSubstitutionTable.fromByteData(_byteData, entry);
       case kOS2Tag:
@@ -102,12 +110,16 @@ class OTFReader {
         return HorizontalHeaderTable.fromByteData(_byteData, entry);
       case kHmtxTag:
         return HorizontalMetricsTable.fromByteData(
-            _byteData, entry, _font.hhea, numGlyphs);
+          _byteData,
+          entry,
+          _font.hhea,
+          numGlyphs,
+        );
       case kCFFTag:
       case kCFF2Tag:
         return CFFTable.fromByteData(_byteData, entry);
       default:
-        OTFDebugger.debugUnsupportedTable(entry.tag);
+        debuggerOTF.debugUnsupportedTable(entry.tag);
         return null;
     }
   }
@@ -117,9 +129,11 @@ class OTFReader {
   /// Throws [ChecksumException] if calculated checksum is different than expected
   void _validateChecksums() {
     final byteDataCopy = ByteData.sublistView(
-        Uint8List.fromList([..._byteData.buffer.asUint8List().toList()]))
-      ..setUint32(_font.head.entry!.offset + 8,
-          0); // Setting head table's checkSumAdjustment to 0
+      Uint8List.fromList([..._byteData.buffer.asUint8List()]),
+    )..setUint32(
+        _font.head.entry!.offset + 8,
+        0,
+      ); // Setting head table's checkSumAdjustment to 0
 
     for (final table in _font.tableMap.values) {
       final entry = table.entry!;
@@ -128,7 +142,10 @@ class OTFReader {
       final tableLength = entry.length;
 
       final tableByteData = ByteData.sublistView(
-          byteDataCopy, tableOffset, tableOffset + tableLength);
+        byteDataCopy,
+        tableOffset,
+        tableOffset + tableLength,
+      );
       final actualChecksum = calculateTableChecksum(tableByteData);
       final expectedChecksum = entry.checkSum;
 

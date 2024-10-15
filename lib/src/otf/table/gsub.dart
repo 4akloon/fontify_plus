@@ -11,12 +11,13 @@ import 'table_record_entry.dart';
 
 class GlyphSubstitutionTableHeader implements BinaryCodable {
   GlyphSubstitutionTableHeader(
-      this.majorVersion,
-      this.minorVersion,
-      this.scriptListOffset,
-      this.featureListOffset,
-      this.lookupListOffset,
-      this.featureVariationsOffset);
+    this.majorVersion,
+    this.minorVersion,
+    this.scriptListOffset,
+    this.featureListOffset,
+    this.lookupListOffset,
+    this.featureVariationsOffset,
+  );
 
   factory GlyphSubstitutionTableHeader.fromByteData(
     ByteData byteData,
@@ -29,7 +30,7 @@ class GlyphSubstitutionTableHeader implements BinaryCodable {
     final isV10 = version == const Revision(1, 0);
 
     if (!isV10) {
-      OTFDebugger.debugUnsupportedTableVersion(kGSUBTag, version.int32value);
+      debuggerOTF.debugUnsupportedTableVersion(kGSUBTag, version.int32value);
     }
 
     return GlyphSubstitutionTableHeader(
@@ -74,9 +75,13 @@ class GlyphSubstitutionTableHeader implements BinaryCodable {
 }
 
 class GlyphSubstitutionTable extends FontTable {
-  GlyphSubstitutionTable(TableRecordEntry? entry, this.header,
-      this.scriptListTable, this.featureListTable, this.lookupListTable)
-      : super.fromTableRecordEntry(entry);
+  GlyphSubstitutionTable(
+    super.entry,
+    this.header,
+    this.scriptListTable,
+    this.featureListTable,
+    this.lookupListTable,
+  ) : super.fromTableRecordEntry();
 
   factory GlyphSubstitutionTable.fromByteData(
     ByteData byteData,
@@ -85,11 +90,17 @@ class GlyphSubstitutionTable extends FontTable {
     final header = GlyphSubstitutionTableHeader.fromByteData(byteData, entry);
 
     final scriptListTable = ScriptListTable.fromByteData(
-        byteData, entry.offset + header.scriptListOffset!);
+      byteData,
+      entry.offset + header.scriptListOffset!,
+    );
     final featureListTable = FeatureListTable.fromByteData(
-        byteData, entry.offset + header.featureListOffset!);
+      byteData,
+      entry.offset + header.featureListOffset!,
+    );
     final lookupListTable = LookupListTable.fromByteData(
-        byteData, entry.offset + header.lookupListOffset!);
+      byteData,
+      entry.offset + header.lookupListOffset!,
+    );
 
     return GlyphSubstitutionTable(
       entry,
@@ -127,17 +138,20 @@ class GlyphSubstitutionTable extends FontTable {
     var relativeOffset = header.size;
 
     scriptListTable.encodeToBinary(
-        byteData.sublistView(relativeOffset, scriptListTable.size));
+      byteData.sublistView(relativeOffset, scriptListTable.size),
+    );
     header.scriptListOffset = relativeOffset;
     relativeOffset += scriptListTable.size;
 
     featureListTable.encodeToBinary(
-        byteData.sublistView(relativeOffset, featureListTable.size));
+      byteData.sublistView(relativeOffset, featureListTable.size),
+    );
     header.featureListOffset = relativeOffset;
     relativeOffset += featureListTable.size;
 
     lookupListTable.encodeToBinary(
-        byteData.sublistView(relativeOffset, lookupListTable.size));
+      byteData.sublistView(relativeOffset, lookupListTable.size),
+    );
     header.lookupListOffset = relativeOffset;
     relativeOffset += lookupListTable.size;
 

@@ -137,10 +137,11 @@ class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
 
   static Object Function(ByteData) _getDecoderForType(Type type) {
     switch (type) {
-      case Uint8List:
+      case const (Uint8List):
         return (bd) => Uint8List.fromList(
-            bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes));
-      case CFFDict:
+              bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes),
+            );
+      case const (CFFDict):
         return (bd) => CFFDict.fromByteData(bd);
       default:
     }
@@ -150,9 +151,9 @@ class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
 
   void Function(ByteData, T) _getEncoder() {
     switch (T) {
-      case Uint8List:
+      case const (Uint8List):
         return (bd, list) => bd.setByteList(0, list as Uint8List);
-      case CFFDict:
+      case const (CFFDict):
         return (bd, dict) => (dict as CFFDict).encodeToBinary(bd);
       default:
     }
@@ -162,9 +163,9 @@ class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
 
   int Function(T) _getByteLengthCallback() {
     switch (T) {
-      case Uint8List:
+      case const (Uint8List):
         return (list) => (list as Uint8List).lengthInBytes;
-      case CFFDict:
+      case const (CFFDict):
         return (dict) => (dict as CFFDict).size;
       default:
     }
@@ -182,8 +183,14 @@ class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
     index = _calculateIndex();
   }
 
-  // TODO: memoize: called three times when writing font - on creating ByteData for font, on creating sublistView and on calling encode
+  // Memoize the result of _calculateIndex to avoid redundant calculations
+  CFFIndex? _cachedIndex;
+
   CFFIndex _calculateIndex() {
+    if (_cachedIndex != null) {
+      return _cachedIndex!;
+    }
+
     final lengthCallback = _getByteLengthCallback();
 
     final dataSizeList = data.map(lengthCallback).toList();
@@ -197,7 +204,8 @@ class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
 
     /// Finding minimum offSize
     CFFIndex newIndex;
-    int expectedOffSize = 0, actualOffSize;
+    int expectedOffSize = 0;
+    int actualOffSize;
 
     do {
       expectedOffSize++;
@@ -209,6 +217,7 @@ class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
       throw TableDataFormatException('INDEX offset overflow');
     }
 
+    _cachedIndex = newIndex;
     return newIndex;
   }
 

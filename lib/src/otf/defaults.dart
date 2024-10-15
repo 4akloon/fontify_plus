@@ -6,7 +6,7 @@ import '../utils/misc.dart';
 import '../utils/otf.dart';
 
 const kDefaultAchVendID = '    ';
-const kDefaultFontFamily = 'Fontify Icons';
+const kDefaultFontFamily = 'fontify_plus Icons';
 const kDefaultTrueTypeUnitsPerEm = 1024; // A power of two is recommended
 const kDefaultOpenTypeUnitsPerEm = 1000;
 const kDefaultBaselineExtension = 150;
@@ -37,27 +37,43 @@ GenericGlyph _generateNotdefGlyph(int ascender) {
   final thickness = (kRelativeThickness * xOuterOffset).round();
 
   final outerRect = math.Rectangle.fromPoints(
-      const math.Point(0, 0), math.Point(xOuterOffset, ascender));
+    const math.Point(0, 0),
+    math.Point(xOuterOffset, ascender),
+  );
 
-  final innerRect = math.Rectangle.fromPoints(math.Point(thickness, thickness),
-      math.Point(xOuterOffset - thickness, ascender - thickness));
+  final innerRect = math.Rectangle.fromPoints(
+    math.Point(thickness, thickness),
+    math.Point(xOuterOffset - thickness, ascender - thickness),
+  );
 
   final outlines = [
     // Outer rectangle clockwise
-    Outline([
-      outerRect.bottomLeft,
-      outerRect.bottomRight,
-      outerRect.topRight,
-      outerRect.topLeft
-    ], List.filled(4, true), false, true, FillRule.nonzero),
+    Outline(
+      [
+        outerRect.bottomLeft,
+        outerRect.bottomRight,
+        outerRect.topRight,
+        outerRect.topLeft,
+      ],
+      List.filled(4, true),
+      false,
+      true,
+      FillRule.nonzero,
+    ),
 
     // Inner rectangle counter-clockwise
-    Outline([
-      innerRect.bottomLeft,
-      innerRect.topLeft,
-      innerRect.topRight,
-      innerRect.bottomRight
-    ], List.filled(4, true), false, true, FillRule.nonzero),
+    Outline(
+      [
+        innerRect.bottomLeft,
+        innerRect.topLeft,
+        innerRect.topRight,
+        innerRect.bottomRight,
+      ],
+      List.filled(4, true),
+      false,
+      true,
+      FillRule.nonzero,
+    ),
   ];
 
   return GenericGlyph(outlines, outerRect);

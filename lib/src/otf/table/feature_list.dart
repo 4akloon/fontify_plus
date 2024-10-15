@@ -39,18 +39,29 @@ class FeatureRecord implements BinaryCodable {
 
 class FeatureTable implements BinaryCodable {
   const FeatureTable(
-      this.featureParams, this.lookupIndexCount, this.lookupListIndices);
+    this.featureParams,
+    this.lookupIndexCount,
+    this.lookupListIndices,
+  );
 
   factory FeatureTable.fromByteData(
-      ByteData byteData, int offset, FeatureRecord record) {
+    ByteData byteData,
+    int offset,
+    FeatureRecord record,
+  ) {
     offset += record.featureOffset!;
 
     final lookupIndexCount = byteData.getUint16(offset + 2);
     final lookupListIndices = List.generate(
-        lookupIndexCount, (i) => byteData.getUint16(offset + 4 + i * 2));
+      lookupIndexCount,
+      (i) => byteData.getUint16(offset + 4 + i * 2),
+    );
 
     return FeatureTable(
-        byteData.getUint16(offset), lookupIndexCount, lookupListIndices);
+      byteData.getUint16(offset),
+      lookupIndexCount,
+      lookupListIndices,
+    );
   }
 
   final int featureParams;
@@ -62,7 +73,9 @@ class FeatureTable implements BinaryCodable {
 
   @override
   void encodeToBinary(ByteData byteData) {
-    byteData..setUint16(0, featureParams)..setUint16(2, lookupIndexCount);
+    byteData
+      ..setUint16(0, featureParams)
+      ..setUint16(2, lookupIndexCount);
 
     for (var i = 0; i < lookupIndexCount; i++) {
       byteData.setInt16(4 + 2 * i, lookupListIndices[i]);
@@ -76,11 +89,16 @@ class FeatureListTable implements BinaryCodable {
   factory FeatureListTable.fromByteData(ByteData byteData, int offset) {
     final featureCount = byteData.getUint16(offset);
     final featureRecords = List.generate(
-        featureCount,
-        (i) => FeatureRecord.fromByteData(
-            byteData, offset + 2 + kFeatureRecordSize * i));
-    final featureTables = List.generate(featureCount,
-        (i) => FeatureTable.fromByteData(byteData, offset, featureRecords[i]));
+      featureCount,
+      (i) => FeatureRecord.fromByteData(
+        byteData,
+        offset + 2 + kFeatureRecordSize * i,
+      ),
+    );
+    final featureTables = List.generate(
+      featureCount,
+      (i) => FeatureTable.fromByteData(byteData, offset, featureRecords[i]),
+    );
 
     return FeatureListTable(featureCount, featureRecords, featureTables);
   }
@@ -89,7 +107,10 @@ class FeatureListTable implements BinaryCodable {
     final featureRecordList = _createDefaultFeatureRecordList();
 
     return FeatureListTable(
-        featureRecordList.length, featureRecordList, _kDefaultFeatureTableList);
+      featureRecordList.length,
+      featureRecordList,
+      _kDefaultFeatureTableList,
+    );
   }
 
   final int featureCount;
@@ -116,7 +137,8 @@ class FeatureListTable implements BinaryCodable {
       final record = featureRecords[i]
         ..featureOffset = tableRelativeOffset
         ..encodeToBinary(
-            byteData.sublistView(recordOffset, kFeatureRecordSize));
+          byteData.sublistView(recordOffset, kFeatureRecordSize),
+        );
 
       final table = featureTables[i];
       final tableSize = table.size;

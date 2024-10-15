@@ -13,8 +13,12 @@ abstract class PathConvertible {
 
 class RectElement extends SvgElement implements PathConvertible {
   RectElement(
-      this.rectangle, this.rx, this.ry, SvgElement? parent, XmlElement element)
-      : super(parent, element);
+    this.rectangle,
+    this.rx,
+    this.ry,
+    SvgElement? parent,
+    XmlElement element,
+  ) : super(parent, element);
 
   factory RectElement.fromXmlElement(SvgElement? parent, XmlElement element) {
     final rect = math.Rectangle(
@@ -66,7 +70,9 @@ class CircleElement extends SvgElement implements PathConvertible {
 
   factory CircleElement.fromXmlElement(SvgElement? parent, XmlElement element) {
     final center = math.Point(
-        element.getScalarAttribute('cx')!, element.getScalarAttribute('cy')!);
+      element.getScalarAttribute('cx')!,
+      element.getScalarAttribute('cy')!,
+    );
 
     final r = element.getScalarAttribute('r')!;
 
@@ -94,7 +100,9 @@ class PolylineElement extends SvgElement implements PathConvertible {
       : super(parent, element);
 
   factory PolylineElement.fromXmlElement(
-      SvgElement? parent, XmlElement element) {
+    SvgElement? parent,
+    XmlElement element,
+  ) {
     final points = element.getAttribute('points')!;
 
     return PolylineElement(points, parent, element);
@@ -115,7 +123,9 @@ class PolygonElement extends SvgElement implements PathConvertible {
       : super(parent, element);
 
   factory PolygonElement.fromXmlElement(
-      SvgElement? parent, XmlElement element) {
+    SvgElement? parent,
+    XmlElement element,
+  ) {
     final points = element.getAttribute('points')!;
 
     return PolygonElement(points, parent, element);
@@ -137,10 +147,14 @@ class LineElement extends SvgElement implements PathConvertible {
 
   factory LineElement.fromXmlElement(SvgElement? parent, XmlElement element) {
     final p1 = math.Point(
-        element.getScalarAttribute('x1')!, element.getScalarAttribute('y1')!);
+      element.getScalarAttribute('x1')!,
+      element.getScalarAttribute('y1')!,
+    );
 
     final p2 = math.Point(
-        element.getScalarAttribute('x2')!, element.getScalarAttribute('y2')!);
+      element.getScalarAttribute('x2')!,
+      element.getScalarAttribute('y2')!,
+    );
 
     return LineElement(p1, p2, parent, element);
   }

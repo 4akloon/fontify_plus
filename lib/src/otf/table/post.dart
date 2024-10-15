@@ -28,7 +28,9 @@ class PostScriptTableHeader implements BinaryCodable {
   );
 
   factory PostScriptTableHeader.fromByteData(
-      ByteData byteData, TableRecordEntry entry) {
+    ByteData byteData,
+    TableRecordEntry entry,
+  ) {
     final version = Revision.fromInt32(byteData.getInt32(entry.offset));
 
     return PostScriptTableHeader(
@@ -90,7 +92,10 @@ abstract class PostScriptData implements BinaryCodable {
   PostScriptData();
 
   static PostScriptData? fromByteData(
-      ByteData byteData, int offset, PostScriptTableHeader header) {
+    ByteData byteData,
+    int offset,
+    PostScriptTableHeader header,
+  ) {
     final version = header.version.int32value;
 
     switch (version) {
@@ -99,7 +104,7 @@ abstract class PostScriptData implements BinaryCodable {
       case _kVersion30:
         return PostScriptVersion30();
       default:
-        OTFDebugger.debugUnsupportedTableVersion(kPostTag, version);
+        debuggerOTF.debugUnsupportedTableVersion(kPostTag, version);
         return null;
     }
   }
@@ -122,14 +127,19 @@ class PostScriptVersion30 extends PostScriptData {
 
 class PostScriptVersion20 extends PostScriptData {
   PostScriptVersion20(
-      this.numberOfGlyphs, this.glyphNameIndex, this.glyphNames);
+    this.numberOfGlyphs,
+    this.glyphNameIndex,
+    this.glyphNames,
+  );
 
   factory PostScriptVersion20.fromByteData(ByteData byteData, int offset) {
     final numberOfGlyphs = byteData.getUint16(offset);
     offset += 2;
 
     final glyphNameIndex = List.generate(
-        numberOfGlyphs, (i) => byteData.getUint16(offset + i * 2));
+      numberOfGlyphs,
+      (i) => byteData.getUint16(offset + i * 2),
+    );
     offset += numberOfGlyphs * 2;
 
     final glyphNames = <PascalString>[];
@@ -173,7 +183,8 @@ class PostScriptVersion20 extends PostScriptData {
 
   @override
   int get size {
-    var glyphNamesSize = 0, currentNameIndex = 0;
+    var glyphNamesSize = 0;
+    var currentNameIndex = 0;
 
     for (var i = 0; i < numberOfGlyphs; i++) {
       if (_isGlyphNameStandard(glyphNameIndex[i])) {
@@ -217,18 +228,24 @@ class PostScriptVersion20 extends PostScriptData {
 }
 
 class PostScriptTable extends FontTable {
-  PostScriptTable(TableRecordEntry? entry, this.header, this.data)
-      : super.fromTableRecordEntry(entry);
+  PostScriptTable(super.entry, this.header, this.data)
+      : super.fromTableRecordEntry();
 
   factory PostScriptTable.fromByteData(
-      ByteData byteData, TableRecordEntry entry) {
+    ByteData byteData,
+    TableRecordEntry entry,
+  ) {
     final header = PostScriptTableHeader.fromByteData(byteData, entry);
 
     return PostScriptTable(
-        entry,
+      entry,
+      header,
+      PostScriptData.fromByteData(
+        byteData,
+        entry.offset + _kHeaderSize,
         header,
-        PostScriptData.fromByteData(
-            byteData, entry.offset + _kHeaderSize, header));
+      ),
+    );
   }
 
   /// Creates post table.
@@ -243,7 +260,10 @@ class PostScriptTable extends FontTable {
         : PostScriptVersion30();
 
     return PostScriptTable(
-        null, PostScriptTableHeader.create(data.version), data);
+      null,
+      PostScriptTableHeader.create(data.version),
+      data,
+    );
   }
 
   final PostScriptTableHeader header;
@@ -520,5 +540,5 @@ const _kMacStandardGlyphNames = [
   'cacute',
   'Ccaron',
   'ccaron',
-  'dcroat'
+  'dcroat',
 ];
