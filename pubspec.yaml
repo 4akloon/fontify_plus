@@ -25,4 +25,4 @@ dev_dependencies:
   test: ^1.25.8
   
 executables:
-  fontify_plus: fontify_plus_plus
+  fontify_plus: fontify_plus
