@@ -8,7 +8,7 @@ import '../utils/enum_class.dart';
 import '../utils/logger.dart';
 import 'formatter.dart';
 
-const _kDefaultConfigPathList = ['pubspec.yaml', 'fontify.yaml'];
+const _kDefaultConfigPathList = ['pubspec.yaml', 'fontify_plus.yaml'];
 const _kPositionalArguments = [CliArgument.svgDir, CliArgument.fontFile];
 
 const _kArgAllowedTypes = <CliArgument, List<Type>>{
@@ -207,7 +207,7 @@ MapEntry<CliArgument, dynamic>? _mapConfigKeyEntry(
 /// Parses config file.
 ///
 /// Returns an instance of [CliArguments] containing all parsed data or null,
-/// if 'fontify' key is not present in config file.
+/// if 'fontify_plus' key is not present in config file.
 Map<CliArgument, dynamic>? parseConfig(String config) {
   final dynamic yamlMap = loadYaml(config);
 
@@ -215,13 +215,13 @@ Map<CliArgument, dynamic>? parseConfig(String config) {
     return null;
   }
 
-  final dynamic fontifyYamlMap = yamlMap['fontify'];
+  final dynamic fontify_plusYamlMap = yamlMap['fontify_plus'];
 
-  if (fontifyYamlMap is! YamlMap) {
+  if (fontify_plusYamlMap is! YamlMap) {
     return null;
   }
 
-  final entries = fontifyYamlMap.entries
+  final entries = fontify_plusYamlMap.entries
       .map(_mapConfigKeyEntry)
       .whereType<MapEntry<CliArgument, dynamic>>();
 
@@ -229,7 +229,7 @@ Map<CliArgument, dynamic>? parseConfig(String config) {
 }
 
 /// Parses argument list and config file, validates parsed data.
-/// Config is used, if it contains 'fontify' section.
+/// Config is used, if it contains 'fontify_plus' section.
 ///
 /// Throws [CliHelpException], if 'help' option is present.
 /// Throws [CliArgumentException], if there is an error in arg parsing.

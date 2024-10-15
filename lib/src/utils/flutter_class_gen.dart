@@ -7,8 +7,8 @@ import '../otf/defaults.dart';
 
 const _kUnnamedIconName = 'unnamed';
 const _kDefaultIndent = 2;
-const _kDefaultClassName = 'FontifyIcons';
-const _kDefaultFontFileName = 'fontify_icons.otf';
+const _kDefaultClassName = 'fontify_plusIcons';
+const _kDefaultFontFileName = 'fontify_plus_icons.otf';
 
 /// Removes any characters that are not valid for variable name.
 ///

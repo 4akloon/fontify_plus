@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:fontify/src/cli/arguments.dart';
-import 'package:fontify/src/cli/options.dart';
-import 'package:fontify/src/common/api.dart';
-import 'package:fontify/src/otf/io.dart';
-import 'package:fontify/src/utils/logger.dart';
+import 'package:fontify_plus/src/cli/arguments.dart';
+import 'package:fontify_plus/src/cli/options.dart';
+import 'package:fontify_plus/src/common/api.dart';
+import 'package:fontify_plus/src/otf/io.dart';
+import 'package:fontify_plus/src/utils/logger.dart';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
@@ -129,9 +129,9 @@ const _kAbout =
     'Converts .svg icons to an OpenType font and generates Flutter-compatible class.';
 
 const _kUsage = '''
-Usage:   fontify <input-svg-dir> <output-font-file> [options]
+Usage:   fontify_plus <input-svg-dir> <output-font-file> [options]
 
-Example: fontify assets/svg/ fonts/my_icons_font.otf --output-class-file=lib/my_icons.dart
+Example: fontify_plus assets/svg/ fonts/my_icons_font.otf --output-class-file=lib/my_icons.dart
 
 Converts every .svg file from <input-svg-dir> directory to an OpenType font and writes it to <output-font-file> file.
 If "--output-class-file" option is specified, Flutter-compatible class that contains identifiers for the icons is generated.

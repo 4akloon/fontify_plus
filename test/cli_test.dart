@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:fontify/src/cli/arguments.dart';
-import 'package:fontify/src/cli/options.dart';
+import 'package:fontify_plus/src/cli/arguments.dart';
+import 'package:fontify_plus/src/cli/options.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -180,7 +180,7 @@ void main() {
   });
 
   group('Config', () {
-    final configFile = File('fontify.yaml');
+    final configFile = File('fontify_plus.yaml');
 
     tearDown(configFile.deleteSync);
 
@@ -198,7 +198,7 @@ void main() {
 
     test('No required', () {
       expectCliArgumentException('''
-fontify:  
+fontify_plus:  
   output_class_file: lib/test_font.dart
   class_name: MyCoolIcons
   indent: 4
@@ -210,7 +210,7 @@ fontify:
     test('Positional args validation', () {
       // dir doesn't exist
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: asdasdasasdsd/
   output_font_file: asdasdasd
       ''');
@@ -219,25 +219,25 @@ fontify:
     test('Options validation', () {
       // indent is positive integer
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: asdasdasd
   indent: -1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: asdasdasd
   indent: asdasdasd
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: asdasdasd
   indent: 1e-1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: asdasdasd
   indent: 1.1
@@ -246,7 +246,7 @@ fontify:
 
     test('All arguments with non-defaults', () {
       final rawParsedArgs = parseConfig('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   
@@ -279,7 +279,7 @@ fontify:
 
     test('All arguments with defaults', () {
       final rawParsedArgs = parseConfig('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
       ''');
@@ -300,49 +300,49 @@ fontify:
 
     test('Type validation', () {
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   output_class_file: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   class_name: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   font_name: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   normalize: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   ignore_shapes: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   recursive: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   verbose: 1
       ''');
       expectCliArgumentException('''
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   package: 1

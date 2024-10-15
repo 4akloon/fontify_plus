@@ -1,4 +1,4 @@
-part of fontify.otf.cff;
+part of fontify_plus.otf.cff;
 
 const _kFormat0 = 0;
 const _kFormat1 = 1;

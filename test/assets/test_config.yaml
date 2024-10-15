@@ -1,7 +1,7 @@
 name: test
 version: 1.0
 
-fontify:
+fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   

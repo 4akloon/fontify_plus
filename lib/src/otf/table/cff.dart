@@ -1,4 +1,4 @@
-library fontify.otf.cff;
+library fontify_plus.otf.cff;
 
 import 'dart:typed_data';
 

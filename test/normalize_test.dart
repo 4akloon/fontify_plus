@@ -1,9 +1,7 @@
 import 'dart:io';
 
-import 'package:fontify/src/common/generic_glyph.dart';
-import 'package:fontify/src/otf/defaults.dart';
-import 'package:fontify/src/otf/otf.dart';
-import 'package:fontify/src/svg/svg.dart';
+import 'package:fontify_plus/fontify_plus.dart';
+import 'package:fontify_plus/src/otf/defaults.dart';
 import 'package:test/test.dart';
 
 import 'constant.dart';

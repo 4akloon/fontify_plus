@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:fontify/fontify.dart';
+import 'package:fontify_plus/fontify_plus.dart';
 
 void main() {
-  const fontFileName = 'fontify_icons.otf';
-  const classFileName = 'fontify_icons.dart';
+  const fontFileName = 'fontify_plus_icons.otf';
+  const classFileName = 'fontify_plus_icons.dart';
 
   // Input data
   final svgMap = {'icon': '<svg viewBox="0 0 0 0"></svg>'};
