@@ -22,7 +22,10 @@ int combineHashCode(int hashFirst, int hashOther) {
 ///
 /// Returns two new control points in a list.
 List<math.Point<num>> quadCurveToCubic(
-    math.Point<num> qp0, math.Point<num> qp1, math.Point<num> qp2) {
+  math.Point<num> qp0,
+  math.Point<num> qp1,
+  math.Point<num> qp2,
+) {
   final cp1 = qp0 + (qp1 - qp0) * (2 / 3);
   final cp2 = qp2 + (qp1 - qp2) * (2 / 3);
 

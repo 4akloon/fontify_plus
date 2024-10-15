@@ -6,14 +6,16 @@ import 'package:fontify/src/cli/options.dart';
 import 'package:test/test.dart';
 
 void main() {
-  final _argParser = ArgParser(allowTrailingOptions: true);
+  final argParser = ArgParser(allowTrailingOptions: true);
 
   group('Arguments', () {
-    defineOptions(_argParser);
+    defineOptions(argParser);
 
     void expectCliArgumentException(List<String> args) {
-      expect(() => parseArgsAndConfig(_argParser, args),
-          throwsA(const TypeMatcher<CliArgumentException>()));
+      expect(
+        () => parseArgsAndConfig(argParser, args),
+        throwsA(const TypeMatcher<CliArgumentException>()),
+      );
     }
 
     test('No positional args', () {
@@ -54,7 +56,7 @@ void main() {
         '--package=test_package',
       ];
 
-      final parsedArgs = parseArgsAndConfig(_argParser, args);
+      final parsedArgs = parseArgsAndConfig(argParser, args);
 
       expect(parsedArgs.svgDir.path, args.first);
       expect(parsedArgs.fontFile.path, args[1]);
@@ -78,7 +80,7 @@ void main() {
         '--ignore-shapes',
       ];
 
-      final parsedArgs = parseArgsAndConfig(_argParser, args);
+      final parsedArgs = parseArgsAndConfig(argParser, args);
 
       expect(parsedArgs.svgDir.path, args.first);
       expect(parsedArgs.fontFile.path, args[1]);
@@ -96,8 +98,10 @@ void main() {
 
     test('Help', () {
       void expectCliHelpException(List<String> args) {
-        expect(() => parseArgsAndConfig(_argParser, args),
-            throwsA(const TypeMatcher<CliHelpException>()));
+        expect(
+          () => parseArgsAndConfig(argParser, args),
+          throwsA(const TypeMatcher<CliHelpException>()),
+        );
       }
 
       expectCliHelpException(['-h']);
@@ -137,7 +141,7 @@ void main() {
         '--config-file=test/assets/test_config.yaml',
       ];
 
-      final parsedArgs = parseArgsAndConfig(_argParser, args);
+      final parsedArgs = parseArgsAndConfig(argParser, args);
 
       expect(parsedArgs.svgDir.path, './');
       expect(parsedArgs.fontFile.path, 'generated_font.otf');
@@ -158,7 +162,7 @@ void main() {
         '--config-file=test/assets/test_config.yaml',
       ];
 
-      final parsedArgs = parseArgsAndConfig(_argParser, args);
+      final parsedArgs = parseArgsAndConfig(argParser, args);
 
       expect(parsedArgs.svgDir.path, './');
       expect(parsedArgs.fontFile.path, 'generated_font.otf');
@@ -176,18 +180,20 @@ void main() {
   });
 
   group('Config', () {
-    final _configFile = File('fontify.yaml');
+    final configFile = File('fontify.yaml');
 
-    tearDown(_configFile.deleteSync);
+    tearDown(configFile.deleteSync);
 
-    CliArguments _parseConfig(String config) {
-      _configFile.writeAsStringSync(config);
-      return parseArgsAndConfig(_argParser, []);
+    CliArguments parseConfig(String config) {
+      configFile.writeAsStringSync(config);
+      return parseArgsAndConfig(argParser, []);
     }
 
     void expectCliArgumentException(String cfg) {
-      expect(() => _parseConfig(cfg),
-          throwsA(const TypeMatcher<CliArgumentException>()));
+      expect(
+        () => parseConfig(cfg),
+        throwsA(const TypeMatcher<CliArgumentException>()),
+      );
     }
 
     test('No required', () {
@@ -239,7 +245,7 @@ fontify:
     });
 
     test('All arguments with non-defaults', () {
-      final rawParsedArgs = _parseConfig('''
+      final rawParsedArgs = parseConfig('''
 fontify:
   input_svg_dir: ./
   output_font_file: generated_font.otf
@@ -272,7 +278,7 @@ fontify:
     });
 
     test('All arguments with defaults', () {
-      final rawParsedArgs = _parseConfig('''
+      final rawParsedArgs = parseConfig('''
 fontify:
   input_svg_dir: ./
   output_font_file: generated_font.otf

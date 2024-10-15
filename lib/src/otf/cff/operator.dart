@@ -51,12 +51,10 @@ class CFFOperator implements BinaryCodable {
         if (dictOperatorNames.containsKey(this)) {
           name = dictOperatorNames[this]!;
         }
-        break;
       case CFFOperatorContext.charString:
         if (charStringOperatorNames.containsKey(this)) {
           name = charStringOperatorNames[this]!;
         }
-        break;
     }
 
     return name;

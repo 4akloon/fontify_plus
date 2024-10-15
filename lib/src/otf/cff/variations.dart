@@ -34,17 +34,22 @@ class RegionAxisCoordinates extends BinaryCodable {
 }
 
 class ItemVariationData extends BinaryCodable {
-  ItemVariationData(this.itemCount, this.shortDeltaCount, this.regionIndexCount,
-      this.regionIndexes);
+  ItemVariationData(
+    this.itemCount,
+    this.shortDeltaCount,
+    this.regionIndexCount,
+    this.regionIndexes,
+  );
 
   factory ItemVariationData.fromByteData(ByteData byteData) {
     final regionIndexCount = byteData.getUint16(4);
 
     return ItemVariationData(
-        byteData.getUint16(0),
-        byteData.getUint16(2),
-        regionIndexCount,
-        List.generate(regionIndexCount, (i) => byteData.getUint16(6 + 2 * i)));
+      byteData.getUint16(0),
+      byteData.getUint16(2),
+      regionIndexCount,
+      List.generate(regionIndexCount, (i) => byteData.getUint16(6 + 2 * i)),
+    );
   }
 
   final int itemCount;
@@ -78,10 +83,12 @@ class VariationRegionList extends BinaryCodable {
     final regions = [
       for (var r = 0; r < regionCount; r++)
         for (var a = 0; a < axisCount; a++)
-          RegionAxisCoordinates.fromByteData(byteData.sublistView(
-            4 + (a + r * axisCount) * _kRegionAxisCoordinatesSize,
-            _kRegionAxisCoordinatesSize,
-          ))
+          RegionAxisCoordinates.fromByteData(
+            byteData.sublistView(
+              4 + (a + r * axisCount) * _kRegionAxisCoordinatesSize,
+              _kRegionAxisCoordinatesSize,
+            ),
+          ),
     ];
 
     return VariationRegionList(
@@ -97,15 +104,18 @@ class VariationRegionList extends BinaryCodable {
 
   @override
   void encodeToBinary(ByteData byteData) {
-    byteData..setUint16(0, axisCount)..setUint16(2, regionCount);
+    byteData
+      ..setUint16(0, axisCount)
+      ..setUint16(2, regionCount);
 
     for (var r = 0; r < regionCount; r++) {
       for (var a = 0; a < axisCount; a++) {
         final index = r * axisCount + a;
         final coords = regions[index];
         final coordsByteData = byteData.sublistView(
-            4 + index * _kRegionAxisCoordinatesSize,
-            _kRegionAxisCoordinatesSize);
+          4 + index * _kRegionAxisCoordinatesSize,
+          _kRegionAxisCoordinatesSize,
+        );
         coords.encodeToBinary(coordsByteData);
       }
     }
@@ -117,21 +127,25 @@ class VariationRegionList extends BinaryCodable {
 
 class ItemVariationStore extends BinaryCodable {
   ItemVariationStore(
-      this.format,
-      this.variationRegionListOffset,
-      this.itemVariationDataCount,
-      this.itemVariationDataOffsets,
-      this.variationRegionList,
-      this.itemVariationDataList);
+    this.format,
+    this.variationRegionListOffset,
+    this.itemVariationDataCount,
+    this.itemVariationDataOffsets,
+    this.variationRegionList,
+    this.itemVariationDataList,
+  );
 
   factory ItemVariationStore.fromByteData(ByteData byteData) {
     final variationRegionListOffset = byteData.getUint32(2);
     final itemVariationDataCount = byteData.getUint16(6);
     final itemVariationDataOffsets = List.generate(
-        itemVariationDataCount, (i) => byteData.getUint32(8 + 4 * i));
+      itemVariationDataCount,
+      (i) => byteData.getUint32(8 + 4 * i),
+    );
 
     final variationRegionList = VariationRegionList.fromByteData(
-        byteData.sublistView(variationRegionListOffset));
+      byteData.sublistView(variationRegionListOffset),
+    );
     final itemVariationDataList = itemVariationDataOffsets
         .map((o) => ItemVariationData.fromByteData(byteData.sublistView(o)))
         .toList();
@@ -179,8 +193,12 @@ class ItemVariationStore extends BinaryCodable {
       ..setUint32(2, variationRegionListOffset)
       ..setUint16(6, itemVariationDataCount);
 
-    variationRegionList.encodeToBinary(byteData.sublistView(
-        variationRegionListOffset, variationRegionListSize));
+    variationRegionList.encodeToBinary(
+      byteData.sublistView(
+        variationRegionListOffset,
+        variationRegionListSize,
+      ),
+    );
   }
 
   int get _itemVariationSubtableListSize =>

@@ -14,25 +14,27 @@ const _kReservedValue = 0x80;
 
 class SimpleGlyphFlag implements BinaryCodable {
   SimpleGlyphFlag(
-      this.onCurvePoint,
-      this.xShortVector,
-      this.yShortVector,
-      this.repeat,
-      this.xIsSameOrPositive,
-      this.yIsSameOrPositive,
-      this.overlapSimple,
-      this.reserved);
+    this.onCurvePoint,
+    this.xShortVector,
+    this.yShortVector,
+    this.repeat,
+    this.xIsSameOrPositive,
+    this.yIsSameOrPositive,
+    this.overlapSimple,
+    this.reserved,
+  );
 
   factory SimpleGlyphFlag.fromIntValue(int flag, [int? repeatTimes]) {
     return SimpleGlyphFlag(
-        checkBitMask(flag, _kOnCurvePointValue),
-        checkBitMask(flag, _kXshortVectorValue),
-        checkBitMask(flag, _kYshortVectorValue),
-        repeatTimes,
-        checkBitMask(flag, _kXisSameValue),
-        checkBitMask(flag, _kYisSameValue),
-        checkBitMask(flag, _kOverlapSimpleValue),
-        checkBitMask(flag, _kReservedValue));
+      checkBitMask(flag, _kOnCurvePointValue),
+      checkBitMask(flag, _kXshortVectorValue),
+      checkBitMask(flag, _kYshortVectorValue),
+      repeatTimes,
+      checkBitMask(flag, _kXisSameValue),
+      checkBitMask(flag, _kYisSameValue),
+      checkBitMask(flag, _kOverlapSimpleValue),
+      checkBitMask(flag, _kReservedValue),
+    );
   }
 
   factory SimpleGlyphFlag.fromByteData(ByteData byteData, int offset) {
@@ -48,14 +50,15 @@ class SimpleGlyphFlag implements BinaryCodable {
     final yIsShort = isShortInteger(y);
 
     return SimpleGlyphFlag(
-        isOnCurve,
-        xIsShort,
-        yIsShort,
-        null,
-        xIsShort && !x.isNegative, // 1 if short and positive, 0 otherwise
-        yIsShort && !y.isNegative, // 1 if short and positive, 0 otherwise
-        false,
-        false);
+      isOnCurve,
+      xIsShort,
+      yIsShort,
+      null,
+      xIsShort && !x.isNegative, // 1 if short and positive, 0 otherwise
+      yIsShort && !y.isNegative, // 1 if short and positive, 0 otherwise
+      false,
+      false,
+    );
   }
 
   final bool onCurvePoint;

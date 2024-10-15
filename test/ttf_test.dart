@@ -4,10 +4,9 @@ import 'dart:typed_data';
 
 import 'package:fontify/src/common/generic_glyph.dart';
 import 'package:fontify/src/otf/io.dart';
+import 'package:fontify/src/otf/otf.dart';
 import 'package:fontify/src/otf/reader.dart';
 import 'package:fontify/src/otf/table/all.dart';
-import 'package:fontify/src/otf/table/hhea.dart';
-import 'package:fontify/src/otf/otf.dart';
 import 'package:fontify/src/utils/misc.dart';
 import 'package:fontify/src/utils/otf.dart';
 import 'package:test/test.dart';
@@ -94,11 +93,12 @@ void main() {
       expect(glyphCalendRainbow.header.xMax, 1000);
       expect(glyphCalendRainbow.header.yMax, 623);
       expect(
-          glyphCalendRainbow.flags
-              .sublist(0, 7)
-              .map((f) => f.onCurvePoint)
-              .toList(),
-          [true, false, true, false, true, false, false]);
+        glyphCalendRainbow.flags
+            .sublist(0, 7)
+            .map((f) => f.onCurvePoint)
+            .toList(),
+        [true, false, true, false, true, false, false],
+      );
       expect(glyphCalendRainbow.pointList.first.x, 936);
       expect(glyphCalendRainbow.pointList.last.x, 681);
       expect(glyphCalendRainbow.pointList.first.y, 110);
@@ -111,8 +111,9 @@ void main() {
       expect(glyphReport.header.xMax, 1001);
       expect(glyphReport.header.yMax, 788);
       expect(
-          glyphReport.flags.sublist(0, 7).map((f) => f.onCurvePoint).toList(),
-          [true, false, false, true, true, false, false]);
+        glyphReport.flags.sublist(0, 7).map((f) => f.onCurvePoint).toList(),
+        [true, false, false, true, true, false, false],
+      );
       expect(glyphReport.pointList.first.x, 63);
       expect(glyphReport.pointList.last.x, 563);
       expect(glyphReport.pointList.first.y, 788);
@@ -124,8 +125,10 @@ void main() {
       expect(glyphPdf.header.yMin, -88);
       expect(glyphPdf.header.xMax, 751);
       expect(glyphPdf.header.yMax, 788);
-      expect(glyphPdf.flags.sublist(0, 7).map((f) => f.onCurvePoint).toList(),
-          [true, false, false, true, true, false, false]);
+      expect(
+        glyphPdf.flags.sublist(0, 7).map((f) => f.onCurvePoint).toList(),
+        [true, false, false, true, true, false, false],
+      );
       expect(glyphPdf.pointList.first.x, 63);
       expect(glyphPdf.pointList.last.x, 448);
       expect(glyphPdf.pointList.first.y, 788);
@@ -187,8 +190,10 @@ void main() {
       final format20 = table.data as PostScriptVersion20;
       expect(format20.numberOfGlyphs, 166);
       expect(format20.glyphNameIndex, _kPOSTformat20indicies);
-      expect(format20.glyphNames.map((ps) => ps.string).toList(),
-          _kPOSTformat20names);
+      expect(
+        format20.glyphNames.map((ps) => ps.string).toList(),
+        _kPOSTformat20names,
+      );
     });
 
     test('Naming table', () {
@@ -227,22 +232,32 @@ void main() {
       expect(format4table.glyphIdArray, List.generate(165, (i) => i + 1));
       expect(format4table.idDelta, [0, 0, 0, 0, 0, 0, 0, 1]);
       expect(format4table.idRangeOffset, [16, 16, 16, 16, 16, 16, 320, 0]);
-      expect(format4table.startCode,
-          [59414, 59430, 59436, 59444, 59446, 62208, 62362, 65535]);
-      expect(format4table.endCode,
-          [59414, 59430, 59436, 59444, 59446, 62360, 62368, 65535]);
+      expect(
+        format4table.startCode,
+        [59414, 59430, 59436, 59444, 59446, 62208, 62362, 65535],
+      );
+      expect(
+        format4table.endCode,
+        [59414, 59430, 59436, 59444, 59446, 62360, 62368, 65535],
+      );
 
       final format12table = table.data[1] as CmapSegmentedCoverageTable;
       expect(format12table.format, 12);
       expect(format12table.language, 0);
       expect(format12table.numGroups, 165);
       expect(format12table.length, 1996);
-      expect(format12table.groups.map((g) => g.startCharCode).toList(),
-          _kCMAPcharCodes);
-      expect(format12table.groups.map((g) => g.endCharCode).toList(),
-          _kCMAPcharCodes);
-      expect(format12table.groups.map((g) => g.startGlyphID).toList(),
-          List.generate(165, (i) => i + 1));
+      expect(
+        format12table.groups.map((g) => g.startCharCode).toList(),
+        _kCMAPcharCodes,
+      );
+      expect(
+        format12table.groups.map((g) => g.endCharCode).toList(),
+        _kCMAPcharCodes,
+      );
+      expect(
+        format12table.groups.map((g) => g.startGlyphID).toList(),
+        List.generate(165, (i) => i + 1),
+      );
     });
 
     test('Horizontal Header table', () {
@@ -271,7 +286,9 @@ void main() {
 
       expect(table.leftSideBearings, isEmpty);
       expect(
-          table.hMetrics.map((m) => m.advanceWidth).toList(), _kHMTXadvWidth);
+        table.hMetrics.map((m) => m.advanceWidth).toList(),
+        _kHMTXadvWidth,
+      );
       expect(table.hMetrics.map((m) => m.lsb).toList(), _kHMTXlsb);
     });
 
@@ -289,7 +306,9 @@ void main() {
       expect(scriptTable.scriptTables[0].defaultLangSys?.featureIndices, [0]);
       expect(scriptTable.scriptTables[0].defaultLangSys?.lookupOrder, 0);
       expect(
-          scriptTable.scriptTables[0].defaultLangSys?.requiredFeatureIndex, 0);
+        scriptTable.scriptTables[0].defaultLangSys?.requiredFeatureIndex,
+        0,
+      );
 
       expect(scriptTable.scriptRecords[1].scriptTag, 'latn');
       expect(scriptTable.scriptTables[1].langSysCount, 0);
@@ -297,7 +316,9 @@ void main() {
       expect(scriptTable.scriptTables[1].defaultLangSys?.featureIndices, [0]);
       expect(scriptTable.scriptTables[1].defaultLangSys?.lookupOrder, 0);
       expect(
-          scriptTable.scriptTables[1].defaultLangSys?.requiredFeatureIndex, 0);
+        scriptTable.scriptTables[1].defaultLangSys?.requiredFeatureIndex,
+        0,
+      );
 
       final featureTable = table.featureListTable;
       expect(featureTable.featureCount, 1);
@@ -328,7 +349,8 @@ void main() {
   });
 
   group('Creation & Writer', () {
-    late ByteData originalByteData, recreatedByteData;
+    late ByteData originalByteData;
+    late ByteData recreatedByteData;
     late OpenTypeFont recreatedFont;
 
     setUpAll(() {
@@ -364,21 +386,33 @@ void main() {
       MockableDateTime.mockedDate = null;
     });
 
-    test('Header table', () {
-      const expected =
-          'AAEAAAABAADXpqNjXw889QALBAAAAAAA2lveGAAAAADaW94Y//X/ZwZkBAAAAAAIAAIAAAAA';
-      final actual = base64Encode(recreatedByteData.buffer.asUint8List(
-          recreatedFont.head.entry!.offset, recreatedFont.head.entry!.length));
+    test(
+      'Header table',
+      () {
+        const expected =
+            'AAEAAAABAADXpqNjXw889QALBAAAAAAA2lveGAAAAADaW94Y//X/ZwZkBAAAAAAIAAIAAAAA';
+        final actual = base64Encode(
+          recreatedByteData.buffer.asUint8List(
+            recreatedFont.head.entry!.offset,
+            recreatedFont.head.entry!.length,
+          ),
+        );
 
-      expect(actual, expected);
-      expect(recreatedFont.head.entry!.checkSum, 439353492);
-    }, skip: "Font's checksum is always changing, unskip later");
+        expect(actual, expected);
+        expect(recreatedFont.head.entry!.checkSum, 439353492);
+      },
+      skip: "Font's checksum is always changing, unskip later",
+    );
 
     test('Glyph Substitution table', () {
       const expected =
           'AAEAAAAKADAAPgACREZMVAAObGF0bgAaAAQAAAAA//8AAQAAAAQAAAAA//8AAQAAAAFsaWdhAAgAAAABAAAAAQAEAAQAAAABAAgAAQAGAAAAAQAA';
-      final actual = base64Encode(recreatedByteData.buffer.asUint8List(
-          recreatedFont.gsub.entry!.offset, recreatedFont.gsub.entry!.length));
+      final actual = base64Encode(
+        recreatedByteData.buffer.asUint8List(
+          recreatedFont.gsub.entry!.offset,
+          recreatedFont.gsub.entry!.length,
+        ),
+      );
 
       expect(actual, expected);
       expect(recreatedFont.gsub.entry!.checkSum, 546121080);
@@ -674,7 +708,7 @@ const _kPOSTformat20indicies = [
   420,
   421,
   422,
-  423
+  423,
 ];
 const _kPOSTformat20names = [
   '',
@@ -842,7 +876,7 @@ const _kPOSTformat20names = [
   'infinity',
   'mortar-board',
   'alert',
-  'file-pdf'
+  'file-pdf',
 ];
 const _kCMAPcharCodes = [
   59414,
@@ -1009,7 +1043,7 @@ const _kCMAPcharCodes = [
   62365,
   62366,
   62367,
-  62368
+  62368,
 ];
 const _kHMTXadvWidth = [
   1000,
@@ -1177,7 +1211,7 @@ const _kHMTXadvWidth = [
   1000,
   1000,
   1000,
-  750
+  750,
 ];
 const _kHMTXlsb = [
   0,
@@ -1345,5 +1379,5 @@ const _kHMTXlsb = [
   0,
   0,
   0,
-  0
+  0,
 ];

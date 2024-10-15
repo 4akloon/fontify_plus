@@ -15,8 +15,13 @@ enum FillRule { nonzero, evenodd }
 ///
 /// TODO: It's very basic class for now used for generic glyph description. Replace it with a proper Path class (like java.awt.geom.Path2D or dart:ui's Path)
 class Outline {
-  Outline(this.pointList, this.isOnCurveList, this._hasCompactCurves,
-      this._hasQuadCurves, this.fillRule);
+  Outline(
+    this.pointList,
+    this.isOnCurveList,
+    this._hasCompactCurves,
+    this._hasQuadCurves,
+    this.fillRule,
+  );
 
   final List<Point<num>> pointList;
   final List<bool> isOnCurveList;
@@ -32,8 +37,13 @@ class Outline {
 
   /// Deep copy of an outline
   Outline copy() {
-    return Outline([...pointList], [...isOnCurveList], _hasCompactCurves,
-        _hasQuadCurves, fillRule);
+    return Outline(
+      [...pointList],
+      [...isOnCurveList],
+      _hasCompactCurves,
+      _hasQuadCurves,
+      fillRule,
+    );
   }
 
   /// Decompacts implicit points of quadratic curves (midpoints and end points)

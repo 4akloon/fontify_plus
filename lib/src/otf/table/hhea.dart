@@ -10,7 +10,7 @@ const _kHheaTableSize = 36;
 
 class HorizontalHeaderTable extends FontTable {
   HorizontalHeaderTable(
-    TableRecordEntry? entry,
+    super.entry,
     this.majorVersion,
     this.minorVersion,
     this.ascender,
@@ -25,10 +25,12 @@ class HorizontalHeaderTable extends FontTable {
     this.caretOffset,
     this.metricDataFormat,
     this.numberOfHMetrics,
-  ) : super.fromTableRecordEntry(entry);
+  ) : super.fromTableRecordEntry();
 
   factory HorizontalHeaderTable.fromByteData(
-      ByteData byteData, TableRecordEntry entry) {
+    ByteData byteData,
+    TableRecordEntry entry,
+  ) {
     return HorizontalHeaderTable(
       entry,
       byteData.getUint16(entry.offset),
@@ -55,21 +57,22 @@ class HorizontalHeaderTable extends FontTable {
     int descender,
   ) {
     return HorizontalHeaderTable(
-        null,
-        1, // major version 1
-        0, // minor version 0
-        ascender,
-        descender, // descender must be negative
-        0, // 0 line gap
-        hmtx.advanceWidthMax,
-        hmtx.minLeftSideBearing,
-        hmtx.getMinRightSideBearing(glyphMetricsList),
-        hmtx.getMaxExtent(glyphMetricsList),
-        1, // caretSlopeRise - vertical
-        0, // caretSlopeRun - vertical
-        0, // non-slanted font - no offset
-        0, // 0 for current metric format
-        glyphMetricsList.length);
+      null,
+      1, // major version 1
+      0, // minor version 0
+      ascender,
+      descender, // descender must be negative
+      0, // 0 line gap
+      hmtx.advanceWidthMax,
+      hmtx.minLeftSideBearing,
+      hmtx.getMinRightSideBearing(glyphMetricsList),
+      hmtx.getMaxExtent(glyphMetricsList),
+      1, // caretSlopeRise - vertical
+      0, // caretSlopeRun - vertical
+      0, // non-slanted font - no offset
+      0, // 0 for current metric format
+      glyphMetricsList.length,
+    );
   }
 
   final int majorVersion;

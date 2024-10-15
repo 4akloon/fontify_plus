@@ -31,8 +31,7 @@ const _kMajorVersion1 = 0x0001;
 const _kMajorVersion2 = 0x0002;
 
 abstract class CFFTable extends FontTable {
-  CFFTable.fromTableRecordEntry(TableRecordEntry? entry)
-      : super.fromTableRecordEntry(entry);
+  CFFTable.fromTableRecordEntry(super.entry) : super.fromTableRecordEntry();
 
   static CFFTable? fromByteData(ByteData byteData, TableRecordEntry entry) {
     final major = byteData.getUint8(entry.offset);
@@ -44,7 +43,7 @@ abstract class CFFTable extends FontTable {
         return CFF2Table.fromByteData(byteData, entry);
     }
 
-    OTFDebugger.debugUnsupportedTableVersion('CFF', major);
+    debuggerOTF.debugUnsupportedTableVersion('CFF', major);
     return null;
   }
 
@@ -78,7 +77,10 @@ void _calculateEntryOffsets(
 
       if (oldOperand.value != newOperand.value) {
         entry.operandList.replaceRange(
-            entryOperandIndex, entryOperandIndex + 1, [newOperand]);
+          entryOperandIndex,
+          entryOperandIndex + 1,
+          [newOperand],
+        );
       }
 
       if (sizeDiff > 0) {

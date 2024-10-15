@@ -11,7 +11,10 @@ abstract class SvgElement {
       : transform = transform ?? xmlElement?.parseTransformMatrix();
 
   factory SvgElement.fromXmlElement(
-      SvgElement? parent, XmlElement element, bool ignoreShapes) {
+    SvgElement? parent,
+    XmlElement element,
+    bool ignoreShapes,
+  ) {
     switch (element.name.local) {
       case 'path':
         return PathElement.fromXmlElement(parent, element);

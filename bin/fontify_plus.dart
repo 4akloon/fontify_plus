@@ -42,17 +42,17 @@ void _run(CliArguments parsedArgs) {
   final isVerbose = parsedArgs.verbose ?? kDefaultVerbose;
 
   if (isVerbose) {
-    logger.setFilterLevel(Level.verbose);
+    logger.setFilterLevel(Level.trace);
   }
 
   if (parsedArgs.classFile?.existsSync() ?? false) {
-    logger.v(
+    logger.t(
         'Output file for a Flutter class already exists (${parsedArgs.classFile!.path}) - '
         'overwriting it');
   }
 
   if (!parsedArgs.fontFile.existsSync()) {
-    logger.v(
+    logger.t(
         'Output file for a font file already exists (${parsedArgs.fontFile.path}) - '
         'overwriting it');
   }
@@ -64,7 +64,8 @@ void _run(CliArguments parsedArgs) {
 
   if (svgFileList.isEmpty) {
     logger.w(
-        "The input directory doesn't contain any SVG file (${parsedArgs.svgDir.path}).");
+      "The input directory doesn't contain any SVG file (${parsedArgs.svgDir.path}).",
+    );
   }
 
   final svgMap = {
@@ -82,7 +83,7 @@ void _run(CliArguments parsedArgs) {
   writeToFile(parsedArgs.fontFile.path, otfResult.font);
 
   if (parsedArgs.classFile == null) {
-    logger.v('No output path for Flutter class was specified - '
+    logger.t('No output path for Flutter class was specified - '
         'skipping class generation.');
   } else {
     final fontFileName = p.basename(parsedArgs.fontFile.path);

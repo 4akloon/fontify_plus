@@ -12,12 +12,16 @@ import 'table_record_entry.dart';
 
 class GlyphDataTable extends FontTable {
   GlyphDataTable(
-    TableRecordEntry? entry,
+    super.entry,
     this.glyphList,
-  ) : super.fromTableRecordEntry(entry);
+  ) : super.fromTableRecordEntry();
 
-  factory GlyphDataTable.fromByteData(ByteData byteData, TableRecordEntry entry,
-      IndexToLocationTable locationTable, int numGlyphs) {
+  factory GlyphDataTable.fromByteData(
+    ByteData byteData,
+    TableRecordEntry entry,
+    IndexToLocationTable locationTable,
+    int numGlyphs,
+  ) {
     final glyphList = <SimpleGlyph>[];
 
     for (var i = 0; i < numGlyphs; i++) {
@@ -28,8 +32,9 @@ class GlyphDataTable extends FontTable {
       final header = GlyphHeader.fromByteData(byteData, headerOffset);
 
       if (header.isComposite) {
-        OTFDebugger.debugUnsupportedFeature(
-            'Composite glyph (glyph header offset $headerOffset)');
+        debuggerOTF.debugUnsupportedFeature(
+          'Composite glyph (glyph header offset $headerOffset)',
+        );
       } else {
         final glyph = isEmpty
             ? SimpleGlyph.empty()
@@ -49,7 +54,8 @@ class GlyphDataTable extends FontTable {
         if (!outline.hasQuadCurves) {
           // TODO: implement cubic -> quad approximation
           throw UnimplementedError(
-              'Cubic to quadratic curve conversion not supported');
+            'Cubic to quadratic curve conversion not supported',
+          );
         }
 
         outline.compactImplicitPoints();

@@ -16,7 +16,7 @@ const _kTableSizeForVersion = {
 };
 
 class MaximumProfileTable extends FontTable {
-  MaximumProfileTable.v0(TableRecordEntry? entry, this.numGlyphs)
+  MaximumProfileTable.v0(super.entry, this.numGlyphs)
       : version = _kVersion0,
         maxPoints = null,
         maxContours = null,
@@ -31,26 +31,26 @@ class MaximumProfileTable extends FontTable {
         maxSizeOfInstructions = null,
         maxComponentElements = null,
         maxComponentDepth = null,
-        super.fromTableRecordEntry(entry);
+        super.fromTableRecordEntry();
 
   MaximumProfileTable.v1(
-      TableRecordEntry? entry,
-      this.numGlyphs,
-      this.maxPoints,
-      this.maxContours,
-      this.maxCompositePoints,
-      this.maxCompositeContours,
-      this.maxZones,
-      this.maxTwilightPoints,
-      this.maxStorage,
-      this.maxFunctionDefs,
-      this.maxInstructionDefs,
-      this.maxStackElements,
-      this.maxSizeOfInstructions,
-      this.maxComponentElements,
-      this.maxComponentDepth)
-      : version = _kVersion1,
-        super.fromTableRecordEntry(entry);
+    super.entry,
+    this.numGlyphs,
+    this.maxPoints,
+    this.maxContours,
+    this.maxCompositePoints,
+    this.maxCompositeContours,
+    this.maxZones,
+    this.maxTwilightPoints,
+    this.maxStorage,
+    this.maxFunctionDefs,
+    this.maxInstructionDefs,
+    this.maxStackElements,
+    this.maxSizeOfInstructions,
+    this.maxComponentElements,
+    this.maxComponentDepth,
+  )   : version = _kVersion1,
+        super.fromTableRecordEntry();
 
   factory MaximumProfileTable.create(int numGlyphs, GlyphDataTable? glyf) {
     final isOpenType = glyf == null;
@@ -60,27 +60,30 @@ class MaximumProfileTable extends FontTable {
     }
 
     return MaximumProfileTable.v1(
-        null,
-        numGlyphs,
-        glyf!.maxPoints,
-        glyf.maxContours,
-        0, // Composite glyphs are not supported
-        0, // Composite glyphs are not supported
-        2, // The twilight zone is used
-        0, // 0 max points for the twilight zone
+      null,
+      numGlyphs,
+      glyf.maxPoints,
+      glyf.maxContours,
+      0, // Composite glyphs are not supported
+      0, // Composite glyphs are not supported
+      2, // The twilight zone is used
+      0, // 0 max points for the twilight zone
 
-        /// Constants taken from FontForge
-        1,
-        1,
-        0,
-        64,
-        glyf.maxSizeOfInstructions,
-        0,
-        0);
+      /// Constants taken from FontForge
+      1,
+      1,
+      0,
+      64,
+      glyf.maxSizeOfInstructions,
+      0,
+      0,
+    );
   }
 
   static MaximumProfileTable? fromByteData(
-      ByteData data, TableRecordEntry entry) {
+    ByteData data,
+    TableRecordEntry entry,
+  ) {
     final version = data.getInt32(entry.offset);
 
     if (version == _kVersion0) {
@@ -105,7 +108,7 @@ class MaximumProfileTable extends FontTable {
         data.getUint16(entry.offset + 30),
       );
     } else {
-      OTFDebugger.debugUnsupportedTableVersion(entry.tag, version);
+      debuggerOTF.debugUnsupportedTableVersion(entry.tag, version);
       return null;
     }
   }
@@ -151,7 +154,7 @@ class MaximumProfileTable extends FontTable {
         ..setUint16(28, maxComponentElements!)
         ..setUint16(30, maxComponentDepth!);
     } else if (version != _kVersion0) {
-      OTFDebugger.debugUnsupportedTableVersion(kMaxpTag, version);
+      debuggerOTF.debugUnsupportedTableVersion(kMaxpTag, version);
     }
   }
 

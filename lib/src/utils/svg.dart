@@ -7,8 +7,11 @@ import '../svg/transform.dart';
 import '../svg/unknown_element.dart';
 
 extension XmlElementExt on XmlElement {
-  num? getScalarAttribute(String name,
-      {String? namespace, bool zeroIfAbsent = true}) {
+  num? getScalarAttribute(
+    String name, {
+    String? namespace,
+    bool zeroIfAbsent = true,
+  }) {
     final attr = getAttribute(name, namespace: namespace);
 
     if (attr == null) {
@@ -37,7 +40,8 @@ extension XmlElementExt on XmlElement {
     if (!ignoreShapes) {
       // Converting shapes into paths
       elements = elements.map(
-          (e) => e is PathConvertible ? (e as PathConvertible).getPath() : e);
+        (e) => e is PathConvertible ? (e as PathConvertible).getPath() : e,
+      );
     }
 
     return elements.toList();

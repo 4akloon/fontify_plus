@@ -173,8 +173,12 @@ class NamingTableFormat0Header implements BinaryCodable {
   );
 
   factory NamingTableFormat0Header.create(List<NameRecord> nameRecordList) {
-    return NamingTableFormat0Header(_kFormat0, nameRecordList.length,
-        6 + nameRecordList.length * _kNameRecordSize, nameRecordList);
+    return NamingTableFormat0Header(
+      _kFormat0,
+      nameRecordList.length,
+      6 + nameRecordList.length * _kNameRecordSize,
+      nameRecordList,
+    );
   }
 
   static NamingTableFormat0Header? fromByteData(
@@ -184,16 +188,19 @@ class NamingTableFormat0Header implements BinaryCodable {
     final format = byteData.getUint16(entry.offset);
 
     if (format != _kFormat0) {
-      OTFDebugger.debugUnsupportedTableFormat(entry.tag, format);
+      debuggerOTF.debugUnsupportedTableFormat(entry.tag, format);
       return null;
     }
 
     final count = byteData.getUint16(entry.offset + 2);
     final stringOffset = byteData.getUint16(entry.offset + 4);
     final nameRecord = List.generate(
-        count,
-        (i) => NameRecord.fromByteData(
-            byteData, entry.offset + 6 + i * _kNameRecordSize));
+      count,
+      (i) => NameRecord.fromByteData(
+        byteData,
+        entry.offset + 6 + i * _kNameRecordSize,
+      ),
+    );
 
     return NamingTableFormat0Header(format, count, stringOffset, nameRecord);
   }
@@ -223,8 +230,7 @@ class NamingTableFormat0Header implements BinaryCodable {
 }
 
 abstract class NamingTable extends FontTable {
-  NamingTable.fromTableRecordEntry(TableRecordEntry? entry)
-      : super.fromTableRecordEntry(entry);
+  NamingTable.fromTableRecordEntry(super.entry) : super.fromTableRecordEntry();
 
   static NamingTable? fromByteData(ByteData byteData, TableRecordEntry entry) {
     final format = byteData.getUint16(entry.offset);
@@ -233,19 +239,22 @@ abstract class NamingTable extends FontTable {
       case _kFormat0:
         return NamingTableFormat0.fromByteData(byteData, entry);
       default:
-        OTFDebugger.debugUnsupportedTableFormat(kNameTag, format);
+        debuggerOTF.debugUnsupportedTableFormat(kNameTag, format);
         return null;
     }
   }
 
   static NamingTable? create(
-      String fontName, String? description, Revision revision,
-      {int format = _kFormat0}) {
+    String fontName,
+    String? description,
+    Revision revision, {
+    int format = _kFormat0,
+  }) {
     switch (format) {
       case _kFormat0:
         return NamingTableFormat0.create(fontName, description, revision);
       default:
-        OTFDebugger.debugUnsupportedTableFormat(kNameTag, format);
+        debuggerOTF.debugUnsupportedTableFormat(kNameTag, format);
         return null;
     }
   }
@@ -257,13 +266,16 @@ abstract class NamingTable extends FontTable {
 
 class NamingTableFormat0 extends NamingTable {
   NamingTableFormat0(
-    TableRecordEntry? entry,
+    super.entry,
     this.header,
     this.stringList,
-  ) : super.fromTableRecordEntry(entry);
+  ) : super.fromTableRecordEntry();
 
   factory NamingTableFormat0.create(
-      String fontName, String? description, Revision revision) {
+    String fontName,
+    String? description,
+    Revision revision,
+  ) {
     final now = DateTime.now();
 
     /// Values for name ids in sorted order
@@ -282,7 +294,7 @@ class NamingTableFormat0 extends NamingTable {
 
     final stringList = [
       for (var i = 0; i < _kNameRecordTemplateList.length; i++)
-        ...stringForNameMap.values
+        ...stringForNameMap.values,
     ];
 
     final recordList = <NameRecord>[];
@@ -311,7 +323,9 @@ class NamingTableFormat0 extends NamingTable {
   }
 
   static NamingTableFormat0? fromByteData(
-      ByteData byteData, TableRecordEntry entry) {
+    ByteData byteData,
+    TableRecordEntry entry,
+  ) {
     final header = NamingTableFormat0Header.fromByteData(byteData, entry);
 
     if (header == null) {
@@ -322,8 +336,12 @@ class NamingTableFormat0 extends NamingTable {
 
     final stringList = [
       for (final record in header.nameRecordList)
-        _getDecoder(record)(List.generate(record.length,
-            (i) => byteData.getUint8(storageAreaOffset + record.offset + i)))
+        _getDecoder(record)(
+          List.generate(
+            record.length,
+            (i) => byteData.getUint8(storageAreaOffset + record.offset + i),
+          ),
+        ),
     ];
 
     return NamingTableFormat0(entry, header, stringList);

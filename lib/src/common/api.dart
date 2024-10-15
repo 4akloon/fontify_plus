@@ -37,7 +37,7 @@ SvgToOtfResult svgToOtf({
 
   final svgList = [
     for (final e in svgMap.entries)
-      Svg.parse(e.key, e.value, ignoreShapes: ignoreShapes)
+      Svg.parse(e.key, e.value, ignoreShapes: ignoreShapes),
   ];
 
   if (!normalize) {

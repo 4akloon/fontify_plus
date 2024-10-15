@@ -23,7 +23,9 @@ class LongHorMetric implements BinaryCodable {
   }
 
   factory LongHorMetric.createForGlyph(
-      GenericGlyphMetrics metrics, int unitsPerEm) {
+    GenericGlyphMetrics metrics,
+    int unitsPerEm,
+  ) {
     if (metrics.width == 0) {
       return LongHorMetric(unitsPerEm ~/ 3, 0);
     }
@@ -49,28 +51,41 @@ class LongHorMetric implements BinaryCodable {
 
 class HorizontalMetricsTable extends FontTable {
   HorizontalMetricsTable(
-    TableRecordEntry? entry,
+    super.entry,
     this.hMetrics,
     this.leftSideBearings,
-  ) : super.fromTableRecordEntry(entry);
+  ) : super.fromTableRecordEntry();
 
-  factory HorizontalMetricsTable.fromByteData(ByteData byteData,
-      TableRecordEntry entry, HorizontalHeaderTable hhea, int numGlyphs) {
+  factory HorizontalMetricsTable.fromByteData(
+    ByteData byteData,
+    TableRecordEntry entry,
+    HorizontalHeaderTable hhea,
+    int numGlyphs,
+  ) {
     final hMetrics = List.generate(
-        hhea.numberOfHMetrics,
-        (i) => LongHorMetric.fromByteData(
-            byteData, entry.offset + _kLongHorMetricSize * i));
+      hhea.numberOfHMetrics,
+      (i) => LongHorMetric.fromByteData(
+        byteData,
+        entry.offset + _kLongHorMetricSize * i,
+      ),
+    );
     final offset = entry.offset + _kLongHorMetricSize * hhea.numberOfHMetrics;
-    final leftSideBearings = List.generate(numGlyphs - hhea.numberOfHMetrics,
-        (i) => byteData.getInt16(offset + 2 * i));
+    final leftSideBearings = List.generate(
+      numGlyphs - hhea.numberOfHMetrics,
+      (i) => byteData.getInt16(offset + 2 * i),
+    );
 
     return HorizontalMetricsTable(entry, hMetrics, leftSideBearings);
   }
 
   factory HorizontalMetricsTable.create(
-      List<GenericGlyphMetrics> glyphMetricsList, int unitsPerEm) {
-    final hMetrics = List.generate(glyphMetricsList.length,
-        (i) => LongHorMetric.createForGlyph(glyphMetricsList[i], unitsPerEm));
+    List<GenericGlyphMetrics> glyphMetricsList,
+    int unitsPerEm,
+  ) {
+    final hMetrics = List.generate(
+      glyphMetricsList.length,
+      (i) => LongHorMetric.createForGlyph(glyphMetricsList[i], unitsPerEm),
+    );
 
     return HorizontalMetricsTable(null, hMetrics, []);
   }

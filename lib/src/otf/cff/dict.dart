@@ -30,7 +30,9 @@ class CFFDictEntry extends BinaryCodable {
         }
 
         return CFFDictEntry(
-            operandList, CFFOperator(CFFOperatorContext.dict, b0, b1));
+          operandList,
+          CFFOperator(CFFOperatorContext.dict, b0, b1),
+        );
       } else {
         final operand = CFFOperand.fromByteData(byteData, offset, b0);
         operandList.add(operand);
@@ -62,15 +64,19 @@ class CFFDictEntry extends BinaryCodable {
       operator.size + operandList.fold<int>(0, (p, e) => p + e.size);
 
   void recalculatePointers(int operandIndex, num Function() valueCallback) {
-    int expectedOperandLength = 0, actualOperandLength;
+    int expectedOperandLength = 0;
+    int actualOperandLength;
     CFFOperand subrsOperand;
 
     do {
       expectedOperandLength++;
 
       // Filling with empty value and fixed length
-      operandList.replaceRange(operandIndex, operandIndex + 1,
-          [CFFOperand(null, expectedOperandLength)]);
+      operandList.replaceRange(
+        operandIndex,
+        operandIndex + 1,
+        [CFFOperand(null, expectedOperandLength)],
+      );
 
       // Checking that offset's byte length is the same as current operand's length
       subrsOperand = CFFOperand.fromValue(valueCallback());

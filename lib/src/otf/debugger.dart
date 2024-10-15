@@ -1,17 +1,21 @@
 import '../utils/logger.dart';
 
-class OTFDebugger {
-  static void _debug(String message) => logger.w(message);
+const debuggerOTF = OTFDebugger();
 
-  static void debugUnsupportedTable(String tableName) =>
+class OTFDebugger {
+  const OTFDebugger();
+
+  void _debug(String message) => logger.w(message);
+
+  void debugUnsupportedTable(String tableName) =>
       _debug('Unsupported table: $tableName');
 
-  static void debugUnsupportedTableVersion(String tableName, int version) =>
+  void debugUnsupportedTableVersion(String tableName, int version) =>
       _debug('Unsupported $tableName table version: $version');
 
-  static void debugUnsupportedTableFormat(String tableName, int format) =>
+  void debugUnsupportedTableFormat(String tableName, int format) =>
       _debug('Unsupported $tableName table format: $format');
 
-  static void debugUnsupportedFeature(String featureDescription) =>
+  void debugUnsupportedFeature(String featureDescription) =>
       _debug('Unsupported feature: $featureDescription');
 }

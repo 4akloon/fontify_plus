@@ -158,7 +158,9 @@ class CliArguments {
 ///
 /// Returns an instance of [CliArguments] containing all parsed data.
 Map<CliArgument, dynamic> parseArguments(
-    ArgParser argParser, List<String> args) {
+  ArgParser argParser,
+  List<String> args,
+) {
   late final ArgResults argResults;
   try {
     argResults = argParser.parse(args);
@@ -237,7 +239,7 @@ CliArguments parseArgsAndConfig(ArgParser argParser, List<String> args) {
 
   final configList = <String>[
     if (configFile is String) configFile,
-    ..._kDefaultConfigPathList
+    ..._kDefaultConfigPathList,
   ].map((e) => File(e));
 
   for (final configFile in configList) {
@@ -274,11 +276,11 @@ extension CliArgumentMapExtension on Map<CliArgument, dynamic> {
     // Validating types
     for (final e in _kArgAllowedTypes.entries) {
       final arg = e.key;
-      final argType = this[arg].runtimeType;
+      final argType = (this[arg] as Object?).runtimeType;
       final allowedTypes = e.value;
 
       if (argType != Null && !allowedTypes.contains(argType)) {
-        throw CliArgumentException("'${argumentNames[arg]}' argument\'s type "
+        throw CliArgumentException("'${argumentNames[arg]}' argument's type "
             'must be one of following: $allowedTypes, '
             "instead got '$argType'.");
       }
@@ -305,12 +307,14 @@ extension CliArgumentMapExtension on Map<CliArgument, dynamic> {
 
     if (svgDir.statSync().type != FileSystemEntityType.directory) {
       throw CliArgumentException(
-          "The input directory is not a directory or it doesn't exist.");
+        "The input directory is not a directory or it doesn't exist.",
+      );
     }
 
     if (indent != null && indent < 0) {
       throw CliArgumentException(
-          'indent must be a non-negative integer, was $indent.');
+        'indent must be a non-negative integer, was $indent.',
+      );
     }
   }
 

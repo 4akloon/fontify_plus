@@ -97,9 +97,10 @@ class CFFOperand extends BinaryCodable {
       return CFFOperand(decodeFiveByte(), 5);
     } else if (b0 == 30) {
       final startNumberOffset = offset;
-      return CFFOperand(decodeRealNumber(),
-          offset - startNumberOffset + 1 // + 1 because of byte 0
-          );
+      return CFFOperand(
+        decodeRealNumber(),
+        offset - startNumberOffset + 1, // + 1 because of byte 0
+      );
     } else if (b0 >= 32 && b0 <= 246) {
       return CFFOperand(decodeOneByte(), 1);
     } else if (b0 >= 247 && b0 <= 250) {
@@ -108,7 +109,8 @@ class CFFOperand extends BinaryCodable {
       return CFFOperand(decodeTwoByteNegative(), 2);
     } else {
       throw TableDataFormatException(
-          'Unknown operand type in CFF table (offset $offset)');
+        'Unknown operand type in CFF table (offset $offset)',
+      );
     }
   }
 
@@ -129,7 +131,7 @@ class CFFOperand extends BinaryCodable {
     var string = value.toString();
 
     // Removing integer part if it's 0
-    string = string.replaceFirst(RegExp(r'^0.'), '.');
+    string = string.replaceFirst(RegExp('^0.'), '.');
 
     // Making exponent char uppercase
     string = string.replaceFirst('e', 'E');

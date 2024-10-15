@@ -15,11 +15,11 @@ abstract class CharsetEntry implements BinaryCodable {
 
     switch (format) {
       case _kFormat1:
-        return CharsetEntryFormat1.fromByteData(byteData, glyphCount);
+        return _CharsetEntryFormat1.fromByteData(byteData, glyphCount);
       case _kFormat0:
       case _kFormat2:
       default:
-        OTFDebugger.debugUnsupportedTableFormat('charsets', format);
+        debuggerOTF.debugUnsupportedTableFormat('charsets', format);
     }
 
     return null;
@@ -28,10 +28,10 @@ abstract class CharsetEntry implements BinaryCodable {
   final int format;
 }
 
-class CharsetEntryFormat1 extends CharsetEntry {
-  CharsetEntryFormat1(int format, this.rangeList) : super(format);
+class _CharsetEntryFormat1 extends CharsetEntry {
+  _CharsetEntryFormat1(super.format, this.rangeList);
 
-  factory CharsetEntryFormat1.fromByteData(ByteData byteData, int glyphCount) {
+  factory _CharsetEntryFormat1.fromByteData(ByteData byteData, int glyphCount) {
     final rangeList = <_Range1>[];
 
     var offset = 0;
@@ -47,14 +47,15 @@ class CharsetEntryFormat1 extends CharsetEntry {
       offset += range.size;
     }
 
-    return CharsetEntryFormat1(_kFormat1, rangeList);
+    return _CharsetEntryFormat1(_kFormat1, rangeList);
   }
 
-  factory CharsetEntryFormat1.create(List<int> sIdList) {
+  factory _CharsetEntryFormat1.create(List<int> sIdList) {
     final rangeList = <_Range1>[];
 
     if (sIdList.isNotEmpty) {
-      var prevSid = sIdList.first, count = 1;
+      var prevSid = sIdList.first;
+      var count = 1;
 
       int getNleft() => count - 1;
 
@@ -78,7 +79,7 @@ class CharsetEntryFormat1 extends CharsetEntry {
       saveRange();
     }
 
-    return CharsetEntryFormat1(_kFormat1, rangeList);
+    return _CharsetEntryFormat1(_kFormat1, rangeList);
   }
 
   final List<_Range1> rangeList;
