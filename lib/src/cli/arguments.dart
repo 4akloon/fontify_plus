@@ -215,13 +215,13 @@ Map<CliArgument, dynamic>? parseConfig(String config) {
     return null;
   }
 
-  final dynamic fontify_plusYamlMap = yamlMap['fontify_plus'];
+  final dynamic fontifyYamlMap = yamlMap['fontify_plus'];
 
-  if (fontify_plusYamlMap is! YamlMap) {
+  if (fontifyYamlMap is! YamlMap) {
     return null;
   }
 
-  final entries = fontify_plusYamlMap.entries
+  final entries = fontifyYamlMap.entries
       .map(_mapConfigKeyEntry)
       .whereType<MapEntry<CliArgument, dynamic>>();
 
