@@ -121,7 +121,7 @@ It's possible to specify any other config file by using `--config-file` option.
 
 The example of API usage is located in [example folder][].
 
-[example folder]: https://github.com/westracer/fontify_plus/tree/master/example/example.dart
+[example folder]: https://github.com/4akloon/fontify_plus/tree/master/example/example.dart
 [svgToOtf]: https://pub.dev/documentation/fontify_plus/latest/fontify_plus/svgToOtf.html
 [generateFlutterClass]: https://pub.dev/documentation/fontify_plus/latest/fontify_plus/generateFlutterClass.html
 
