@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2
+
+* Remove `collection` package dependency
+
 ## 0.4.1
 
 * Remove `meta` package dependency
