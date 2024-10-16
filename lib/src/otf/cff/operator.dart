@@ -1,15 +1,12 @@
 import 'dart:typed_data';
 
-import 'package:meta/meta.dart';
-
 import '../../common/codable/binary.dart';
 import 'char_string_operator.dart';
 import 'dict_operator.dart';
 
 enum CFFOperatorContext { dict, charString }
 
-@immutable
-class CFFOperator implements BinaryCodable {
+final class CFFOperator implements BinaryCodable {
   const CFFOperator(this.context, this.b0, [this.b1])
       : intValue = b1 != null ? ((b0 << 8) | b1) : b0;
 

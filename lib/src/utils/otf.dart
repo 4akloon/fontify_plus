@@ -1,7 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:meta/meta.dart';
-
 import '../otf/table/head.dart';
 import 'misc.dart';
 
@@ -171,8 +169,7 @@ extension OTFStringExt on String {
       getAsciiPrintable().replaceAll(RegExp(r'[^\x21-\x7E]'), '');
 }
 
-@immutable
-class Revision {
+final class Revision {
   const Revision(int? major, int? minor)
       : major = major ?? 0,
         minor = minor ?? 0;
