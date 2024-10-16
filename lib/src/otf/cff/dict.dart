@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'package:collection/collection.dart';
 
 import '../../common/codable/binary.dart';
 import '../../utils/exception.dart';
@@ -120,7 +119,13 @@ class CFFDict extends BinaryCodable {
   List<CFFDictEntry> entryList;
 
   CFFDictEntry? getEntryForOperator(CFFOperator operator) {
-    return entryList.firstWhereOrNull((e) => e.operator == operator);
+    for (final e in entryList) {
+      if (e.operator == operator) {
+        return e;
+      }
+    }
+
+    return null;
   }
 
   @override
