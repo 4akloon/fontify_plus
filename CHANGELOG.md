@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+* Remove `meta` package dependency
+
 ## 0.4.0
 
 * Update Dart SDK constraint to `>=3.0.0 <4.0.0`
