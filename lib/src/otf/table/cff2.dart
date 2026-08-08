@@ -48,6 +48,13 @@ class CFF2Table extends CFFTable implements CalculatableOffsets {
   int get _localSubrsListSize =>
       localSubrsDataList.fold(0, (p, d) => p + d.size);
 
+  /// NOTE: a single call leaves fontDictList's own INDEX stale. It measures
+  /// each Font DICT's size before [_recalculateCFF2FontDictOffsets] (below)
+  /// fills that DICT's Private entry in with its real operands, so the INDEX
+  /// is sized against the bare, pre-growth DICT. [CFF2Table.create] calls
+  /// this twice for exactly that reason — the second pass sees the grown
+  /// DICTs and is stable from there. Call it at least twice before encoding
+  /// a table built any other way.
   @override
   void recalculateOffsets() {
     _recalculateCFF2TopDictOffsets(this);

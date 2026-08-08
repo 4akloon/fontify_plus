@@ -20,7 +20,7 @@ CFF2Table _buildCFF2Table(List<GenericGlyph> glyphList) {
     return byteData.buffer.asUint8List();
   }).toList();
 
-  return CFF2Table(
+  final table = CFF2Table(
     null,
     CFF2TableHeader.create(),
     CFFDict.empty(),
@@ -36,5 +36,18 @@ CFF2Table _buildCFF2Table(List<GenericGlyph> glyphList) {
     // A Private DICT is required, but can be empty
     [CFFDict([])],
     <CFFIndexWithData<Uint8List>>[],
-  )..recalculateOffsets();
+  );
+
+  // The first pass fills each Font DICT's Private entry in with its real
+  // operands (offset and size), growing it from the bare operator it started
+  // as. fontDictList's own INDEX is recalculated earlier in that same pass,
+  // against the pre-growth size, so it comes out stale. A second pass sees
+  // the already-grown Font DICTs and recalculates fontDictList's INDEX
+  // against their real size instead — stable from there on, so exactly two
+  // calls are what a correctly-encodable table needs, not one.
+  table
+    ..recalculateOffsets()
+    ..recalculateOffsets();
+
+  return table;
 }
