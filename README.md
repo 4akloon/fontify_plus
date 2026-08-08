@@ -144,10 +144,14 @@ hairline thin in naive converters.
 
 fontify_plus computes the area the stroke covers and fills that instead,
 honouring `stroke-width`, `stroke-linecap`, `stroke-linejoin`,
-`stroke-miterlimit`, `stroke-dasharray` and `stroke-dashoffset`, including
-values inherited from an ancestor `<g>`. A dashed stroke is cut into its dashes
-and each dash is outlined separately. No preparation is needed — export from
-Figma and convert.
+`stroke-miterlimit` and `stroke-dasharray`, including values inherited from an
+ancestor `<g>`. A dashed stroke is cut into its dashes and each dash is
+outlined separately. No preparation is needed — export from Figma and convert.
+
+`stroke-dashoffset` is parsed but has no effect: `vector_graphics_compiler`
+drops it before fontify_plus sees the path, so the dash pattern always starts
+at the beginning of the path regardless of the value. See
+[doc/figma-export.md](doc/figma-export.md) for this and other limitations.
 
 Pass `--no-outline-strokes` to disable it and treat path data as fill geometry,
 as older versions did.

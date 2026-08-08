@@ -121,11 +121,14 @@ shrinks proportionally. Uniform frame sizes fix this.
 
 ## Limitations
 
-fontify_plus models stroke geometry, not stroke *painting*. `stroke-dasharray` /
-`stroke-dashoffset` are honoured — the stroke is cut into dashes and each dash is
-outlined as its own contour. The following are not supported, and an icon using
-them should be outlined in Figma before export:
+fontify_plus models stroke geometry, not stroke *painting*. `stroke-dasharray`
+is honoured — the stroke is cut into dashes and each dash is outlined as its
+own contour. The following are not supported, and an icon using them should be
+outlined in Figma before export:
 
+- `stroke-dashoffset` — parsed but then dropped by `vector_graphics_compiler`
+  before fontify_plus ever sees it, not by this package. The dash pattern
+  always starts at the beginning of the path regardless of the value.
 - Non-scaling strokes (`vector-effect="non-scaling-stroke"`).
 - Gradients, patterns and opacity. A glyph is a single-colour region; colour
   comes from Flutter at render time.
