@@ -86,6 +86,12 @@ List<Outline> outlinesFromContours(
         ..addOffCurve(segment.p2.x, segment.p2.y)
         ..addOnCurve(segment.p3.x, segment.p3.y);
     }
+
+    // The outliner closes a ring by joining its last segment back to the
+    // first, so the final point repeats the start. A contour's closing
+    // segment is implicit: keeping the repeat costs a point in every stroked
+    // contour and would not match what `outlinesFromCommands` emits for `Z`.
+    accumulator.dropRepeatedStart();
   }
 
   return accumulator.finish();
@@ -145,6 +151,25 @@ class _ContourAccumulator {
 
     _points.clear();
     _isOnCurve.clear();
+  }
+
+  /// Drops the open contour's last point when it repeats the first.
+  ///
+  /// Only an on-curve point is a candidate: an off-curve control that happens
+  /// to land on the start is a real control point, not a closing repeat.
+  void dropRepeatedStart() {
+    if (_points.length < 2 || !_isOnCurve.last) {
+      return;
+    }
+
+    final first = _points.first;
+    final last = _points.last;
+
+    if ((first.x - last.x).abs() <= kPointEpsilon &&
+        (first.y - last.y).abs() <= kPointEpsilon) {
+      _points.removeLast();
+      _isOnCurve.removeLast();
+    }
   }
 
   /// Flushes whatever is open and returns every contour collected.
