@@ -37,6 +37,7 @@ void main() {
     });
 
     test('is not equal to an unrelated type', () {
+      // ignore: unrelated_type_equality_checks
       expect(const Revision(1, 0) == 'not a revision', isFalse);
     });
   });
