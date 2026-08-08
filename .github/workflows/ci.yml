@@ -14,9 +14,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 3.5 is the package's declared floor; stable catches new lints and
+        # 3.10 is the package's declared floor; stable catches new lints and
         # deprecations before they reach users.
-        sdk: ['3.5', stable]
+        sdk: ['3.10', stable]
 
     steps:
       - uses: actions/checkout@v5

@@ -1,6 +1,9 @@
 # Changelog
 
-## 0.6.0
+## 0.5.0
+
+**This release fixes a bug that made every 0.4.x version unable to produce a
+font at all.** If you are on 0.4.x, upgrade.
 
 SVG parsing now goes through `package:vector_graphics_compiler` instead of a
 hand-written reader. This fixes several classes of icon that previously came out
@@ -10,44 +13,24 @@ blank or wrong, and removes a net 496 lines from `lib` and `bin` (602 added,
 ### Breaking
 
 * Minimum Dart SDK is now 3.10.
+* `normalize` now defaults to false. Normalization scales each glyph until its
+  own longest side fills the em square, which discards how much of its artboard
+  an icon was drawn to occupy: a full-bleed circle is shrunk and a small arrow
+  is blown up until they match, so the arrow can end up larger than the circle.
+  With it off the artboard maps onto the em square directly and
+  `Icon(..., size: n)` covers the same area as the SVG at the same size. Pass
+  `--normalize` for icons collected from sources whose viewBoxes disagree.
 * The `ignoreShapes` option is gone from `svgToOtf`, the `--ignore-shapes` flag
   and the `ignore_shapes` config key. Shape elements are always converted to
   paths; the parser no longer records which element a path came from.
+* The generated class is now `abstract final` rather than a plain class with a
+  private constructor. It states the intent directly — a namespace of constants
+  that can be neither instantiated nor extended — and drops the unused
+  constructor.
 * The `Svg` class and the rest of the SVG element tree are no longer exported.
   Use `svgToOtf`, or `GenericGlyph.fromSvg(name, xmlString)`.
 * A `viewBox` with fewer than four numbers is now rejected instead of being
   left-padded with zeroes.
-
-### Fixed
-
-* Read presentation properties from a `style` attribute. An icon written as
-  `style="fill:none;stroke:#000;stroke-width:1.5"` — the shape Illustrator and
-  some Figma exports produce — previously lost its stroke entirely and rendered
-  blank.
-* Expand `<use>`, `<defs>` and `<symbol>` instead of discarding them.
-* Accept an SVG with `width`/`height` and no `viewBox`, and a `viewBox` with a
-  non-zero minimum.
-* Accept `width="100%"`.
-* Stop a `<clipPath>`'s own shape from being drawn as part of the icon.
-
-### Changed
-
-* A path with `fill="none"` and no stroke is dropped rather than filled.
-* `stroke-dasharray` is now honoured: each dash is outlined separately.
-* Contours produced by stroke outlining always use the nonzero fill rule. An
-  `evenodd` value on a stroked path used to punch holes through its own stroke.
-* A stroke-derived contour closed by a straight line no longer repeats its start
-  point, which every such contour used to carry. A contour closed by a curve still
-  carries it, and must: CFF closes a charstring path with a straight line, so a
-  curve's end point cannot be left implicit. Glyphs shift by a few bytes either way
-  as a result; round-capped icons grow slightly, everything else shrinks.
-* `clip-path`, `<text>` and `<image>` remain unsupported, but now log a warning
-  naming the icon instead of being dropped silently.
-
-## 0.5.0
-
-**This release fixes a bug that made every 0.4.x version unable to produce a
-font at all.** If you are on 0.4.x, upgrade.
 
 ### Fixed
 
@@ -59,8 +42,20 @@ font at all.** If you are on 0.4.x, upgrade.
 * Fix `moveTo` not starting a new subpath when converting paths to outlines. A
   path such as `M8 2V13 M13 8H2` — two separate strokes, no `Z` — was
   accumulated into a single contour and rendered as one zigzag.
-* Preserve the source element when converting shapes to paths, so attributes on
-  a `<circle>` or `<rect>` are no longer lost.
+* Fix glyph normalization scaling to `ascender + descender` instead of the span
+  between them. With the default metrics that is 700 units rather than 1000, so
+  every normalized glyph came out at 70% of the size it asked for. (The same sum
+  is correct a few lines away in `center`, where it is the band's midpoint
+  rather than its height.)
+* Read presentation properties from a `style` attribute. An icon written as
+  `style="fill:none;stroke:#000;stroke-width:1.5"` — the shape Illustrator and
+  some Figma exports produce — previously lost its stroke entirely and rendered
+  blank.
+* Expand `<use>`, `<defs>` and `<symbol>` instead of discarding them.
+* Accept an SVG with `width`/`height` and no `viewBox`, and a `viewBox` with a
+  non-zero minimum.
+* Accept `width="100%"`.
+* Stop a `<clipPath>`'s own shape from being drawn as part of the icon.
 
 ### Added
 
@@ -88,40 +83,21 @@ font at all.** If you are on 0.4.x, upgrade.
   tighter than the stroke is wide — the true offset grows a cusp that no curve
   tracks. Those are detected and approximated in one step; the nonzero winding
   rule absorbs the small overlap.
-* `CONTRIBUTING.md`, CI across Dart 3.5 and stable, and automated publishing.
-
-* Fix glyph normalization scaling to `ascender + descender` instead of the span
-  between them. With the default metrics that is 700 units rather than 1000, so
-  every normalized glyph came out at 70% of the size it asked for. (The same sum
-  is correct a few lines away in `center`, where it is the band's midpoint
-  rather than its height.)
+* `CONTRIBUTING.md`, CI across Dart 3.10 and stable, and automated publishing.
 
 ### Changed
 
-* **Breaking:** `normalize` now defaults to false. Normalization scales each
-  glyph until its own longest side fills the em square, which discards how much
-  of its artboard an icon was drawn to occupy: a full-bleed circle is shrunk and
-  a small arrow is blown up until they match, so the arrow can end up larger
-  than the circle. With it off the artboard maps onto the em square directly and
-  `Icon(..., size: n)` covers the same area as the SVG at the same size. Pass
-  `--normalize` for icons collected from sources whose viewBoxes disagree.
-* **Breaking:** `ignoreShapes` now defaults to false, so `<circle>`, `<rect>`,
-  `<line>`, `<polyline>` and `<polygon>` are converted to paths instead of being
-  silently discarded. Pass `--ignore-shapes` for the old behaviour.
-* **Breaking:** the generated class is now `abstract final` rather than a plain
-  class with a private constructor. It states the intent directly — a namespace
-  of constants that can be neither instantiated nor extended — and drops the
-  unused constructor.
-* **Breaking:** minimum Dart SDK is now 3.5.
-* Upgrade all dependencies, including `xml` 6 to 7.
+* A path with `fill="none"` and no stroke is dropped rather than filled.
+* `stroke-dasharray` is now honoured: each dash is outlined separately.
+* `clip-path`, `<text>` and `<image>` remain unsupported, but now log a warning
+  naming the icon instead of being dropped silently.
 * Drop the `recase` and `logger` dependencies. `recase` was pulled in for one
   call; `logger` for four lines of levelled output. Both are now a few lines of
   local code, which also removes their transitive `clock` and `meta`.
 * Restructure the source into one responsibility per file. Stroke outlining,
   Bézier geometry, CFF, the OTF tables and the CLI each became a directory of
   focused files rather than one large one; existing import paths still work
-  through barrel files. Behaviour is unchanged — the generated font is
-  byte-for-byte identical.
+  through barrel files.
 * Remove the CFF charstring interpreter's read path. It was unreachable, and it
   did not advance the read offset past multi-byte operands, so it would have
   misparsed any charstring it was pointed at. `CharStringInterpreter` is now
