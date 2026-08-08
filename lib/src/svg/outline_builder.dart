@@ -171,6 +171,17 @@ class _ContourAccumulator {
       return;
     }
 
+    // Only a contour closed by a straight line may leave its last point
+    // implicit. CFF closes a charstring path with a straight line, so when the
+    // closing segment is a curve its end point has to be written down. The
+    // charstring encoder needs it for a second reason too: it walks one flat
+    // point list across every contour and reads one flag past each curve's
+    // start, so a contour ending off-curve either runs off the end or steals
+    // the next contour's first point.
+    if (!_isOnCurve[_points.length - 2]) {
+      return;
+    }
+
     final first = _points.first;
     final last = _points.last;
 

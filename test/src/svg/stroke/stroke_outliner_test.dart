@@ -1,38 +1,39 @@
 import 'dart:math' as math;
 
+import 'package:fontify_plus/src/svg/geometry/cubic.dart';
 import 'package:fontify_plus/src/svg/stroke/stroke_outliner.dart';
 import 'package:fontify_plus/src/svg/stroke/stroke_properties.dart';
 import 'package:test/test.dart';
+import 'package:vector_graphics_compiler/vector_graphics_compiler.dart' as vg;
 
 import 'contour_reader.dart';
 
 /// Outlines [pathData] as a one-liner, which is all these tests need of
 /// [StrokeOutliner].
-String? outlineStrokeToPathData(String pathData, StrokeProperties stroke) =>
-    StrokeOutliner(stroke).outline(pathData);
+List<List<Cubic>> outlineStroke(String pathData, StrokeProperties stroke) =>
+    StrokeOutliner(stroke).outline(vg.parseSvgPathData(pathData).commands);
 
 void main() {
   group('outlineStrokeToPathData', () {
     test('gives a straight stroke the area of its bounding rectangle', () {
       // A 10-long, 2-wide butt-capped stroke covers exactly 20 square units.
-      final outlined = outlineStrokeToPathData('M0 0H10', kStroke);
+      final outlined = outlineStroke('M0 0H10', kStroke);
 
-      expect(outlined, isNotNull);
-      expect(totalArea(outlined!), closeTo(20, 0.01));
+      expect(totalArea(outlined), closeTo(20, 0.01));
     });
 
     test('extends a square cap by half the stroke width at each end', () {
-      final outlined = outlineStrokeToPathData(
+      final outlined = outlineStroke(
         'M0 0H10',
         const StrokeProperties(width: 2, cap: LineCap.square),
       );
 
       // 10 + 1 + 1 long, 2 wide.
-      expect(totalArea(outlined!), closeTo(24, 0.01));
+      expect(totalArea(outlined), closeTo(24, 0.01));
     });
 
     test('adds a half disc at each end for a round cap', () {
-      final outlined = outlineStrokeToPathData(
+      final outlined = outlineStroke(
         'M0 0H10',
         const StrokeProperties(width: 2, cap: LineCap.round),
       );
@@ -46,19 +47,19 @@ void main() {
       const body = 20.0;
       const disc = math.pi;
 
-      expect(totalArea(outlined!), lessThanOrEqualTo(body + disc));
+      expect(totalArea(outlined), lessThanOrEqualTo(body + disc));
       expect(totalArea(outlined), greaterThan(body + disc * 0.95));
     });
 
     test('produces a hollow ring for a closed stroke', () {
       // A stroked 10x10 square: two contours, wound opposite so the nonzero
       // rule leaves the interior empty.
-      final outlined = outlineStrokeToPathData(
+      final outlined = outlineStroke(
         'M0 0H10V10H0Z',
         const StrokeProperties(width: 2, join: LineJoin.miter),
       );
 
-      final parsed = contours(outlined!);
+      final parsed = flatten(outlined);
       expect(parsed, hasLength(2));
 
       final areas = parsed.map(signedArea).toList();
@@ -76,13 +77,13 @@ void main() {
     test('keeps crossing subpaths as separate contours', () {
       // A plus sign: two strokes that cross. They must not be spliced into one
       // contour, and the nonzero rule merges them where they overlap.
-      final outlined = outlineStrokeToPathData('M5 0V10M0 5H10', kStroke);
+      final outlined = outlineStroke('M5 0V10M0 5H10', kStroke);
 
-      expect(contours(outlined!), hasLength(2));
+      expect(flatten(outlined), hasLength(2));
     });
 
-    test('returns null when there is nothing to stroke', () {
-      expect(outlineStrokeToPathData('', kStroke), isNull);
+    test('returns nothing when there is nothing to stroke', () {
+      expect(outlineStroke('', kStroke), isEmpty);
     });
 
     test('falls back to a bevel past the miter limit', () {
@@ -91,40 +92,42 @@ void main() {
       // generous one.
       const path = 'M0 0L10 0L0 0.5';
 
-      final clipped = outlineStrokeToPathData(
+      final clipped = outlineStroke(
         path,
         const StrokeProperties(width: 2, miterLimit: 1),
       );
-      final spiked = outlineStrokeToPathData(
+      final spiked = outlineStroke(
         path,
         const StrokeProperties(width: 2, miterLimit: 100),
       );
 
-      expect(totalArea(clipped!), lessThan(totalArea(spiked!)));
+      expect(totalArea(clipped), lessThan(totalArea(spiked)));
     });
 
     test('emits curves rather than a dense polyline', () {
-      // Offsetting only works on line segments, so the outline is built as a
-      // flattened polyline and then refitted. Shipping the polyline verbatim
-      // would cost dozens of commands per icon for no extra accuracy.
-      final outlined = outlineStrokeToPathData('M0 0C0 5 10 5 10 0', kStroke)!;
+      // Offsetting a cubic directly keeps the result on the order of the
+      // source curve. Flattening and refitting would cost dozens of points
+      // per icon for no extra accuracy.
+      final outlined = outlineStroke('M0 0C0 5 10 5 10 0', kStroke);
 
-      expect(outlined, contains('C'));
-      // The flattened polyline behind this outline runs to several hundred
-      // points; refitting has to bring it back to the order of the curve.
       expect(
-        commandCount(outlined),
-        lessThan(30),
-        reason: 'a refitted curve should need far fewer commands than samples',
+        outlined.single.any((s) => s.p1 != s.p0 || s.p2 != s.p3),
+        isTrue,
+        reason: 'the outline should hold curves, not only straight segments',
+      );
+      expect(
+        pointCount(outlined),
+        lessThan(90),
+        reason: 'an offset curve should need far fewer points than samples',
       );
     });
 
     test('stays accurate after refitting', () {
       // Compactness is only worth having if the shape survives it. A stroke of
       // width 2 along a curve of arc length L covers about 2L.
-      final outlined = outlineStrokeToPathData('M0 0C0 5 10 5 10 0', kStroke)!;
+      final outlined = outlineStroke('M0 0C0 5 10 5 10 0', kStroke);
 
-      final contour = contours(outlined).single;
+      final contour = flatten(outlined).single;
       final xs = contour.map((p) => p[0]);
       final ys = contour.map((p) => p[1]);
 
@@ -142,12 +145,12 @@ void main() {
       // Curve fitting is smooth by construction, so a corner survives only if
       // the outliner marks it and the run is cut there. If that breaks, the
       // sharp tip is quietly rounded away.
-      final outlined = outlineStrokeToPathData(
+      final outlined = outlineStroke(
         'M0 0L10 0L10 10',
         const StrokeProperties(width: 2, miterLimit: 10),
-      )!;
+      );
 
-      final contour = contours(outlined).single;
+      final contour = flatten(outlined).single;
 
       // The outer miter tip of a right angle sits at (11, -1).
       final reachesTip = contour.any(
@@ -158,10 +161,10 @@ void main() {
     });
 
     test('keeps a square cap sharp through refitting', () {
-      final outlined = outlineStrokeToPathData(
+      final outlined = outlineStroke(
         'M0 0H10',
         const StrokeProperties(width: 2, cap: LineCap.square),
-      )!;
+      );
 
       // Square caps are four right angles; rounding any of them loses area.
       expect(totalArea(outlined), closeTo(24, 0.01));

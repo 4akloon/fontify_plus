@@ -5,21 +5,20 @@ import 'package:fontify_plus/src/common/outline.dart';
 import 'package:fontify_plus/src/otf/table/glyph/flag.dart';
 import 'package:fontify_plus/src/otf/table/glyph/header.dart';
 import 'package:fontify_plus/src/otf/table/glyph/simple.dart';
-import 'package:fontify_plus/src/svg/svg.dart';
 import 'package:test/test.dart';
 
 /// A single triangular contour, all on-curve.
 SimpleGlyph triangleGlyph() => SimpleGlyph(
-      GlyphHeader(1, 0, 0, 10, 10),
-      [2],
-      [],
-      [
-        SimpleGlyphFlag.createForPoint(0, 0, true),
-        SimpleGlyphFlag.createForPoint(10, 0, true),
-        SimpleGlyphFlag.createForPoint(10, 10, true),
-      ],
-      [const Point(0, 0), const Point(10, 0), const Point(10, 10)],
-    );
+  GlyphHeader(1, 0, 0, 10, 10),
+  [2],
+  [],
+  [
+    SimpleGlyphFlag.createForPoint(0, 0, true),
+    SimpleGlyphFlag.createForPoint(10, 0, true),
+    SimpleGlyphFlag.createForPoint(10, 10, true),
+  ],
+  [const Point(0, 0), const Point(10, 0), const Point(10, 10)],
+);
 
 void main() {
   group('GenericGlyph constructors', () {
@@ -77,40 +76,88 @@ void main() {
   });
 
   group('GenericGlyph.fromSvg', () {
-    test('converts every path into outlines', () {
-      final svg = Svg.parse(
-        'icon',
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
-            '<path d="M0 0 L1 0 L1 1 Z"/>'
-            '<path d="M5 5 L6 5 L6 6 Z"/></svg>',
-        outlineStrokes: false,
+    // The exact shape Figma exports for outline-style icon sets, and the
+    // reason such icons used to come out blank.
+    const strokedPlus =
+        '<svg viewBox="0 0 16 16" fill="none">'
+        '<path d="M8 2.66667V13.3333M13.3333 8H2.66666" stroke="#000" '
+        'stroke-width="1.33" stroke-linecap="round"/></svg>';
+
+    double areaOf(GenericGlyph glyph) {
+      var total = 0.0;
+
+      for (final outline in glyph.outlines) {
+        final points = outline.pointList;
+        var acc = 0.0;
+
+        for (var i = 0; i < points.length; i++) {
+          final a = points[i];
+          final b = points[(i + 1) % points.length];
+          acc += a.x * b.y - b.x * a.y;
+        }
+
+        total += (acc / 2).abs();
+      }
+
+      return total;
+    }
+
+    test('turns a stroked icon into fillable outlines', () {
+      final glyph = GenericGlyph.fromSvg('plus', strokedPlus);
+
+      expect(glyph.outlines, isNotEmpty);
+      expect(
+        areaOf(glyph),
+        greaterThan(1),
+        reason: 'a stroked icon must enclose area',
       );
-
-      final glyph = GenericGlyph.fromSvg(svg);
-
-      expect(glyph.outlines, hasLength(2));
     });
 
-    test('takes its name from the SVG', () {
-      final svg = Svg.parse(
-        'arrow-up',
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
-            '<path d="M0 0 L1 0 L1 1 Z"/></svg>',
+    test('leaves a zero-area centreline when outlineStrokes is false', () {
+      final glyph = GenericGlyph.fromSvg(
+        'plus',
+        strokedPlus,
         outlineStrokes: false,
       );
 
-      expect(GenericGlyph.fromSvg(svg).metadata.name, 'arrow-up');
+      expect(
+        areaOf(glyph),
+        closeTo(0, 0.001),
+        reason: 'the unconverted centreline is what made icons render blank',
+      );
     });
 
-    test('takes its bounds from the viewBox', () {
-      final svg = Svg.parse(
-        'icon',
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-            '<path d="M0 0 L1 0 L1 1 Z"/></svg>',
-        outlineStrokes: false,
+    test('keeps the fill of a path that is both filled and stroked', () {
+      final glyph = GenericGlyph.fromSvg(
+        'both',
+        '<svg viewBox="0 0 16 16">'
+            '<path d="M2 2H10V10H2Z" fill="#000" stroke="#000" '
+            'stroke-width="2"/></svg>',
       );
 
-      expect(GenericGlyph.fromSvg(svg).bounds.width, 24);
+      // The original filled contour plus the two walls of the stroked ring.
+      expect(glyph.outlines.length, greaterThanOrEqualTo(3));
+    });
+
+    test('takes its bounds from the viewport', () {
+      final glyph = GenericGlyph.fromSvg(
+        'box',
+        '<svg viewBox="0 0 16 32"><path d="M0 0H16V32H0Z" fill="#000"/></svg>',
+      );
+
+      expect(glyph.bounds.left, 0);
+      expect(glyph.bounds.top, 0);
+      expect(glyph.bounds.width, 16);
+      expect(glyph.bounds.height, 32);
+    });
+
+    test('records the name in its metadata', () {
+      final glyph = GenericGlyph.fromSvg(
+        'arrow_up',
+        '<svg viewBox="0 0 16 16"><path d="M0 0H16V16H0Z"/></svg>',
+      );
+
+      expect(glyph.metadata.name, 'arrow_up');
     });
   });
 
@@ -193,7 +240,10 @@ void main() {
 
     test('produces an independent metadata object', () {
       final original = GenericGlyph(
-          [], const Rectangle(0, 0, 0, 0), GenericGlyphMetadata(name: 'a'));
+        [],
+        const Rectangle(0, 0, 0, 0),
+        GenericGlyphMetadata(name: 'a'),
+      );
       final copy = original.copy();
 
       copy.metadata.name = 'b';

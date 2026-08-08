@@ -55,6 +55,16 @@ extension GlyphCharStringEncoding on GenericGlyph {
         throw UnsupportedError('CharString outlines must contain cubic curves');
       }
 
+      // The encoder below reads one flag past each curve's start, so a contour
+      // ending off-curve runs off the point list or steals the next contour's
+      // first point. CFF also closes a path with a straight line, so a curve's
+      // end point can never be left implicit.
+      if (outline.isOnCurveList.isNotEmpty && !outline.isOnCurveList.last) {
+        throw UnsupportedError(
+          'CharString contours must end with an on-curve point',
+        );
+      }
+
       if (outline.fillRule == FillRule.evenodd) {
         logger.logOnce(
           Level.warning,

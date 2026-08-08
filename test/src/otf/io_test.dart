@@ -4,18 +4,17 @@ import 'dart:io';
 import 'package:fontify_plus/src/common/generic_glyph.dart';
 import 'package:fontify_plus/src/otf/io.dart';
 import 'package:fontify_plus/src/otf/otf.dart';
-import 'package:fontify_plus/src/svg/svg.dart';
 import 'package:test/test.dart';
 
 OpenTypeFont _buildFont() {
-  final svg = Svg.parse(
+  final glyph = GenericGlyph.fromSvg(
     'icon',
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
         '<path d="M0 0 L10 0 L10 10 Z"/></svg>',
   );
 
   return OpenTypeFont.createFromGlyphs(
-    glyphList: [GenericGlyph.fromSvg(svg)],
+    glyphList: [glyph],
     fontName: 'Test',
     useOpenType: true,
   );
@@ -45,20 +44,21 @@ void main() {
     });
 
     test(
-        'warns when an OpenType (CFF) font is written without an .otf extension',
-        () {
-      final font = _buildFont();
-      final path = '${tempDir.path}/test.ttf';
+      'warns when an OpenType (CFF) font is written without an .otf extension',
+      () {
+        final font = _buildFont();
+        final path = '${tempDir.path}/test.ttf';
 
-      final printLines = <String>[];
-      runZoned(
-        () => writeToFile(path, font),
-        zoneSpecification: ZoneSpecification(
-          print: (self, parent, zone, line) => printLines.add(line),
-        ),
-      );
+        final printLines = <String>[];
+        runZoned(
+          () => writeToFile(path, font),
+          zoneSpecification: ZoneSpecification(
+            print: (self, parent, zone, line) => printLines.add(line),
+          ),
+        );
 
-      expect(printLines, isNotEmpty);
-    });
+        expect(printLines, isNotEmpty);
+      },
+    );
   });
 }

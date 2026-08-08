@@ -190,9 +190,11 @@ void main() {
       expect(outline.isOnCurveList, [true, false, false, true]);
     });
 
-    test('keeps a ring whose final segment is a curve', () {
-      // The shape the dropped repeat produces most often: the contour ends
-      // off-curve, because the closing on-curve point was the repeat.
+    test('keeps the repeat when the closing segment is a curve', () {
+      // A curve's end point cannot be left implicit: CFF closes a charstring
+      // path with a straight line, and the charstring encoder requires every
+      // contour to end on-curve because it reads one flag past each curve's
+      // start. So this repeat is not ballast — it is the curve's end point.
       final closingCurve = Cubic(
         Vector2(10, 0),
         Vector2(10, 5),
@@ -203,8 +205,23 @@ void main() {
         [line(0, 0, 10, 0), closingCurve],
       ]).single;
 
-      expect(outline.isOnCurveList, [true, true, false, false]);
-      expect(outline.pointList, hasLength(4));
+      expect(outline.isOnCurveList, [true, true, false, false, true]);
+      expect(outline.pointList, hasLength(5));
+    });
+
+    test('every contour ends on-curve', () {
+      // The invariant the charstring encoder depends on, pinned directly.
+      final contours = [
+        [line(0, 0, 1, 0), line(1, 0, 1, 1), line(1, 1, 0, 0)],
+        [
+          line(0, 0, 10, 0),
+          Cubic(Vector2(10, 0), Vector2(10, 5), Vector2(0, 5), Vector2(0, 0)),
+        ],
+      ];
+
+      for (final outline in outlinesFromContours(contours, height: 10)) {
+        expect(outline.isOnCurveList.last, isTrue);
+      }
     });
 
     test('keeps a two-point contour rather than collapsing it to one', () {

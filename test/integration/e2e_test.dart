@@ -5,7 +5,6 @@ import 'package:fontify_plus/src/otf/otf.dart';
 import 'package:fontify_plus/src/otf/reader.dart';
 import 'package:fontify_plus/src/otf/table/cmap.dart';
 import 'package:fontify_plus/src/otf/writer.dart';
-import 'package:fontify_plus/src/svg/svg.dart';
 import 'package:test/test.dart';
 
 /// A stroked icon: two crossing open subpaths, `fill="none"`.
@@ -24,20 +23,9 @@ const _filledSquare = '''
 </svg>
 ''';
 
-/// A shape element rather than a `<path>`, to cover the shape-conversion path.
-const _circleShape = '''
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-<circle cx="8" cy="8" r="6" fill="#000" />
-</svg>
-''';
-
-OpenTypeFont _buildFont(Map<String, String> svgMap,
-    {bool ignoreShapes = true}) {
+OpenTypeFont _buildFont(Map<String, String> svgMap) {
   final glyphList = [
-    for (final e in svgMap.entries)
-      GenericGlyph.fromSvg(
-        Svg.parse(e.key, e.value, ignoreShapes: ignoreShapes),
-      ),
+    for (final e in svgMap.entries) GenericGlyph.fromSvg(e.key, e.value),
   ];
 
   return OpenTypeFont.createFromGlyphs(
@@ -95,8 +83,8 @@ void main() {
 
       final reread = _roundTrip(font);
 
-      final segmentTables =
-          reread.cmap.data.whereType<CmapSegmentMappingToDeltaValuesTable>();
+      final segmentTables = reread.cmap.data
+          .whereType<CmapSegmentMappingToDeltaValuesTable>();
       expect(segmentTables, isNotEmpty, reason: 'expected a format 4 subtable');
 
       // Every mapped character code across the format 4 segments.
@@ -140,28 +128,6 @@ void main() {
 
       expect(reread.maxp.numGlyphs, font.maxp.numGlyphs);
       expect(reread.maxp.numGlyphs, greaterThanOrEqualTo(40));
-    });
-  });
-
-  group('Shape elements', () {
-    // Setting `ignoreShapes` discards <circle>, <rect>, <line>, <polyline> and
-    // <polygon> outright. It defaults to false for that reason — silently
-    // dropping geometry produced icons missing whole pieces. These pin both
-    // sides so the default cannot flip back without a deliberate test update.
-    test('are discarded when ignoreShapes is true', () {
-      final glyph = GenericGlyph.fromSvg(
-        Svg.parse('circle_shape', _circleShape, ignoreShapes: true),
-      );
-
-      expect(glyph.outlines, isEmpty);
-    });
-
-    test('are converted to outlines when ignoreShapes is false', () {
-      final glyph = GenericGlyph.fromSvg(
-        Svg.parse('circle_shape', _circleShape, ignoreShapes: false),
-      );
-
-      expect(glyph.outlines, isNotEmpty);
     });
   });
 }

@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
+import 'package:vector_graphics_compiler/vector_graphics_compiler.dart' as vg;
+
 import '../../otf/table/glyph/simple.dart';
-import '../../svg/outline_converter.dart';
-import '../../svg/path.dart';
-import '../../svg/svg.dart';
+import '../../svg/outline_builder.dart';
+import '../../svg/stroke/stroke_outliner.dart';
+import '../../svg/svg_parser.dart';
 import '../../utils/misc.dart';
 import '../outline.dart';
 import 'generic_glyph_metadata.dart';
@@ -17,12 +19,12 @@ import 'generic_glyph_metrics.dart';
 /// so that this class stays the glyph's geometry and nothing else.
 class GenericGlyph {
   GenericGlyph(this.outlines, this.bounds, [GenericGlyphMetadata? metadata])
-      : metadata = metadata ?? GenericGlyphMetadata();
+    : metadata = metadata ?? GenericGlyphMetadata();
 
   GenericGlyph.empty()
-      : outlines = [],
-        bounds = const math.Rectangle(0, 0, 0, 0),
-        metadata = GenericGlyphMetadata();
+    : outlines = [],
+      bounds = const math.Rectangle(0, 0, 0, 0),
+      metadata = GenericGlyphMetadata();
 
   factory GenericGlyph.fromSimpleTrueTypeGlyph(SimpleGlyph glyph) {
     final isOnCurveList = glyph.flags.map((e) => e.onCurvePoint).toList();
@@ -49,16 +51,58 @@ class GenericGlyph {
     return GenericGlyph(outlines, bounds);
   }
 
-  factory GenericGlyph.fromSvg(Svg svg) {
-    final outlines = [
-      for (final path in svg.elementList.whereType<PathElement>())
-        ...PathToOutlineConverter(svg, path).convert(),
-    ];
+  /// Builds a glyph from an SVG document.
+  ///
+  /// [name] identifies the icon in errors and in the generated class.
+  ///
+  /// When [outlineStrokes] is true — the default — a stroked path is replaced
+  /// by the filled region its stroke covers. Font glyphs are fill-only, so
+  /// without it an outline-style icon collapses to its zero-area centreline.
+  ///
+  /// Throws `SvgParserException` for anything the parser rejects.
+  factory GenericGlyph.fromSvg(
+    String name,
+    String xmlString, {
+    bool outlineStrokes = true,
+  }) {
+    final geometry = parseSvgGeometry(name, xmlString);
+    final height = geometry.height;
+    final outlines = <Outline>[];
+
+    for (final shape in geometry.shapes) {
+      final stroke = outlineStrokes ? shape.stroke : null;
+
+      // A path can be both filled and stroked; the fill is its own region and
+      // survives independently. With outlining off, the raw path is all there
+      // is to emit — which is what makes a stroked icon come out blank.
+      if (shape.filled || stroke == null) {
+        outlines.addAll(
+          outlinesFromCommands(
+            shape.path.commands,
+            height: height,
+            fillRule: shape.path.fillType == vg.PathFillType.evenOdd
+                ? FillRule.evenodd
+                : FillRule.nonzero,
+          ),
+        );
+      }
+
+      if (stroke == null) {
+        continue;
+      }
+
+      outlines.addAll(
+        outlinesFromContours(
+          StrokeOutliner(stroke).outline(shape.path.commands),
+          height: height,
+        ),
+      );
+    }
 
     return GenericGlyph(
       outlines,
-      svg.viewBox,
-      GenericGlyphMetadata(name: svg.name),
+      math.Rectangle<num>(0, 0, geometry.width, geometry.height),
+      GenericGlyphMetadata(name: name),
     );
   }
 
@@ -70,8 +114,9 @@ class GenericGlyph {
   List<math.Point> get pointList => [for (final o in outlines) ...o.pointList];
 
   /// On-curve flags aligned with [pointList].
-  List<bool> get isOnCurveList =>
-      [for (final o in outlines) ...o.isOnCurveList];
+  List<bool> get isOnCurveList => [
+    for (final o in outlines) ...o.isOnCurveList,
+  ];
 
   /// Index into [pointList] of each contour's last point.
   List<int> get endPoints {
@@ -109,8 +154,8 @@ class GenericGlyph {
 
   /// Deep copy of a glyph and its outlines
   GenericGlyph copy() => GenericGlyph(
-        [for (final outline in outlines) outline.copy()],
-        bounds,
-        metadata.copy(),
-      );
+    [for (final outline in outlines) outline.copy()],
+    bounds,
+    metadata.copy(),
+  );
 }

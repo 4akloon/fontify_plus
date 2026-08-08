@@ -1,5 +1,4 @@
 import '../otf.dart';
-import '../svg.dart';
 import '../utils/flutter_class_gen.dart';
 import '../utils/logger.dart';
 import 'generic_glyph.dart';
@@ -52,30 +51,28 @@ SvgToOtfResult svgToOtf({
 }) {
   normalize ??= false;
 
-  final svgList = [
+  final glyphList = [
     for (final e in svgMap.entries)
-      Svg.parse(
+      GenericGlyph.fromSvg(
         e.key,
         e.value,
-        ignoreShapes: ignoreShapes,
-        outlineStrokes: outlineStrokes,
+        outlineStrokes: outlineStrokes ?? true,
       ),
   ];
 
   if (!normalize) {
-    for (var i = 1; i < svgList.length; i++) {
-      if (svgList[i - 1].viewBox.height != svgList[i].viewBox.height) {
+    for (var i = 1; i < glyphList.length; i++) {
+      if (glyphList[i - 1].bounds.height != glyphList[i].bounds.height) {
         logger.logOnce(
-            Level.warning,
-            'Some SVG files contain different view box height, '
-            'while normalization option is disabled. '
-            'This is not recommended.');
+          Level.warning,
+          'Some SVG files contain different view box height, '
+          'while normalization option is disabled. '
+          'This is not recommended.',
+        );
         break;
       }
     }
   }
-
-  final glyphList = svgList.map((e) => GenericGlyph.fromSvg(e)).toList();
 
   final font = OpenTypeFont.createFromGlyphs(
     glyphList: glyphList,

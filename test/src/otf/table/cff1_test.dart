@@ -3,20 +3,19 @@ import 'dart:typed_data';
 import 'package:fontify_plus/src/common/generic_glyph.dart';
 import 'package:fontify_plus/src/otf/otf.dart';
 import 'package:fontify_plus/src/otf/table/all.dart';
-import 'package:fontify_plus/src/svg/svg.dart';
 import 'package:fontify_plus/src/utils/otf.dart';
 import 'package:test/test.dart';
 
+GenericGlyph _triangleGlyph() => GenericGlyph.fromSvg(
+  'icon',
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+      '<path d="M0 0 L10 0 L10 10 Z"/></svg>',
+);
+
 /// A real, fully-wired CFF1Table, built the way the font builder does.
 CFF1Table buildCff1Table({int glyphCount = 1}) {
-  final svg = Svg.parse(
-    'icon',
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
-        '<path d="M0 0 L10 0 L10 10 Z"/></svg>',
-  );
-
   final font = OpenTypeFont.createFromGlyphs(
-    glyphList: [for (var i = 0; i < glyphCount; i++) GenericGlyph.fromSvg(svg)],
+    glyphList: [for (var i = 0; i < glyphCount; i++) _triangleGlyph()],
     fontName: 'Test',
   );
 

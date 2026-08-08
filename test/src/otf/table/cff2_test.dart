@@ -2,18 +2,17 @@ import 'dart:typed_data';
 
 import 'package:fontify_plus/src/common/generic_glyph.dart';
 import 'package:fontify_plus/src/otf/table/all.dart';
-import 'package:fontify_plus/src/svg/svg.dart';
 import 'package:fontify_plus/src/utils/otf.dart';
 import 'package:test/test.dart';
 
 GenericGlyph triangleGlyph() {
-  final svg = Svg.parse(
+  final glyph = GenericGlyph.fromSvg(
     'icon',
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
         '<path d="M0 0 L10 0 L10 10 Z"/></svg>',
   );
 
-  return GenericGlyph.fromSvg(svg);
+  return glyph;
 }
 
 void main() {

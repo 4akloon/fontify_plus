@@ -1,5 +1,5 @@
+import 'package:fontify_plus/src/svg/geometry/cubic.dart';
 import 'package:fontify_plus/src/svg/stroke/stroke_properties.dart';
-import 'package:path_parsing/path_parsing.dart';
 
 double signedArea(List<List<double>> points) {
   var sum = 0.0;
@@ -13,90 +13,43 @@ double signedArea(List<List<double>> points) {
   return sum / 2;
 }
 
-/// Flattens path data into one point list per contour.
+/// Flattens outlined contours into one point list per contour.
 ///
-/// The outliner emits cubics wherever the geometry was curved, so these
-/// assertions have to go through a real path parser rather than splitting the
-/// string on command letters.
-class ContourReader extends PathProxy {
-  final contours = <List<List<double>>>[];
+/// The outliner emits cubics wherever the geometry was curved, so area
+/// assertions have to sample the curves rather than use their end points.
+List<List<List<double>>> flatten(List<List<Cubic>> contours) {
+  const steps = 24;
+  final result = <List<List<double>>>[];
 
-  List<List<double>>? _current;
-  var _cursor = [0.0, 0.0];
+  for (final contour in contours) {
+    if (contour.isEmpty) {
+      continue;
+    }
 
-  @override
-  void moveTo(double x, double y) {
-    _flush();
-    _cursor = [x, y];
-    _current = [
-      [x, y],
+    final points = <List<double>>[
+      [contour.first.p0.x, contour.first.p0.y],
     ];
-  }
 
-  @override
-  void lineTo(double x, double y) {
-    _cursor = [x, y];
-    (_current ??= []).add([x, y]);
-  }
-
-  @override
-  void cubicTo(
-    double x1,
-    double y1,
-    double x2,
-    double y2,
-    double x3,
-    double y3,
-  ) {
-    final p0 = _cursor;
-    const steps = 24;
-
-    for (var i = 1; i <= steps; i++) {
-      final t = i / steps;
-      final u = 1 - t;
-      final a = u * u * u;
-      final b = 3 * u * u * t;
-      final c = 3 * u * t * t;
-      final d = t * t * t;
-
-      (_current ??= []).add([
-        a * p0[0] + b * x1 + c * x2 + d * x3,
-        a * p0[1] + b * y1 + c * y2 + d * y3,
-      ]);
+    for (final segment in contour) {
+      for (var i = 1; i <= steps; i++) {
+        final point = segment.pointAt(i / steps);
+        points.add([point.x, point.y]);
+      }
     }
 
-    _cursor = [x3, y3];
-  }
-
-  @override
-  void close() => _flush();
-
-  void _flush() {
-    final current = _current;
-
-    if (current != null && current.length > 2) {
-      contours.add(current);
+    if (points.length > 2) {
+      result.add(points);
     }
-
-    _current = null;
   }
 
-  List<List<List<double>>> read(String pathData) {
-    writeSvgPathDataToPath(pathData, this);
-    _flush();
-
-    return contours;
-  }
+  return result;
 }
 
-List<List<List<double>>> contours(String pathData) =>
-    ContourReader().read(pathData);
+double totalArea(List<List<Cubic>> contours) =>
+    flatten(contours).fold(0.0, (sum, c) => sum + signedArea(c).abs());
 
-double totalArea(String pathData) =>
-    contours(pathData).fold(0.0, (sum, c) => sum + signedArea(c).abs());
-
-/// Number of drawing commands in path data — the size the glyph will cost.
-int commandCount(String pathData) =>
-    RegExp('[MLCZ]').allMatches(pathData).length;
+/// Points the glyph will cost: one for the contour start, three per segment.
+int pointCount(List<List<Cubic>> contours) =>
+    contours.fold(0, (sum, contour) => sum + 1 + contour.length * 3);
 
 const kStroke = StrokeProperties(width: 2);

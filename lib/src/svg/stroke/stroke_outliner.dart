@@ -3,7 +3,6 @@ import 'package:vector_graphics_compiler/vector_graphics_compiler.dart' as vg;
 import '../geometry/cubic.dart';
 import '../geometry/cubic_offset.dart';
 import '../geometry/tolerances.dart';
-import 'contour_writer.dart';
 import 'stroke_capper.dart';
 import 'stroke_joiner.dart';
 import 'stroke_properties.dart';
@@ -35,20 +34,13 @@ class StrokeOutliner {
   final StrokeJoiner _joiner;
   final StrokeCapper _capper;
 
-  static const _writer = ContourWriter();
-
-  /// Path data for the covered region, or null when [pathData] contains
-  /// nothing strokeable.
-  String? outline(String pathData) {
-    final contours = [
-      for (final subPath in SubPathBuilder().build(
-        vg.parseSvgPathData(pathData).commands,
-      ))
-        ..._outlineSubPath(subPath),
-    ];
-
-    return contours.isEmpty ? null : _writer.write(contours);
-  }
+  /// The closed contours covering the stroke of [commands].
+  ///
+  /// Empty when [commands] holds nothing strokeable.
+  List<List<Cubic>> outline(Iterable<vg.PathCommand> commands) => [
+    for (final subPath in SubPathBuilder().build(commands))
+      ..._outlineSubPath(subPath),
+  ];
 
   /// The filled contours covering one stroked subpath.
   List<List<Cubic>> _outlineSubPath(SubPath subPath) {

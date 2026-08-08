@@ -28,21 +28,16 @@ const _quarter = '''
 
 void main() {
   group('Normalization', () {
-    List<GenericGlyph> createGlyphList() {
-      final svgFileList = _kTestCompSvgPathList.map((e) => File(e));
-      final svgList = svgFileList.map(
-        (e) => Svg.parse(e.path, e.readAsStringSync()),
-      );
-      return svgList.map((e) => GenericGlyph.fromSvg(e)).toList();
-    }
+    List<GenericGlyph> createGlyphList() => [
+      for (final path in _kTestCompSvgPathList)
+        GenericGlyph.fromSvg(path, File(path).readAsStringSync()),
+    ];
 
     /// Longest side of each non-default glyph, in font units.
     List<num> longestSides(List<GenericGlyph> glyphList) => [
-          for (final g in glyphList)
-            g.metrics.height > g.metrics.width
-                ? g.metrics.height
-                : g.metrics.width,
-        ];
+      for (final g in glyphList)
+        g.metrics.height > g.metrics.width ? g.metrics.height : g.metrics.width,
+    ];
 
     test('Metrics, normalization is off', () {
       final font = OpenTypeFont.createFromGlyphs(
@@ -78,7 +73,7 @@ void main() {
       const descender = -150;
       const emSpan = ascender - descender;
 
-      final glyph = GenericGlyph.fromSvg(Svg.parse('quarter', _quarter));
+      final glyph = GenericGlyph.fromSvg('quarter', _quarter);
       final resized = glyph.resize(ascender: ascender, descender: descender);
 
       final longest = longestSides([resized]).single;
@@ -94,8 +89,8 @@ void main() {
       // This is what normalization is for, and also why it is off by default:
       // it is only correct when the artboards genuinely disagree.
       final glyphs = [
-        GenericGlyph.fromSvg(Svg.parse('full', _fullBleed)),
-        GenericGlyph.fromSvg(Svg.parse('quarter', _quarter)),
+        GenericGlyph.fromSvg('full', _fullBleed),
+        GenericGlyph.fromSvg('quarter', _quarter),
       ].map((g) => g.resize(ascender: 850, descender: -150)).toList();
 
       final sides = longestSides(glyphs);
@@ -110,8 +105,8 @@ void main() {
       const unitsPerEm = kDefaultOpenTypeUnitsPerEm;
 
       final glyphs = [
-        GenericGlyph.fromSvg(Svg.parse('full', _fullBleed)),
-        GenericGlyph.fromSvg(Svg.parse('quarter', _quarter)),
+        GenericGlyph.fromSvg('full', _fullBleed),
+        GenericGlyph.fromSvg('quarter', _quarter),
       ].map((g) => g.resize(fontHeight: unitsPerEm)).toList();
 
       final sides = longestSides(glyphs);

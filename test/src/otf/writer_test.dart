@@ -1,18 +1,17 @@
 import 'package:fontify_plus/src/common/generic_glyph.dart';
 import 'package:fontify_plus/src/otf/otf.dart';
 import 'package:fontify_plus/src/otf/writer.dart';
-import 'package:fontify_plus/src/svg/svg.dart';
 import 'package:test/test.dart';
 
 OpenTypeFont _buildFont() {
-  final svg = Svg.parse(
+  final glyph = GenericGlyph.fromSvg(
     'icon',
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
         '<path d="M0 0 L10 0 L10 10 Z"/></svg>',
   );
 
   return OpenTypeFont.createFromGlyphs(
-    glyphList: [GenericGlyph.fromSvg(svg)],
+    glyphList: [glyph],
     fontName: 'Test',
   );
 }
