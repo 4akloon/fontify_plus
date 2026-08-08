@@ -40,7 +40,7 @@ void _recalculateCFF2TopDictOffsets(CFF2Table table) {
 
   _calculateEntryOffsets(
     [
-      if (vstoreEntry != null) vstoreEntry,
+      ?vstoreEntry,
       topDict.getEntryForOperator(op.charStrings)!,
       topDict.getEntryForOperator(op.fdArray)!,
     ],

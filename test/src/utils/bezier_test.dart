@@ -91,9 +91,9 @@ double worstDeviation(
 void main() {
   group('quadCurveToCubic', () {
     test('produces control points that reconstruct the quadratic exactly', () {
-      final qp0 = math.Point<num>(0, 0);
-      final qp1 = math.Point<num>(5, 10);
-      final qp2 = math.Point<num>(10, 0);
+      const qp0 = math.Point<num>(0, 0);
+      const qp1 = math.Point<num>(5, 10);
+      const qp2 = math.Point<num>(10, 0);
 
       final cubicControls = quadCurveToCubic(qp0, qp1, qp2);
 
@@ -118,10 +118,10 @@ void main() {
 
   group('cubicCurveToQuadratics', () {
     test('returns a chain that starts and ends where the cubic does', () {
-      final p0 = math.Point<num>(0, 0);
-      final p1 = math.Point<num>(0, 10);
-      final p2 = math.Point<num>(10, 10);
-      final p3 = math.Point<num>(10, 0);
+      const p0 = math.Point<num>(0, 0);
+      const p1 = math.Point<num>(0, 10);
+      const p2 = math.Point<num>(10, 10);
+      const p3 = math.Point<num>(10, 0);
 
       final chain = cubicCurveToQuadratics(p0, p1, p2, p3);
 
@@ -130,10 +130,10 @@ void main() {
     });
 
     test('stays within tolerance of a curved cubic', () {
-      final p0 = math.Point<num>(0, 0);
-      final p1 = math.Point<num>(0, 20);
-      final p2 = math.Point<num>(20, 20);
-      final p3 = math.Point<num>(20, 0);
+      const p0 = math.Point<num>(0, 0);
+      const p1 = math.Point<num>(0, 20);
+      const p2 = math.Point<num>(20, 20);
+      const p3 = math.Point<num>(20, 0);
 
       const tolerance = kQuadraticApproximationTolerance;
       final chain = cubicCurveToQuadratics(p0, p1, p2, p3, tolerance);
@@ -145,10 +145,10 @@ void main() {
     });
 
     test('a tighter tolerance never produces fewer segments', () {
-      final p0 = math.Point<num>(0, 0);
-      final p1 = math.Point<num>(0, 30);
-      final p2 = math.Point<num>(30, 30);
-      final p3 = math.Point<num>(30, 0);
+      const p0 = math.Point<num>(0, 0);
+      const p1 = math.Point<num>(0, 30);
+      const p2 = math.Point<num>(30, 30);
+      const p3 = math.Point<num>(30, 0);
 
       final loose = cubicCurveToQuadratics(p0, p1, p2, p3, 2);
       final tight = cubicCurveToQuadratics(p0, p1, p2, p3, 0.1);
@@ -157,10 +157,10 @@ void main() {
     });
 
     test('a straight cubic needs only one segment', () {
-      final p0 = math.Point<num>(0, 0);
-      final p1 = math.Point<num>(5, 0);
-      final p2 = math.Point<num>(10, 0);
-      final p3 = math.Point<num>(15, 0);
+      const p0 = math.Point<num>(0, 0);
+      const p1 = math.Point<num>(5, 0);
+      const p2 = math.Point<num>(10, 0);
+      const p3 = math.Point<num>(15, 0);
 
       final chain = cubicCurveToQuadratics(p0, p1, p2, p3);
 
@@ -168,7 +168,7 @@ void main() {
     });
 
     test('a degenerate cubic (all points equal) needs only one segment', () {
-      final p = math.Point<num>(3, 3);
+      const p = math.Point<num>(3, 3);
       final chain = cubicCurveToQuadratics(p, p, p, p);
 
       expect(chain, hasLength(1));
@@ -176,10 +176,10 @@ void main() {
     });
 
     test('chain segments connect end to end', () {
-      final p0 = math.Point<num>(0, 0);
-      final p1 = math.Point<num>(-40, 40);
-      final p2 = math.Point<num>(40, 40);
-      final p3 = math.Point<num>(0, 0);
+      const p0 = math.Point<num>(0, 0);
+      const p1 = math.Point<num>(-40, 40);
+      const p2 = math.Point<num>(40, 40);
+      const p3 = math.Point<num>(0, 0);
 
       final chain = cubicCurveToQuadratics(p0, p1, p2, p3, 0.1);
 

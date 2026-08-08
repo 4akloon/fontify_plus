@@ -15,7 +15,7 @@ void main() {
     });
 
     test('getValueForKey returns null for a key not present', () {
-      final partial = EnumClass<_Fruit, String>({_Fruit.apple: 'a'});
+      const partial = EnumClass<_Fruit, String>({_Fruit.apple: 'a'});
 
       expect(partial.getValueForKey(_Fruit.banana), isNull);
     });

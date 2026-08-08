@@ -11,7 +11,7 @@ const _kLangSys = LanguageSystemTable(0, 0xFFFF, 1, [0]);
 void main() {
   group('ScriptTable.size', () {
     test('is 4 bytes plus the default and listed lang-sys tables', () {
-      final table = ScriptTable(4, 0, [], [], _kLangSys);
+      const table = ScriptTable(4, 0, [], [], _kLangSys);
 
       expect(table.size, 4 + _kLangSys.size);
     });
@@ -28,7 +28,7 @@ void main() {
     test(
       'round-trips a default-only table through encodeToBinary and fromByteData',
       () {
-        final table = ScriptTable(4, 0, [], [], _kLangSys);
+        const table = ScriptTable(4, 0, [], [], _kLangSys);
         final scriptRecord = ScriptRecord('latn', 0);
         final bytes = ByteData(table.size);
 
@@ -56,7 +56,7 @@ void main() {
     });
 
     test('reads the table at the record\'s scriptOffset', () {
-      final table = ScriptTable(4, 0, [], [], _kLangSys);
+      const table = ScriptTable(4, 0, [], [], _kLangSys);
       final scriptRecord = ScriptRecord('latn', 10);
       final bytes = ByteData(10 + table.size);
 
