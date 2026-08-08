@@ -124,7 +124,6 @@ $message
 $_kUsage
 ${_argParser.usage}
 ''');
-  exit(64);
 }
 
 const _kAbout =
