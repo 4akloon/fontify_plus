@@ -1,3 +1,5 @@
+import 'package:vector_graphics_compiler/vector_graphics_compiler.dart' as vg;
+
 import '../geometry/cubic.dart';
 import '../geometry/cubic_offset.dart';
 import '../geometry/tolerances.dart';
@@ -20,12 +22,12 @@ import 'sub_path.dart';
 /// consistent orientation to make that hold.
 class StrokeOutliner {
   StrokeOutliner(this.stroke)
-      : _offsetter = CubicOffsetter(
-          distance: stroke.radius,
-          tolerance: kCurveTolerance,
-        ),
-        _joiner = StrokeJoiner(stroke),
-        _capper = StrokeCapper(stroke);
+    : _offsetter = CubicOffsetter(
+        distance: stroke.radius,
+        tolerance: kCurveTolerance,
+      ),
+      _joiner = StrokeJoiner(stroke),
+      _capper = StrokeCapper(stroke);
 
   final StrokeProperties stroke;
 
@@ -39,7 +41,9 @@ class StrokeOutliner {
   /// nothing strokeable.
   String? outline(String pathData) {
     final contours = [
-      for (final subPath in SubPathBuilder().build(pathData))
+      for (final subPath in SubPathBuilder().build(
+        vg.parseSvgPathData(pathData).commands,
+      ))
         ..._outlineSubPath(subPath),
     ];
 

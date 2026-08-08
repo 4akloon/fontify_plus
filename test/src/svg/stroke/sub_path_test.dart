@@ -1,11 +1,13 @@
 import 'package:fontify_plus/src/svg/stroke/sub_path.dart';
 import 'package:test/test.dart';
+import 'package:vector_graphics_compiler/vector_graphics_compiler.dart' as vg;
 import 'package:vector_math/vector_math.dart';
 
 /// [Vector2] is float32-backed, so seven significant digits is the ceiling.
 const _kEpsilon = 1e-5;
 
-List<SubPath> build(String pathData) => SubPathBuilder().build(pathData);
+List<SubPath> build(String pathData) =>
+    SubPathBuilder().build(vg.parseSvgPathData(pathData).commands);
 
 void main() {
   group('SubPath', () {

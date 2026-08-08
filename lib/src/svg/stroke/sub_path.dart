@@ -1,4 +1,4 @@
-import 'package:path_parsing/path_parsing.dart';
+import 'package:vector_graphics_compiler/vector_graphics_compiler.dart' as vg;
 import 'package:vector_math/vector_math.dart';
 
 import '../geometry/cubic.dart';
@@ -21,33 +21,51 @@ class SubPath {
 
   /// The same subpath traced the other way, so offsetting to the left walks
   /// the other side of the stroke.
-  List<Cubic> get reversedSegments =>
-      [for (final segment in segments.reversed) segment.reversed];
+  List<Cubic> get reversedSegments => [
+    for (final segment in segments.reversed) segment.reversed,
+  ];
 }
 
-/// Collects SVG path data as subpaths of cubic segments.
-class SubPathBuilder extends PathProxy {
+/// Collects path commands as subpaths of cubic segments.
+class SubPathBuilder {
   final _subPaths = <SubPath>[];
 
   SubPath? _current;
   Vector2 _cursor = Vector2.zero();
 
-  List<SubPath> build(String pathData) {
-    writeSvgPathDataToPath(pathData, this);
+  List<SubPath> build(Iterable<vg.PathCommand> commands) {
+    for (final command in commands) {
+      switch (command) {
+        case vg.MoveToCommand(:final x, :final y):
+          _moveTo(x, y);
+        case vg.LineToCommand(:final x, :final y):
+          _lineTo(x, y);
+        case vg.CubicToCommand(
+          :final x1,
+          :final y1,
+          :final x2,
+          :final y2,
+          :final x3,
+          :final y3,
+        ):
+          _cubicTo(x1, y1, x2, y2, x3, y3);
+        case vg.CloseCommand():
+          _close();
+      }
+    }
+
     _finish();
 
     return _subPaths;
   }
 
-  @override
-  void moveTo(double x, double y) {
+  void _moveTo(double x, double y) {
     _finish();
     _cursor = Vector2(x, y);
     _current = SubPath(_cursor.clone());
   }
 
-  @override
-  void lineTo(double x, double y) {
+  void _lineTo(double x, double y) {
     final end = Vector2(x, y);
     final current = _currentOrStart();
 
@@ -58,8 +76,7 @@ class SubPathBuilder extends PathProxy {
     _cursor = end;
   }
 
-  @override
-  void cubicTo(
+  void _cubicTo(
     double x1,
     double y1,
     double x2,
@@ -77,8 +94,7 @@ class SubPathBuilder extends PathProxy {
     _cursor = end;
   }
 
-  @override
-  void close() {
+  void _close() {
     final current = _current;
 
     if (current != null &&
