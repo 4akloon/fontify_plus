@@ -18,11 +18,11 @@ class CFFOperand extends BinaryCodable {
     switch (b0) {
       /// -32768 to +32767
       case 28:
-        return CFFOperand(byteData.getUint16(offset), 3);
+        return CFFOperand(byteData.getInt16(offset), 3);
 
       /// -(2^31) to +(2^31 - 1)
       case 29:
-        return CFFOperand(byteData.getUint32(offset), 5);
+        return CFFOperand(byteData.getInt32(offset), 5);
 
       case 30:
         final (value, size) = decodeRealNumber(byteData, offset);
@@ -122,13 +122,13 @@ class CFFOperand extends BinaryCodable {
     if (value >= -32768 && value <= 32767) {
       byteData
         ..setUint8(0, 28)
-        ..setUint16(1, value);
+        ..setInt16(1, value);
       return;
     }
 
     byteData
       ..setUint8(0, 29)
-      ..setUint32(1, value);
+      ..setInt32(1, value);
   }
 
   @override
