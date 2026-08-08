@@ -171,7 +171,7 @@ void main() {
     void capturingPrints(void Function() body) => runZoned(
       body,
       zoneSpecification: ZoneSpecification(
-        print: (_, __, ___, line) => printed.add(line),
+        print: (_, _, _, line) => printed.add(line),
       ),
     );
 
