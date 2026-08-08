@@ -29,8 +29,8 @@ enum LineJoin {
 /// path has to be converted into the region it covers before it can become a
 /// glyph. These are the inputs that conversion needs.
 ///
-/// Reading them off an element is a separate concern, handled by
-/// `resolveStroke` in `stroke_properties_resolver.dart`.
+/// Reading them off a parsed SVG is a separate concern, handled by
+/// `strokePropertiesOf` in `stroke_attributes.dart`.
 class StrokeProperties {
   const StrokeProperties({
     required this.width,

@@ -16,7 +16,6 @@ void main() {
         CliArgument.fontPackage: 'my_package',
         CliArgument.fontName: 'My Icons',
         CliArgument.recursive: true,
-        CliArgument.ignoreShapes: false,
         CliArgument.outlineStrokes: true,
         CliArgument.normalize: false,
         CliArgument.useOpenType: true,
@@ -32,7 +31,6 @@ void main() {
       expect(args.fontPackage, 'my_package');
       expect(args.fontName, 'My Icons');
       expect(args.recursive, isTrue);
-      expect(args.ignoreShapes, isFalse);
       expect(args.outlineStrokes, isTrue);
       expect(args.normalize, isFalse);
       expect(args.useOpenType, isTrue);
@@ -52,7 +50,6 @@ void main() {
       expect(args.fontPackage, isNull);
       expect(args.fontName, isNull);
       expect(args.recursive, isNull);
-      expect(args.ignoreShapes, isNull);
       expect(args.outlineStrokes, isNull);
       expect(args.normalize, isNull);
       expect(args.useOpenType, isNull);

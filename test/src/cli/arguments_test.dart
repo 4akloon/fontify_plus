@@ -49,7 +49,6 @@ void main() {
         '--class-name=MyIcons',
         '--font-name=My Icons',
         '--no-normalize',
-        '--no-ignore-shapes',
         '--recursive',
         '--verbose',
         '--config-file=test/config.yaml',
@@ -65,7 +64,6 @@ void main() {
       expect(parsedArgs.className, 'MyIcons');
       expect(parsedArgs.fontName, 'My Icons');
       expect(parsedArgs.normalize, isFalse);
-      expect(parsedArgs.ignoreShapes, isFalse);
       expect(parsedArgs.recursive, isTrue);
       expect(parsedArgs.verbose, isTrue);
       expect(parsedArgs.configFile?.path, 'test/config.yaml');
@@ -77,7 +75,6 @@ void main() {
         './',
         'test/fonts/my_font.otf',
         '--normalize',
-        '--ignore-shapes',
       ];
 
       final parsedArgs = parseArgsAndConfig(argParser, args);
@@ -89,7 +86,6 @@ void main() {
       expect(parsedArgs.className, isNull);
       expect(parsedArgs.fontName, isNull);
       expect(parsedArgs.normalize, isTrue);
-      expect(parsedArgs.ignoreShapes, isTrue);
       expect(parsedArgs.recursive, isFalse);
       expect(parsedArgs.verbose, isFalse);
       expect(parsedArgs.configFile, isNull);
@@ -113,7 +109,6 @@ void main() {
         '--class-name=MyIcons',
         '--font-name=My Icons',
         '--no-normalize',
-        '--no-ignore-shapes',
         '--recursive',
         '--verbose',
         '--help',
@@ -134,7 +129,6 @@ void main() {
         '--class-name=no',
         '--font-name=no',
         '--normalize',
-        '--ignore-shapes',
         '--recursive',
         '--verbose',
         '--package=no',
@@ -150,7 +144,6 @@ void main() {
       expect(parsedArgs.className, 'MyIcons');
       expect(parsedArgs.fontName, 'My Icons');
       expect(parsedArgs.normalize, isFalse);
-      expect(parsedArgs.ignoreShapes, isFalse);
       expect(parsedArgs.recursive, isFalse);
       expect(parsedArgs.verbose, isFalse);
       expect(parsedArgs.configFile, isNull);
@@ -171,7 +164,6 @@ void main() {
       expect(parsedArgs.className, 'MyIcons');
       expect(parsedArgs.fontName, 'My Icons');
       expect(parsedArgs.normalize, isFalse);
-      expect(parsedArgs.ignoreShapes, isFalse);
       expect(parsedArgs.recursive, isFalse);
       expect(parsedArgs.verbose, isFalse);
       expect(parsedArgs.configFile, isNull);
@@ -257,7 +249,6 @@ fontify_plus:
 
   font_name: My Icons
   normalize: false
-  ignore_shapes: false
 
   recursive: true
   verbose: true
@@ -271,7 +262,6 @@ fontify_plus:
       expect(parsedArgs.className, 'MyIcons');
       expect(parsedArgs.fontName, 'My Icons');
       expect(parsedArgs.normalize, isFalse);
-      expect(parsedArgs.ignoreShapes, isFalse);
       expect(parsedArgs.recursive, isTrue);
       expect(parsedArgs.verbose, isTrue);
       expect(parsedArgs.fontPackage, 'test_package');
@@ -292,7 +282,6 @@ fontify_plus:
       expect(parsedArgs.className, isNull);
       expect(parsedArgs.fontName, isNull);
       expect(parsedArgs.normalize, isNull);
-      expect(parsedArgs.ignoreShapes, isNull);
       expect(parsedArgs.recursive, isNull);
       expect(parsedArgs.verbose, isNull);
       expect(parsedArgs.fontPackage, isNull);
@@ -322,12 +311,6 @@ fontify_plus:
   input_svg_dir: ./
   output_font_file: generated_font.otf
   normalize: 1
-      ''');
-      expectCliArgumentException('''
-fontify_plus:
-  input_svg_dir: ./
-  output_font_file: generated_font.otf
-  ignore_shapes: 1
       ''');
       expectCliArgumentException('''
 fontify_plus:

@@ -28,14 +28,13 @@ void main() {
       expect(results['opentype'], isTrue);
     });
 
-    test('normalize and ignore-shapes default to false', () {
+    test('normalize defaults to false', () {
       final argParser = ArgParser();
       defineOptions(argParser);
 
       final results = argParser.parse([]);
 
       expect(results['normalize'], isFalse);
-      expect(results['ignore-shapes'], isFalse);
     });
 
     test('indent defaults to "2"', () {

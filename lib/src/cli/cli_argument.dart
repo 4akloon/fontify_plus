@@ -16,7 +16,6 @@ enum CliArgument {
 
   // Font-related
   fontName,
-  ignoreShapes,
   outlineStrokes,
   normalize,
   useOpenType,
@@ -41,7 +40,6 @@ const kArgAllowedTypes = <CliArgument, List<Type>>{
   CliArgument.indent: [String, int],
   CliArgument.fontName: [String],
   CliArgument.normalize: [bool],
-  CliArgument.ignoreShapes: [bool],
   CliArgument.outlineStrokes: [bool],
   CliArgument.useOpenType: [bool],
   CliArgument.recursive: [bool],
@@ -53,7 +51,6 @@ const kArgAllowedTypes = <CliArgument, List<Type>>{
 /// Command-line option name for each argument.
 const kOptionNames = EnumClass<CliArgument, String>({
   // svgDir and fontFile are not options
-
   CliArgument.classFile: 'output-class-file',
   CliArgument.className: 'class-name',
   CliArgument.indent: 'indent',
@@ -61,7 +58,6 @@ const kOptionNames = EnumClass<CliArgument, String>({
 
   CliArgument.fontName: 'font-name',
   CliArgument.normalize: 'normalize',
-  CliArgument.ignoreShapes: 'ignore-shapes',
   CliArgument.outlineStrokes: 'outline-strokes',
   CliArgument.useOpenType: 'opentype',
 
@@ -84,7 +80,6 @@ const kConfigKeys = EnumClass<CliArgument, String>({
 
   CliArgument.fontName: 'font_name',
   CliArgument.normalize: 'normalize',
-  CliArgument.ignoreShapes: 'ignore_shapes',
   CliArgument.outlineStrokes: 'outline_strokes',
   CliArgument.useOpenType: 'opentype',
 

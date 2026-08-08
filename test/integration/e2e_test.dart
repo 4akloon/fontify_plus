@@ -129,5 +129,19 @@ void main() {
       expect(reread.maxp.numGlyphs, font.maxp.numGlyphs);
       expect(reread.maxp.numGlyphs, greaterThanOrEqualTo(40));
     });
+
+    test('writes a round-capped stroked icon through the CFF path', () {
+      // Round caps and joins close a contour with a curve, so its end point
+      // cannot be left implicit. Getting that wrong made the default
+      // useOpenType path throw RangeError while every other test stayed green,
+      // because no fixture in the suite was stroked.
+      final font = _buildFont({'round_plus': _strokedPlus});
+
+      final reread = _roundTrip(font);
+
+      expect(reread.isOpenType, isTrue);
+      expect(reread.cff, isNotNull);
+      expect(reread.maxp.numGlyphs, font.maxp.numGlyphs);
+    });
   });
 }

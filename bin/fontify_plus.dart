@@ -47,14 +47,16 @@ void _run(CliArguments parsedArgs) {
 
   if (parsedArgs.classFile?.existsSync() ?? false) {
     logger.t(
-        'Output file for a Flutter class already exists (${parsedArgs.classFile!.path}) - '
-        'overwriting it');
+      'Output file for a Flutter class already exists (${parsedArgs.classFile!.path}) - '
+      'overwriting it',
+    );
   }
 
   if (!parsedArgs.fontFile.existsSync()) {
     logger.t(
-        'Output file for a font file already exists (${parsedArgs.fontFile.path}) - '
-        'overwriting it');
+      'Output file for a font file already exists (${parsedArgs.fontFile.path}) - '
+      'overwriting it',
+    );
   }
 
   final svgFileList = parsedArgs.svgDir
@@ -75,7 +77,6 @@ void _run(CliArguments parsedArgs) {
 
   final otfResult = svgToOtf(
     svgMap: svgMap,
-    ignoreShapes: parsedArgs.ignoreShapes,
     outlineStrokes: parsedArgs.outlineStrokes,
     normalize: parsedArgs.normalize,
     useOpenType: parsedArgs.useOpenType,
@@ -85,8 +86,10 @@ void _run(CliArguments parsedArgs) {
   writeToFile(parsedArgs.fontFile.path, otfResult.font);
 
   if (parsedArgs.classFile == null) {
-    logger.t('No output path for Flutter class was specified - '
-        'skipping class generation.');
+    logger.t(
+      'No output path for Flutter class was specified - '
+      'skipping class generation.',
+    );
   } else {
     final fontFileName = p.basename(parsedArgs.fontFile.path);
 

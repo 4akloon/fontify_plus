@@ -16,8 +16,6 @@ class SvgToOtfResult {
 /// Converts SVG icons to OTF font.
 ///
 /// * [svgMap] contains name (key) to data (value) SVG mapping. Required.
-/// * If [ignoreShapes] is set to true, shapes (circle, rect, etc.) are
-/// discarded rather than converted into paths. Defaults to false.
 /// * If [outlineStrokes] is set to true, stroked paths are replaced by the
 /// filled region their stroke covers. Defaults to true — font glyphs are
 /// fill-only, so a stroked icon is otherwise invisible.
@@ -43,7 +41,6 @@ class SvgToOtfResult {
 /// Returns an instance of [SvgToOtfResult] class containing glyphs and a font.
 SvgToOtfResult svgToOtf({
   required Map<String, String> svgMap,
-  bool? ignoreShapes,
   bool? outlineStrokes,
   bool? normalize,
   bool? useOpenType,

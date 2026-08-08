@@ -13,7 +13,6 @@ class CliArguments {
     this.fontPackage,
     this.fontName,
     this.recursive,
-    this.ignoreShapes,
     this.outlineStrokes,
     this.normalize,
     this.useOpenType,
@@ -26,21 +25,20 @@ class CliArguments {
   /// The map must already have been validated and formatted; the casts here
   /// are what that step guarantees.
   factory CliArguments.fromMap(Map<CliArgument, dynamic> map) => CliArguments(
-        map[CliArgument.svgDir] as Directory,
-        map[CliArgument.fontFile] as File,
-        map[CliArgument.classFile] as File?,
-        map[CliArgument.className] as String?,
-        map[CliArgument.indent] as int?,
-        map[CliArgument.fontPackage] as String?,
-        map[CliArgument.fontName] as String?,
-        map[CliArgument.recursive] as bool?,
-        map[CliArgument.ignoreShapes] as bool?,
-        map[CliArgument.outlineStrokes] as bool?,
-        map[CliArgument.normalize] as bool?,
-        map[CliArgument.useOpenType] as bool?,
-        map[CliArgument.verbose] as bool?,
-        map[CliArgument.configFile] as File?,
-      );
+    map[CliArgument.svgDir] as Directory,
+    map[CliArgument.fontFile] as File,
+    map[CliArgument.classFile] as File?,
+    map[CliArgument.className] as String?,
+    map[CliArgument.indent] as int?,
+    map[CliArgument.fontPackage] as String?,
+    map[CliArgument.fontName] as String?,
+    map[CliArgument.recursive] as bool?,
+    map[CliArgument.outlineStrokes] as bool?,
+    map[CliArgument.normalize] as bool?,
+    map[CliArgument.useOpenType] as bool?,
+    map[CliArgument.verbose] as bool?,
+    map[CliArgument.configFile] as File?,
+  );
 
   final Directory svgDir;
   final File fontFile;
@@ -50,7 +48,6 @@ class CliArguments {
   final int? indent;
   final String? fontName;
   final bool? recursive;
-  final bool? ignoreShapes;
 
   /// Whether stroked paths are converted into the filled region they cover.
   final bool? outlineStrokes;
