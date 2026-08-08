@@ -52,33 +52,34 @@ class FlutterClassGenerator {
     final iconNameSet = <String>{};
 
     return glyphList.map((g) {
-      final baseName =
-          _getVarName(p.basenameWithoutExtension(g.metadata.name!)).snakeCase;
+      // lowerCamelCase is Dart's convention for constants; snake_case names
+      // trip `constant_identifier_names` in any project using standard lints.
+      //
+      // Case conversion runs before sanitization: separators like "-" and " "
+      // are what mark word boundaries, and stripping them first would collapse
+      // "arrow-up" to "arrowup" instead of "arrowUp".
+      final baseName = _getVarName(
+        p.basenameWithoutExtension(g.metadata.name!).camelCase,
+      );
       final usingDefaultName = baseName.isEmpty;
 
       var variableName = usingDefaultName ? _kUnnamedIconName : baseName;
 
-      // Handling same names by adding numeration to them
+      // Two files can normalize to the same identifier; disambiguate with a
+      // numeric suffix. It is appended directly rather than after an
+      // underscore, which would break lowerCamelCase again.
+      //
+      // Existing trailing digits are deliberately not parsed: an icon named
+      // `alert_02` becomes `alert02`, and treating that `02` as a counter would
+      // hand the duplicate the name `alert03` — which most likely belongs to a
+      // different icon in the same set.
       if (iconNameSet.contains(variableName)) {
-        // If name already contains numeration, then splitting it
-        final countMatch = RegExp(r'^(.*)_([0-9]+)$').firstMatch(variableName);
-
-        var variableNameCount = 1;
-        var variableWithoutCount = variableName;
-
-        if (countMatch != null) {
-          variableNameCount = int.parse(countMatch.group(2)!);
-          variableWithoutCount = countMatch.group(1)!;
-        }
-
-        String variableNameWithCount;
+        final baseVariableName = variableName;
+        var count = 1;
 
         do {
-          variableNameWithCount =
-              '${variableWithoutCount}_${++variableNameCount}';
-        } while (iconNameSet.contains(variableNameWithCount));
-
-        variableName = variableNameWithCount;
+          variableName = '$baseVariableName${++count}';
+        } while (iconNameSet.contains(variableName));
       }
 
       iconNameSet.add(variableName);

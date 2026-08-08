@@ -173,8 +173,9 @@ opacity — are ignored. A glyph is a single-colour region; colour comes from th
 surrounding text style at render time.
 - When `normalize` is set to false, it's recommended that SVG icons have the same height.
 Otherwise, final result might not look as expected.
-- When Flutter class is generated, static variables names derive from SVG file name
-converted to pascal case with non-allowed characters removed.
+- When Flutter class is generated, static variable names derive from the SVG
+file name converted to lowerCamelCase (Dart's convention for constants) with
+non-allowed characters removed.
 Name is set to 'unnamed', if it's empty.
 Suffix '_{i+1}' is added, if name already exists.
 
