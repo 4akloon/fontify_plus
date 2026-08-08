@@ -3,23 +3,31 @@ import 'dart:math' as math;
 import 'package:path_parsing/path_parsing.dart';
 import 'package:vector_math/vector_math.dart';
 
+import 'bezier_offset.dart';
 import 'stroke.dart';
 
-/// Curve flattening tolerance, in SVG user units.
+/// How far the offset may stray from the true offset, in SVG user units.
 ///
-/// Icons are authored in small viewBoxes (commonly 16 or 24 units) and then
-/// scaled to the font's em square, so the tolerance has to be a small fraction
-/// of a unit to survive that magnification. 0.02 keeps a 16-unit icon smooth at
-/// 1000 upem while holding the point count low enough to keep glyphs compact.
-const _kFlattenTolerance = 0.02;
+/// Icons are authored in small viewBoxes (commonly 16 or 24 units) and scaled
+/// onto the em square, so at the usual 1000 upem this is about 1.2 font units —
+/// the resolution a typeface is drawn at anyway, and well under a pixel at any
+/// size an icon is displayed.
+const _kOffsetTolerance = 0.02;
 
 /// Points closer together than this are treated as coincident.
 const _kEpsilon = 1e-9;
 
+/// Cosine of the sharpest turn still treated as a smooth junction.
+///
+/// Roughly one degree. A curve written as a chain of cubics meets itself
+/// tangentially at each junction, and inserting join geometry there would
+/// litter the outline with degenerate arcs.
+const _kSmoothJunctionCosine = 0.9998;
+
 /// Converts a stroked SVG path into the filled region that the stroke covers.
 ///
-/// Returns path data describing that region as closed polygonal contours, or
-/// null when [pathData] contains nothing strokeable.
+/// Returns path data describing that region, or null when [pathData] contains
+/// nothing strokeable.
 ///
 /// Font glyphs have no stroke — an outline is either filled or it is invisible.
 /// A stroked path handed straight to the rasterizer collapses to its zero-area
@@ -31,8 +39,8 @@ const _kEpsilon = 1e-9;
 /// subpaths (a plus sign, an X) need no clipping pass. Contours are emitted in
 /// consistent orientation to make that hold.
 String? outlineStrokeToPathData(String pathData, StrokeProperties stroke) {
-  final subPaths = _flatten(pathData);
-  final contours = <List<Vector2>>[];
+  final subPaths = _SubPathBuilder().build(pathData);
+  final contours = <List<Cubic>>[];
 
   for (final subPath in subPaths) {
     contours.addAll(_outlineSubPath(subPath, stroke));
@@ -45,34 +53,31 @@ String? outlineStrokeToPathData(String pathData, StrokeProperties stroke) {
   return _toPathData(contours);
 }
 
-/// A polyline approximation of one subpath.
+/// One subpath, kept as curves rather than flattened.
+///
+/// Offsetting proceeds segment by segment either way, but keeping the curves
+/// means their offsets can be approximated directly. Flattening first discards
+/// the exact end tangents that make that approximation cheap, and no amount of
+/// refitting afterwards recovers them.
 class _SubPath {
-  _SubPath(Vector2 start) : points = [start];
+  _SubPath(this.start);
 
-  final List<Vector2> points;
+  final Vector2 start;
+  final segments = <Cubic>[];
   bool closed = false;
 
-  void add(Vector2 point) {
-    // Collapse repeated points: zero-length segments have no direction, so they
-    // would produce meaningless normals downstream.
-    if (points.isEmpty || points.last.distanceToSquared(point) > _kEpsilon) {
-      points.add(point);
-    }
-  }
+  Vector2 get end => segments.isEmpty ? start : segments.last.p3;
 }
 
-/// Walks SVG path data and reduces every curve to line segments.
-class _PathFlattener extends PathProxy {
-  final subPaths = <_SubPath>[];
+/// Collects SVG path data as cubic segments.
+class _SubPathBuilder extends PathProxy {
+  final _subPaths = <_SubPath>[];
 
   _SubPath? _current;
   Vector2 _cursor = Vector2.zero();
 
   @override
   void moveTo(double x, double y) {
-    // A moveTo always begins a new subpath. Appending to the current one would
-    // splice unrelated strokes into a single contour — the reason a two-stroke
-    // plus sign renders as one zigzag.
     _finish();
     _cursor = Vector2(x, y);
     _current = _SubPath(_cursor.clone());
@@ -80,8 +85,14 @@ class _PathFlattener extends PathProxy {
 
   @override
   void lineTo(double x, double y) {
-    _cursor = Vector2(x, y);
-    (_current ??= _SubPath(_cursor.clone())).add(_cursor.clone());
+    final end = Vector2(x, y);
+    final current = _current ??= _SubPath(_cursor.clone());
+
+    if (current.end.distanceToSquared(end) > _kEpsilon) {
+      current.segments.add(Cubic.line(current.end, end));
+    }
+
+    _cursor = end;
   }
 
   @override
@@ -93,111 +104,53 @@ class _PathFlattener extends PathProxy {
     double x3,
     double y3,
   ) {
-    final p0 = _cursor.clone();
-    final p1 = Vector2(x1, y1);
-    final p2 = Vector2(x2, y2);
-    final p3 = Vector2(x3, y3);
+    final current = _current ??= _SubPath(_cursor.clone());
+    final end = Vector2(x3, y3);
 
-    final current = _current ??= _SubPath(p0.clone());
-    final steps = _cubicSegmentCount(p0, p1, p2, p3);
+    current.segments.add(
+      Cubic(current.end, Vector2(x1, y1), Vector2(x2, y2), end),
+    );
 
-    for (var i = 1; i <= steps; i++) {
-      current.add(_cubicAt(p0, p1, p2, p3, i / steps));
-    }
-
-    _cursor = p3;
+    _cursor = end;
   }
 
   @override
   void close() {
-    _current?.closed = true;
+    final current = _current;
+
+    if (current != null &&
+        current.segments.isNotEmpty &&
+        current.end.distanceToSquared(current.start) > _kEpsilon) {
+      current.segments.add(Cubic.line(current.end, current.start));
+    }
+
+    current?.closed = true;
     _finish();
   }
 
   void _finish() {
     final current = _current;
 
-    if (current != null && current.points.isNotEmpty) {
-      subPaths.add(current);
+    if (current != null && current.segments.isNotEmpty) {
+      _subPaths.add(current);
     }
 
     _current = null;
   }
 
-  List<_SubPath> flatten(String pathData) {
+  List<_SubPath> build(String pathData) {
     writeSvgPathDataToPath(pathData, this);
     _finish();
 
-    return subPaths;
+    return _subPaths;
   }
 }
-
-List<_SubPath> _flatten(String pathData) => _PathFlattener().flatten(pathData);
-
-/// Chooses a segment count for a cubic from its control polygon length.
-///
-/// The control polygon bounds the curve, so its length caps how far the curve
-/// can stray; the error of an n-segment chord approximation falls off as n^-2.
-int _cubicSegmentCount(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3) {
-  final polygonLength =
-      p0.distanceTo(p1) + p1.distanceTo(p2) + p2.distanceTo(p3);
-
-  if (polygonLength <= _kEpsilon) {
-    return 1;
-  }
-
-  final steps = math.sqrt(polygonLength / _kFlattenTolerance).ceil();
-
-  return steps.clamp(2, 64);
-}
-
-Vector2 _cubicAt(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, double t) {
-  final u = 1 - t;
-  final a = u * u * u;
-  final b = 3 * u * u * t;
-  final c = 3 * u * t * t;
-  final d = t * t * t;
-
-  return Vector2(
-    a * p0.x + b * p1.x + c * p2.x + d * p3.x,
-    a * p0.y + b * p1.y + c * p2.y + d * p3.y,
-  );
-}
-
-/// Left-hand normal of a unit direction.
-Vector2 _leftNormal(Vector2 direction) => Vector2(-direction.y, direction.x);
 
 /// Builds the filled contours covering one stroked subpath.
-List<List<Vector2>> _outlineSubPath(_SubPath subPath, StrokeProperties stroke) {
-  final points = [...subPath.points];
+List<List<Cubic>> _outlineSubPath(_SubPath subPath, StrokeProperties stroke) {
   final radius = stroke.radius;
 
-  // A closed subpath whose last point repeats the first carries a redundant
-  // vertex; the closing segment is implied.
-  if (subPath.closed &&
-      points.length > 1 &&
-      points.first.distanceToSquared(points.last) <= _kEpsilon) {
-    points.removeLast();
-  }
-
-  if (points.length < 2) {
-    // A degenerate subpath is visible only when the cap paints something.
-    if (points.length == 1 && stroke.cap == LineCap.round) {
-      return [_circle(points.first, radius)];
-    }
-
-    if (points.length == 1 && stroke.cap == LineCap.square) {
-      final c = points.first;
-      return [
-        [
-          Vector2(c.x - radius, c.y - radius),
-          Vector2(c.x + radius, c.y - radius),
-          Vector2(c.x + radius, c.y + radius),
-          Vector2(c.x - radius, c.y + radius),
-        ],
-      ];
-    }
-
+  if (subPath.segments.isEmpty) {
     return const [];
   }
 
@@ -205,357 +158,303 @@ List<List<Vector2>> _outlineSubPath(_SubPath subPath, StrokeProperties stroke) {
     // A closed stroke is an annulus: the outer wall and the inner wall, wound
     // opposite so the nonzero rule leaves the middle hollow.
     return [
-      _offsetSide(points, true, radius, stroke),
-      _offsetSide(points.reversed.toList(), true, radius, stroke),
+      _offsetSide(subPath.segments, true, radius, stroke),
+      _offsetSide(_reverse(subPath.segments), true, radius, stroke),
     ];
   }
 
   // An open stroke is a single loop: up one side, around the end cap, back down
   // the other side, around the start cap.
-  final contour = <Vector2>[
-    ..._offsetSide(points, false, radius, stroke),
+  final forward = subPath.segments;
+  final backward = _reverse(forward);
+
+  return [
+    <Cubic>[
+      ..._offsetSide(forward, false, radius, stroke),
+      ..._cap(forward.last.p3, forward.last.tangentAt(1), radius, stroke.cap),
+      ..._offsetSide(backward, false, radius, stroke),
+      ..._cap(backward.last.p3, backward.last.tangentAt(1), radius, stroke.cap),
+    ],
   ];
-
-  _appendCap(
-    contour,
-    points[points.length - 1],
-    _direction(points[points.length - 2], points[points.length - 1]),
-    radius,
-    stroke.cap,
-  );
-
-  contour.addAll(_offsetSide(points.reversed.toList(), false, radius, stroke));
-
-  _appendCap(
-    contour,
-    points.first,
-    _direction(points[1], points.first),
-    radius,
-    stroke.cap,
-  );
-
-  return [contour];
 }
 
-Vector2 _direction(Vector2 from, Vector2 to) {
-  final delta = to - from;
-  final length = delta.length;
+/// Reverses a chain of segments, so offsetting to the left walks the other side.
+List<Cubic> _reverse(List<Cubic> segments) => [
+      for (final s in segments.reversed) Cubic(s.p3, s.p2, s.p1, s.p0),
+    ];
 
-  return length <= _kEpsilon ? Vector2(1, 0) : delta / length;
-}
-
-/// Offsets a polyline to its left by [radius], inserting join geometry.
-List<Vector2> _offsetSide(
-  List<Vector2> points,
+/// Offsets a chain of segments to its left, inserting join geometry.
+List<Cubic> _offsetSide(
+  List<Cubic> segments,
   bool closed,
   double radius,
   StrokeProperties stroke,
 ) {
-  final result = <Vector2>[];
-  final segmentCount = closed ? points.length : points.length - 1;
+  final result = <Cubic>[];
 
-  Vector2? previousNormal;
+  for (var i = 0; i < segments.length; i++) {
+    final segment = segments[i];
+    final offset = offsetCubic(segment, radius, _kOffsetTolerance);
 
-  for (var i = 0; i < segmentCount; i++) {
-    final start = points[i];
-    final end = points[(i + 1) % points.length];
-
-    final direction = _direction(start, end);
-    final normal = _leftNormal(direction) * radius;
-
-    var skipStart = false;
-
-    if (previousNormal != null) {
-      skipStart =
-          _appendJoin(result, start, previousNormal, normal, radius, stroke);
+    if (offset.isEmpty) {
+      continue;
     }
 
-    if (!skipStart) {
-      result.add(start + normal);
+    if (result.isNotEmpty) {
+      _join(
+        result,
+        segment.p0,
+        segments[i - 1].tangentAt(1),
+        segment.tangentAt(0),
+        offset.first.p0,
+        radius,
+        stroke,
+      );
     }
 
-    result.add(end + normal);
-
-    previousNormal = normal;
+    result.addAll(offset);
   }
 
-  if (closed && previousNormal != null && result.isNotEmpty) {
+  if (closed && result.isNotEmpty) {
     // Close the ring by joining the last segment back to the first.
-    final firstDirection = _direction(points[0], points[1 % points.length]);
-    final firstNormal = _leftNormal(firstDirection) * radius;
-
-    if (_appendJoin(
+    _join(
       result,
-      points[0],
-      previousNormal,
-      firstNormal,
+      segments.first.p0,
+      segments.last.tangentAt(1),
+      segments.first.tangentAt(0),
+      result.first.p0,
       radius,
       stroke,
-    )) {
-      // The closing join replaced the ring's first point too.
-      result.removeAt(0);
-    }
+    );
   }
 
   return result;
 }
 
-/// Adds the corner geometry between two offset segments meeting at [vertex].
-///
-/// Returns true when the caller must not emit the incoming segment's offset
-/// start point, because this join has already replaced it.
+/// Bridges the gap between two offset segments meeting at [vertex].
 ///
 /// The two sides of a corner behave differently. On the outer side the offset
-/// edges pull apart and the gap has to be filled according to `stroke-linejoin`.
-/// On the inner side they overrun each other, and the fix is to trim both back
-/// to where they cross — leaving the overrun in place would fold a reversed
-/// loop into the contour, which the nonzero rule punches out as a hole.
-bool _appendJoin(
-  List<Vector2> result,
+/// edges pull apart and the gap is filled according to `stroke-linejoin`. On the
+/// inner side they overrun each other, and the fix is to pull both back to where
+/// their tangents cross — leaving the overrun folds a reversed loop into the
+/// contour, which the nonzero rule punches out as a hole.
+void _join(
+  List<Cubic> result,
   Vector2 vertex,
-  Vector2 previousNormal,
-  Vector2 normal,
+  Vector2 incomingTangent,
+  Vector2 outgoingTangent,
+  Vector2 nextStart,
   double radius,
   StrokeProperties stroke,
 ) {
-  final cross = previousNormal.x * normal.y - previousNormal.y * normal.x;
+  final previousEnd = result.last.p3;
 
-  // Collinear segments need no join.
-  if (cross.abs() <= _kEpsilon) {
-    return false;
+  if (previousEnd.distanceToSquared(nextStart) <= _kEpsilon) {
+    return;
   }
+
+  // Tangentially continuous: a chain of cubics describing one curve. Any gap is
+  // numerical, so close it with a straight bridge rather than a join.
+  if (incomingTangent.dot(outgoingTangent) >= _kSmoothJunctionCosine) {
+    result.add(Cubic.line(previousEnd, nextStart));
+    return;
+  }
+
+  final cross = incomingTangent.x * outgoingTangent.y -
+      incomingTangent.y * outgoingTangent.x;
 
   // Offsetting to the left makes a right turn the outer side.
   final isOuter = cross < 0;
 
   if (!isOuter) {
-    return _trimInnerCorner(result, vertex, previousNormal, normal, radius);
+    final crossing = _tangentCrossing(
+      previousEnd,
+      incomingTangent,
+      nextStart,
+      outgoingTangent,
+    );
+
+    // A very sharp inner corner puts the crossing far from the path, where
+    // using it would distort more than the overlap it removes.
+    if (crossing != null && crossing.distanceTo(vertex) <= radius * 4) {
+      result
+        ..add(Cubic.line(previousEnd, crossing))
+        ..add(Cubic.line(crossing, nextStart));
+      return;
+    }
+
+    result.add(Cubic.line(previousEnd, nextStart));
+    return;
   }
 
   switch (stroke.join) {
     case LineJoin.bevel:
-      // The straight line between the two offset endpoints is the bevel; the
-      // points bracketing this call already supply it.
-      return false;
+      result.add(Cubic.line(previousEnd, nextStart));
+      return;
 
     case LineJoin.round:
-      _appendArc(result, vertex, previousNormal, normal, radius);
-      return false;
+      final from = math.atan2(
+        previousEnd.y - vertex.y,
+        previousEnd.x - vertex.x,
+      );
+      final to = math.atan2(nextStart.y - vertex.y, nextStart.x - vertex.x);
+
+      result.addAll(arcToCubics(vertex, radius, from, _shortSweep(to - from)));
+      return;
 
     case LineJoin.miter:
-      final miter = _miterPoint(vertex, previousNormal, normal, radius);
-
-      if (miter == null) {
-        return false;
-      }
+      final tip = _tangentCrossing(
+        previousEnd,
+        incomingTangent,
+        nextStart,
+        outgoingTangent,
+      );
 
       // stroke-miterlimit is the ratio of miter length to stroke width; past it
       // SVG requires falling back to a bevel.
-      if (miter.distanceTo(vertex) / radius > stroke.miterLimit) {
-        return false;
+      if (tip == null || tip.distanceTo(vertex) / radius > stroke.miterLimit) {
+        result.add(Cubic.line(previousEnd, nextStart));
+        return;
       }
 
-      result.add(miter);
-      return false;
+      result
+        ..add(Cubic.line(previousEnd, tip))
+        ..add(Cubic.line(tip, nextStart));
+      return;
   }
 }
 
-/// Replaces an inner corner's overlapping edge ends with their crossing point.
-///
-/// Drops the outgoing point of the previous segment and reports that the next
-/// segment's start point is likewise unneeded.
-bool _trimInnerCorner(
-  List<Vector2> result,
-  Vector2 vertex,
-  Vector2 previousNormal,
-  Vector2 normal,
-  double radius,
-) {
-  if (result.isEmpty) {
-    return false;
-  }
-
-  final crossing = _miterPoint(vertex, previousNormal, normal, radius);
-
-  // A very sharp inner corner puts the crossing far from the path, where using
-  // it would distort the outline more than the small overlap it removes.
-  if (crossing == null || crossing.distanceTo(vertex) > radius * 4) {
-    return false;
-  }
-
-  result
-    ..removeLast()
-    ..add(crossing);
-
-  return true;
-}
-
-/// Intersection of the two offset edges, or null when they are parallel.
-Vector2? _miterPoint(
-  Vector2 vertex,
-  Vector2 previousNormal,
-  Vector2 normal,
-  double radius,
-) {
-  final bisector = previousNormal + normal;
-  final length = bisector.length;
-
-  if (length <= _kEpsilon) {
-    return null;
-  }
-
-  final unitBisector = bisector / length;
-
-  // cos of half the angle between the two offset directions.
-  final cosHalf = unitBisector.dot(normal) / radius;
-
-  if (cosHalf.abs() <= _kEpsilon) {
-    return null;
-  }
-
-  return vertex + unitBisector * (radius / cosHalf);
-}
-
-/// Appends an arc around [centre] from [from] to [to], both offset vectors of
-/// length [radius].
-void _appendArc(
-  List<Vector2> result,
-  Vector2 centre,
-  Vector2 from,
-  Vector2 to,
-  double radius,
-) {
-  final startAngle = math.atan2(from.y, from.x);
-  var sweep = math.atan2(to.y, to.x) - startAngle;
-
-  // Take the short way round; the long way would wrap the arc the wrong side of
-  // the corner.
-  while (sweep > math.pi) {
-    sweep -= 2 * math.pi;
-  }
-  while (sweep < -math.pi) {
-    sweep += 2 * math.pi;
-  }
-
-  _appendArcSweep(result, centre, startAngle, sweep, radius);
-}
-
-/// Appends an arc of an explicitly given sweep.
-///
-/// A cap turns through exactly half a circle, where the two directions are
-/// equally short and the sign cannot be recovered from the endpoints — picking
-/// wrong folds the cap back over the stroke and cancels its area. Callers that
-/// know the direction pass it here instead.
-void _appendArcSweep(
-  List<Vector2> result,
-  Vector2 centre,
-  double startAngle,
-  double sweep,
-  double radius,
-) {
-  final steps = _arcSegmentCount(radius, sweep.abs());
-
-  for (var i = 1; i < steps; i++) {
-    final angle = startAngle + sweep * (i / steps);
-    result.add(
-      Vector2(
-        centre.x + radius * math.cos(angle),
-        centre.y + radius * math.sin(angle),
-      ),
-    );
-  }
-}
-
-/// Segment count for an arc, from the sagitta of a chord at the flattening
-/// tolerance.
-int _arcSegmentCount(double radius, double sweep) {
-  if (radius <= _kEpsilon || sweep <= _kEpsilon) {
-    return 1;
-  }
-
-  final ratio = 1 - _kFlattenTolerance / radius;
-  final maxAngle =
-      ratio <= -1 ? math.pi : 2 * math.acos(ratio.clamp(-1.0, 1.0));
-
-  if (maxAngle <= _kEpsilon) {
-    return 32;
-  }
-
-  return (sweep / maxAngle).ceil().clamp(2, 64);
-}
-
-/// Appends the cap that turns the stroke around at an endpoint.
+/// Turns the stroke around at an endpoint.
 ///
 /// [direction] points along the stroke, out of the endpoint.
-void _appendCap(
-  List<Vector2> result,
+List<Cubic> _cap(
   Vector2 endPoint,
   Vector2 direction,
   double radius,
   LineCap cap,
 ) {
-  final normal = _leftNormal(direction) * radius;
+  final normal = leftNormal(direction) * radius;
+  final from = endPoint + normal;
+  final to = endPoint - normal;
 
   switch (cap) {
     case LineCap.butt:
-      // The contour closes straight across; nothing to add.
-      return;
+      return [Cubic.line(from, to)];
 
     case LineCap.round:
-      // Sweep from the left normal to the right normal the way that passes
-      // through [direction], so the cap bulges out beyond the endpoint.
-      _appendArcSweep(
-        result,
+      // Sweep the way that passes through [direction], so the cap bulges out
+      // beyond the endpoint. Both directions are equally short at half a turn,
+      // so the sign cannot be recovered from the endpoints alone.
+      return arcToCubics(
         endPoint,
+        radius,
         math.atan2(normal.y, normal.x),
         -math.pi,
-        radius,
       );
-      return;
 
     case LineCap.square:
       final extension = direction * radius;
-      result
-        ..add(endPoint + normal + extension)
-        ..add(endPoint - normal + extension);
-      return;
+
+      return [
+        Cubic.line(from, from + extension),
+        Cubic.line(from + extension, to + extension),
+        Cubic.line(to + extension, to),
+      ];
   }
 }
 
-List<Vector2> _circle(Vector2 centre, double radius) {
-  final steps = _arcSegmentCount(radius, 2 * math.pi);
+/// Intersection of two lines given by a point and a direction, or null when
+/// they are parallel.
+Vector2? _tangentCrossing(
+  Vector2 pointA,
+  Vector2 directionA,
+  Vector2 pointB,
+  Vector2 directionB,
+) {
+  final determinant = directionA.x * directionB.y - directionA.y * directionB.x;
 
-  return [
-    for (var i = 0; i < steps; i++)
-      Vector2(
-        centre.x + radius * math.cos(2 * math.pi * i / steps),
-        centre.y + radius * math.sin(2 * math.pi * i / steps),
-      ),
-  ];
+  if (determinant.abs() <= _kEpsilon) {
+    return null;
+  }
+
+  final delta = pointB - pointA;
+  final t = (delta.x * directionB.y - delta.y * directionB.x) / determinant;
+
+  return pointA + directionA * t;
 }
 
-/// Serializes contours as closed polygonal SVG path data.
-String _toPathData(List<List<Vector2>> contours) {
+/// Normalizes a sweep to the short way round.
+double _shortSweep(double sweep) {
+  var result = sweep;
+
+  while (result > math.pi) {
+    result -= 2 * math.pi;
+  }
+  while (result < -math.pi) {
+    result += 2 * math.pi;
+  }
+
+  return result;
+}
+
+/// Serializes contours as closed SVG path data.
+String _toPathData(List<List<Cubic>> contours) {
   final buffer = StringBuffer();
 
   for (final contour in contours) {
-    if (contour.length < 3) {
+    if (contour.isEmpty) {
       continue;
     }
 
     buffer.write(
-        'M${_coordinate(contour.first.x)} ${_coordinate(contour.first.y)}');
+      'M${_coordinate(contour.first.p0.x)} ${_coordinate(contour.first.p0.y)}',
+    );
 
-    for (var i = 1; i < contour.length; i++) {
-      buffer.write(
-        'L${_coordinate(contour[i].x)} ${_coordinate(contour[i].y)}',
-      );
+    for (final segment in contour) {
+      if (_isStraight(segment)) {
+        buffer.write(
+          'L${_coordinate(segment.p3.x)} ${_coordinate(segment.p3.y)}',
+        );
+      } else {
+        buffer.write(
+          'C${_coordinate(segment.p1.x)} ${_coordinate(segment.p1.y)} '
+          '${_coordinate(segment.p2.x)} ${_coordinate(segment.p2.y)} '
+          '${_coordinate(segment.p3.x)} ${_coordinate(segment.p3.y)}',
+        );
+      }
     }
 
     buffer.write('Z');
   }
 
   return buffer.toString();
+}
+
+/// Whether a cubic's controls lie on its chord, so it can be written as a line.
+///
+/// Joins and caps produce plenty of straight pieces; spending six coordinates
+/// on each would undo much of what offsetting curves directly buys.
+bool _isStraight(Cubic segment) {
+  final chord = segment.p3 - segment.p0;
+  final length = chord.length;
+
+  if (length <= _kEpsilon) {
+    return true;
+  }
+
+  final direction = chord / length;
+
+  for (final control in [segment.p1, segment.p2]) {
+    final offset = control - segment.p0;
+    final along = offset.dot(direction);
+    final perpendicular = (offset - direction * along).length;
+
+    if (perpendicular > _kOffsetTolerance / 4 || along < 0 || along > length) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /// Trims float noise so the emitted path data stays readable and compact.

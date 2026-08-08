@@ -376,6 +376,7 @@ void main() {
         fontName: 'TestFont',
         useOpenType: false,
         usePostV2: true,
+        normalize: true,
       );
 
       recreatedByteData = ByteData(recreatedFont.size);
@@ -422,7 +423,10 @@ void main() {
       final table = recreatedFont.os2;
 
       expect(table.version, 5);
-      expect(table.xAvgCharWidth, 675);
+
+      // Was 675 while normalization scaled glyphs to ascender + descender
+      // (700 units) instead of the 1000-unit span between them.
+      expect(table.xAvgCharWidth, 953);
     });
   });
 

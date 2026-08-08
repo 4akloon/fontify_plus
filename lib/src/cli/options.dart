@@ -41,9 +41,11 @@ void defineOptions(ArgParser argParser) {
     )
     ..addFlag(
       kOptionNames[CliArgument.normalize]!,
-      help:
-          'Enables glyph normalization for the font. Disable this if every icon has the same size and positioning.',
-      defaultsTo: true,
+      help: 'Scales each glyph so its own longest side fills the em square. '
+          'Only for icons from mismatched sources: it discards how much of '
+          'its artboard each icon was drawn to occupy, so a full-bleed icon '
+          'and a small one come out the same size.',
+      defaultsTo: false,
     )
     ..addFlag(
       kOptionNames[CliArgument.ignoreShapes]!,

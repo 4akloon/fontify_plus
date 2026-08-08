@@ -121,8 +121,6 @@ class FlutterClassGenerator {
   /// Generates content for a class' file.
   String generate() {
     final classContent = [
-      '$_className._();',
-      '',
       _fontFamilyConst,
       if (_hasPackage) _fontPackageConst,
       for (var i = 0; i < glyphList.length; i++) ..._generateIconConst(i),
@@ -157,7 +155,7 @@ import 'package:flutter/widgets.dart';
 ///       fonts:
 ///         - asset: fonts/$_fontFileName
 /// ```
-class $_className {
+abstract final class $_className {
 $classContentString
 }
 ''';

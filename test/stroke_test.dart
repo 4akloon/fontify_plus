@@ -4,6 +4,7 @@ import 'package:fontify_plus/src/common/generic_glyph.dart';
 import 'package:fontify_plus/src/svg/stroke.dart';
 import 'package:fontify_plus/src/svg/stroke_outliner.dart';
 import 'package:fontify_plus/src/svg/svg.dart';
+import 'package:path_parsing/path_parsing.dart';
 import 'package:test/test.dart';
 
 /// Signed area of a closed polygon via the shoelace formula.
@@ -22,40 +23,91 @@ double _signedArea(List<List<double>> points) {
   return sum / 2;
 }
 
-/// Extracts each `M ... Z` contour from polygonal path data.
-List<List<List<double>>> _contours(String pathData) {
+/// Flattens path data into one point list per contour.
+///
+/// The outliner emits cubics wherever the geometry was curved, so these
+/// assertions have to go through a real path parser rather than splitting the
+/// string on command letters.
+class _ContourReader extends PathProxy {
   final contours = <List<List<double>>>[];
 
-  for (final chunk in pathData.split('M')) {
-    if (chunk.trim().isEmpty) {
-      continue;
-    }
+  List<List<double>>? _current;
+  var _cursor = [0.0, 0.0];
 
-    final points = <List<double>>[];
-
-    for (final part in chunk.replaceAll('Z', '').split('L')) {
-      final coords = part.trim().split(RegExp(r'\s+'));
-
-      if (coords.length == 2) {
-        final x = double.tryParse(coords[0]);
-        final y = double.tryParse(coords[1]);
-
-        if (x != null && y != null) {
-          points.add([x, y]);
-        }
-      }
-    }
-
-    if (points.isNotEmpty) {
-      contours.add(points);
-    }
+  @override
+  void moveTo(double x, double y) {
+    _flush();
+    _cursor = [x, y];
+    _current = [
+      [x, y],
+    ];
   }
 
-  return contours;
+  @override
+  void lineTo(double x, double y) {
+    _cursor = [x, y];
+    (_current ??= []).add([x, y]);
+  }
+
+  @override
+  void cubicTo(
+    double x1,
+    double y1,
+    double x2,
+    double y2,
+    double x3,
+    double y3,
+  ) {
+    final p0 = _cursor;
+    const steps = 24;
+
+    for (var i = 1; i <= steps; i++) {
+      final t = i / steps;
+      final u = 1 - t;
+      final a = u * u * u;
+      final b = 3 * u * u * t;
+      final c = 3 * u * t * t;
+      final d = t * t * t;
+
+      (_current ??= []).add([
+        a * p0[0] + b * x1 + c * x2 + d * x3,
+        a * p0[1] + b * y1 + c * y2 + d * y3,
+      ]);
+    }
+
+    _cursor = [x3, y3];
+  }
+
+  @override
+  void close() => _flush();
+
+  void _flush() {
+    final current = _current;
+
+    if (current != null && current.length > 2) {
+      contours.add(current);
+    }
+
+    _current = null;
+  }
+
+  List<List<List<double>>> read(String pathData) {
+    writeSvgPathDataToPath(pathData, this);
+    _flush();
+
+    return contours;
+  }
 }
+
+List<List<List<double>>> _contours(String pathData) =>
+    _ContourReader().read(pathData);
 
 double _totalArea(String pathData) =>
     _contours(pathData).fold(0.0, (sum, c) => sum + _signedArea(c).abs());
+
+/// Number of drawing commands in path data — the size the glyph will cost.
+int _commandCount(String pathData) =>
+    RegExp('[MLCZ]').allMatches(pathData).length;
 
 const _stroke = StrokeProperties(width: 2);
 
@@ -220,14 +272,68 @@ void main() {
       expect(_totalArea(clipped!), lessThan(_totalArea(spiked!)));
     });
 
-    test('flattens curves finely enough to stay smooth', () {
+    test('emits curves rather than a dense polyline', () {
+      // Offsetting only works on line segments, so the outline is built as a
+      // flattened polyline and then refitted. Shipping the polyline verbatim
+      // would cost dozens of commands per icon for no extra accuracy.
+      final outlined = outlineStrokeToPathData('M0 0C0 5 10 5 10 0', _stroke)!;
+
+      expect(outlined, contains('C'));
+      // The flattened polyline behind this outline runs to several hundred
+      // points; refitting has to bring it back to the order of the curve.
+      expect(
+        _commandCount(outlined),
+        lessThan(30),
+        reason: 'a refitted curve should need far fewer commands than samples',
+      );
+    });
+
+    test('stays accurate after refitting', () {
+      // Compactness is only worth having if the shape survives it. A stroke of
+      // width 2 along a curve of arc length L covers about 2L.
+      final outlined = outlineStrokeToPathData('M0 0C0 5 10 5 10 0', _stroke)!;
+
+      final contour = _contours(outlined).single;
+      final xs = contour.map((p) => p[0]);
+      final ys = contour.map((p) => p[1]);
+
+      // Both ends of this curve leave vertically, so the stroke spreads
+      // sideways there and the butt caps sit flat on y = 0.
+      expect(xs.reduce(math.min), closeTo(-1, 0.05));
+      expect(xs.reduce(math.max), closeTo(11, 0.05));
+      expect(ys.reduce(math.min), closeTo(0, 0.05));
+
+      // The curve peaks at 3.75, plus half a stroke width.
+      expect(ys.reduce(math.max), closeTo(4.75, 0.05));
+    });
+
+    test('keeps a miter corner sharp through refitting', () {
+      // Curve fitting is smooth by construction, so a corner survives only if
+      // the outliner marks it and the run is cut there. If that breaks, the
+      // sharp tip is quietly rounded away.
       final outlined = outlineStrokeToPathData(
-        'M0 0C0 5 10 5 10 0',
-        _stroke,
+        'M0 0L10 0L10 10',
+        const StrokeProperties(width: 2, miterLimit: 10),
+      )!;
+
+      final contour = _contours(outlined).single;
+
+      // The outer miter tip of a right angle sits at (11, -1).
+      final reachesTip = contour.any(
+        (p) => (p[0] - 11).abs() < 0.01 && (p[1] + 1).abs() < 0.01,
       );
 
-      // A coarse approximation would betray itself as a handful of points.
-      expect(_contours(outlined!).first.length, greaterThan(20));
+      expect(reachesTip, isTrue, reason: 'the miter tip was rounded off');
+    });
+
+    test('keeps a square cap sharp through refitting', () {
+      final outlined = outlineStrokeToPathData(
+        'M0 0H10',
+        const StrokeProperties(width: 2, cap: LineCap.square),
+      )!;
+
+      // Square caps are four right angles; rounding any of them loses area.
+      expect(_totalArea(outlined), closeTo(24, 0.01));
     });
   });
 

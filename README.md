@@ -57,9 +57,9 @@ Font options:
 - `-f` or `--font-name=<name>`
 Name for a generated font.
 - `--[no-]normalize`
-Enables glyph normalization for the font.
-Disable this if every icon has the same size and positioning.
-(defaults to on)
+Scales each glyph so its own longest side fills the em square.
+Only for icons collected from mismatched sources — see [Glyph sizing](#glyph-sizing).
+(defaults to off)
 - `--[no-]ignore-shapes`
 Disables SVG shape-to-path conversion (circle, rect, etc.).
 (defaults to on)
@@ -110,8 +110,8 @@ fontify_plus:
   package: my_font_package
 
   font_name: "My Icons"
-  normalize: true
-  ignore_shapes: true
+  normalize: false
+  ignore_shapes: false
 
   recursive: true
   verbose: false
@@ -157,6 +157,23 @@ as older versions did.
 For export settings, troubleshooting and the cases that need outlining in Figma
 first, see [doc/figma-export.md](doc/figma-export.md).
 
+## Glyph sizing
+
+By default an icon's artboard maps straight onto the em square. An icon drawn to
+fill its 16x16 viewBox fills the em; one drawn at half that size fills half of
+it. `Icon(MyIcons.thing, size: 24)` then covers the same area the SVG does at
+24 logical pixels, so the font is a drop-in replacement for the SVG.
+
+`--normalize` instead scales each glyph individually until its own longest side
+fills the em square, and centres it. That discards how much of its artboard the
+icon was drawn to occupy — which is design information. A full-bleed circle gets
+shrunk and a small arrow gets blown up until they match, so the arrow can end up
+larger than the circle even though the artwork says otherwise.
+
+Use it only when the icons come from mismatched sources whose viewBoxes disagree
+and a uniform size is the lesser evil. For a set exported from one design file,
+leave it off.
+
 ## Notes
 
 - Generated OpenType font is using CFF table.
@@ -171,8 +188,8 @@ Anything else related to the group is ignored and group referencing is not suppo
 - Paint attributes other than stroke geometry — `fill` colour, gradients,
 opacity — are ignored. A glyph is a single-colour region; colour comes from the
 surrounding text style at render time.
-- When `normalize` is set to false, it's recommended that SVG icons have the same height.
-Otherwise, final result might not look as expected.
+- `normalize` expects every icon to share a viewBox when it is off, which is the
+usual case for an icon set. See [Glyph sizing](#glyph-sizing).
 - When Flutter class is generated, static variable names derive from the SVG
 file name converted to lowerCamelCase (Dart's convention for constants) with
 non-allowed characters removed.

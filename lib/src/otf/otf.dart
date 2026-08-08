@@ -78,7 +78,7 @@ class OpenTypeFont implements BinaryCodable {
     achVendID ??= kDefaultAchVendID;
     fontName ??= kDefaultFontFamily;
     useOpenType ??= true;
-    normalize ??= true;
+    normalize ??= false;
     usePostV2 ??= false;
 
     _generateCharCodes(glyphList);

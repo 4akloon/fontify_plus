@@ -24,9 +24,17 @@ class SvgToOtfResult {
 /// fill-only, so a stroked icon is otherwise invisible.
 /// NOTE: Paint attributes other than stroke geometry (such as "fill" colour)
 /// are ignored — only the shape's outline is used.
-/// * If [normalize] is set to true,
-/// glyphs are resized and centered to fit in coordinates grid (unitsPerEm).
-/// Defaults to true.
+/// * If [normalize] is set to true, each glyph is scaled so that its own
+/// longest side fills the em square, then centred. Defaults to false.
+///
+/// Normalization discards how much of its artboard an icon was drawn to
+/// occupy, which is design information: a full-bleed circle and a small
+/// arrow both end up the same size, inverting the set's proportions. With it
+/// off, the artboard maps onto the em square directly and the relative sizes
+/// the icons were drawn at survive — what an icon set almost always wants.
+///
+/// Turn it on only for icons collected from mismatched sources, where the
+/// viewBoxes disagree and forcing a uniform size is the lesser evil.
 /// * [fontName] is a name for a generated font.
 ///
 /// Returns an instance of [SvgToOtfResult] class containing glyphs and a font.
@@ -37,7 +45,7 @@ SvgToOtfResult svgToOtf({
   bool? normalize,
   String? fontName,
 }) {
-  normalize ??= true;
+  normalize ??= false;
 
   final svgList = [
     for (final e in svgMap.entries)

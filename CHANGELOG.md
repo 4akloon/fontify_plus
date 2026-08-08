@@ -31,13 +31,43 @@ font at all.** If you are on 0.4.x, upgrade.
   because nothing exercised the full write path.
 * `doc/figma-export.md` — export settings, troubleshooting, and the cases that
   need outlining in Figma first.
+* Analytic offsetting for outlined strokes. The outline is built by offsetting
+  the source curves directly, rather than flattening them to a polyline first.
+  End points and end tangents of an offset are known exactly, so each source
+  curve maps to a handful of cubics instead of hundreds of samples that then
+  have to be refitted. Round joins and caps became cubic arc approximations for
+  the same reason. On a 32-icon set that cut the font by 39% raw and 30%
+  compressed, and halved the point count, with no measurable change to the
+  rendered shape.
+
+  Where `distance * curvature` reaches 1 — the inside of a corner rounded
+  tighter than the stroke is wide — the true offset grows a cusp that no curve
+  tracks. Those are detected and approximated in one step; the nonzero winding
+  rule absorbs the small overlap.
 * `CONTRIBUTING.md`, CI across Dart 3.5 and stable, and automated publishing.
+
+* Fix glyph normalization scaling to `ascender + descender` instead of the span
+  between them. With the default metrics that is 700 units rather than 1000, so
+  every normalized glyph came out at 70% of the size it asked for. (The same sum
+  is correct a few lines away in `center`, where it is the band's midpoint
+  rather than its height.)
 
 ### Changed
 
+* **Breaking:** `normalize` now defaults to false. Normalization scales each
+  glyph until its own longest side fills the em square, which discards how much
+  of its artboard an icon was drawn to occupy: a full-bleed circle is shrunk and
+  a small arrow is blown up until they match, so the arrow can end up larger
+  than the circle. With it off the artboard maps onto the em square directly and
+  `Icon(..., size: n)` covers the same area as the SVG at the same size. Pass
+  `--normalize` for icons collected from sources whose viewBoxes disagree.
 * **Breaking:** `ignoreShapes` now defaults to false, so `<circle>`, `<rect>`,
   `<line>`, `<polyline>` and `<polygon>` are converted to paths instead of being
   silently discarded. Pass `--ignore-shapes` for the old behaviour.
+* **Breaking:** the generated class is now `abstract final` rather than a plain
+  class with a private constructor. It states the intent directly — a namespace
+  of constants that can be neither instantiated nor extended — and drops the
+  unused constructor.
 * **Breaking:** minimum Dart SDK is now 3.5.
 * Upgrade all dependencies, including `xml` 6 to 7.
 

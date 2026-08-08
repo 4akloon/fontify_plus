@@ -77,6 +77,16 @@ void main() {
       expect(memberNames(source), isNot(contains('alert03')));
     });
 
+    test('declares the class abstract final', () {
+      // `abstract final` states the intent directly: the class is a namespace
+      // of constants, so it can be neither instantiated nor extended. A private
+      // constructor only blocks the first, and leaves an unused member behind.
+      final source = generate(['icon']);
+
+      expect(source, contains('abstract final class MyIcons {'));
+      expect(source, isNot(contains('MyIcons._()')));
+    });
+
     test('declares the font package when one is given', () {
       final source = generate(['icon'], package: 'design_system');
 
