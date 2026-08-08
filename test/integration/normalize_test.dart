@@ -4,7 +4,7 @@ import 'package:fontify_plus/fontify_plus.dart';
 import 'package:fontify_plus/src/otf/defaults.dart';
 import 'package:test/test.dart';
 
-import 'constant.dart';
+import '../constant.dart';
 
 const _kTestCompSvgPathList = [
   '$kTestAssetsDir/svg/comp_first.svg',

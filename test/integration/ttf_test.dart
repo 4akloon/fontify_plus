@@ -11,7 +11,7 @@ import 'package:fontify_plus/src/utils/misc.dart';
 import 'package:fontify_plus/src/utils/otf.dart';
 import 'package:test/test.dart';
 
-import 'constant.dart';
+import '../constant.dart';
 import 'fixtures/ttf_expected_data.dart';
 
 const _kTestFontAssetPath = '$kTestAssetsDir/test_font.ttf';
