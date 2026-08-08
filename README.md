@@ -60,9 +60,6 @@ Name for a generated font.
 Scales each glyph so its own longest side fills the em square.
 Only for icons collected from mismatched sources — see [Glyph sizing](#glyph-sizing).
 (defaults to off)
-- `--[no-]ignore-shapes`
-Disables SVG shape-to-path conversion (circle, rect, etc.).
-(defaults to on)
 
 Other options:
 
@@ -111,7 +108,6 @@ fontify_plus:
 
   font_name: "My Icons"
   normalize: false
-  ignore_shapes: false
 
   recursive: true
   verbose: false
@@ -183,8 +179,7 @@ leave it off.
 - SVG `<g>` element's children are expanded to the root with transformations applied.
 Anything else related to the group is ignored and group referencing is not supported.
 - Consider using [Non-zero fill rule][].
-- Shapes (circle, rect, etc.) are converted to paths by default. Setting
-`ignoreShapes` to true discards them instead, which silently drops geometry.
+- Shapes (circle, rect, etc.) are always converted to paths.
 - Paint attributes other than stroke geometry — `fill` colour, gradients,
 opacity — are ignored. A glyph is a single-colour region; colour comes from the
 surrounding text style at render time.

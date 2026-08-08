@@ -1,5 +1,49 @@
 # Changelog
 
+## 0.6.0
+
+SVG parsing now goes through `package:vector_graphics_compiler` instead of a
+hand-written reader. This fixes several classes of icon that previously came out
+blank or wrong, and removes a net 496 lines from `lib` and `bin` (602 added,
+1098 removed).
+
+### Breaking
+
+* Minimum Dart SDK is now 3.10.
+* The `ignoreShapes` option is gone from `svgToOtf`, the `--ignore-shapes` flag
+  and the `ignore_shapes` config key. Shape elements are always converted to
+  paths; the parser no longer records which element a path came from.
+* The `Svg` class and the rest of the SVG element tree are no longer exported.
+  Use `svgToOtf`, or `GenericGlyph.fromSvg(name, xmlString)`.
+* A `viewBox` with fewer than four numbers is now rejected instead of being
+  left-padded with zeroes.
+
+### Fixed
+
+* Read presentation properties from a `style` attribute. An icon written as
+  `style="fill:none;stroke:#000;stroke-width:1.5"` — the shape Illustrator and
+  some Figma exports produce — previously lost its stroke entirely and rendered
+  blank.
+* Expand `<use>`, `<defs>` and `<symbol>` instead of discarding them.
+* Accept an SVG with `width`/`height` and no `viewBox`, and a `viewBox` with a
+  non-zero minimum.
+* Accept `width="100%"`.
+* Stop a `<clipPath>`'s own shape from being drawn as part of the icon.
+
+### Changed
+
+* A path with `fill="none"` and no stroke is dropped rather than filled.
+* `stroke-dasharray` is now honoured: each dash is outlined separately.
+* Contours produced by stroke outlining always use the nonzero fill rule. An
+  `evenodd` value on a stroked path used to punch holes through its own stroke.
+* A stroke-derived contour closed by a straight line no longer repeats its start
+  point, which every such contour used to carry. A contour closed by a curve still
+  carries it, and must: CFF closes a charstring path with a straight line, so a
+  curve's end point cannot be left implicit. Glyphs shift by a few bytes either way
+  as a result; round-capped icons grow slightly, everything else shrinks.
+* `clip-path`, `<text>` and `<image>` remain unsupported, but now log a warning
+  naming the icon instead of being dropped silently.
+
 ## 0.5.0
 
 **This release fixes a bug that made every 0.4.x version unable to produce a
