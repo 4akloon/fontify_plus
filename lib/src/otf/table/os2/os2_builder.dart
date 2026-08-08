@@ -43,6 +43,13 @@ OS2Table buildOS2Table(
   final cmapFormat4subtable =
       cmap.data.whereType<CmapSegmentMappingToDeltaValuesTable>().first;
 
+  // Format 4's segment list always ends with the required 0xFFFF/0xFFFF
+  // terminator segment (see CharacterToGlyphTable.create), so the highest
+  // real character code is the second-to-last endCode entry, not the last.
+  final format4EndCodes = cmapFormat4subtable.endCode;
+  final lastRealCharIndex =
+      format4EndCodes[math.max(0, format4EndCodes.length - 2)];
+
   return OS2Table(
     null,
     version,
@@ -74,7 +81,7 @@ OS2Table buildOS2Table(
     asciiAchVendID,
     0x40 | 0x80, // REGULAR and USE_TYPO_METRICS
     cmapFormat4subtable.startCode.first,
-    cmapFormat4subtable.endCode.last,
+    lastRealCharIndex,
     hhea.ascender,
     hhea.descender,
     hhea.lineGap,
