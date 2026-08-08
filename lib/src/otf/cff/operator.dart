@@ -8,7 +8,7 @@ enum CFFOperatorContext { dict, charString }
 
 final class CFFOperator implements BinaryCodable {
   const CFFOperator(this.context, this.b0, [this.b1])
-      : intValue = b1 != null ? ((b0 << 8) | b1) : b0;
+    : intValue = b1 != null ? ((b0 << 8) | b1) : b0;
 
   final int b0;
   final int? b1;

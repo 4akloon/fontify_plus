@@ -40,8 +40,9 @@ OS2Table buildOS2Table(
   final scriptXsize = (emSize * kDefaultSubscriptRelativeXsize).round();
   final scriptYsize = (height * kDefaultSubscriptRelativeYsize).round();
 
-  final cmapFormat4subtable =
-      cmap.data.whereType<CmapSegmentMappingToDeltaValuesTable>().first;
+  final cmapFormat4subtable = cmap.data
+      .whereType<CmapSegmentMappingToDeltaValuesTable>()
+      .first;
 
   // Format 4's segment list always ends with the required 0xFFFF/0xFFFF
   // terminator segment (see CharacterToGlyphTable.create), so the highest
@@ -73,7 +74,6 @@ OS2Table buildOS2Table(
     /// NOTE: Only 2 unicode ranges are used now.
     ///
     /// Should be made calculated, in case of using other ranges.
-
     1, // Bit 1: Basic Latin. Includes space
     (1 << 28) | (1 << 25), // Bits 57 & 60: Non-Plane 0 and Private Use Area
     0,

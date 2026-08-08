@@ -24,9 +24,11 @@ extension CliArgumentMapExtension on Map<CliArgument, dynamic> {
       final allowedTypes = e.value;
 
       if (argType != Null && !allowedTypes.contains(argType)) {
-        throw CliArgumentException("'${argumentNames[arg]}' argument's type "
-            'must be one of following: $allowedTypes, '
-            "instead got '$argType'.");
+        throw CliArgumentException(
+          "'${argumentNames[arg]}' argument's type "
+          'must be one of following: $allowedTypes, '
+          "instead got '$argType'.",
+        );
       }
     }
   }

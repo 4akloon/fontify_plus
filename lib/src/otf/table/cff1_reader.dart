@@ -42,11 +42,9 @@ CFF1Table _readCFF1Table(ByteData byteData, TableRecordEntry entry) {
   fixedOffset += globalSubrsData.index!.size;
 
   /// CharStrings INDEX
-  final charStringsIndexOffset = topDict
-      .getEntryForOperator(op.charStrings)!
-      .operandList
-      .first
-      .value as int;
+  final charStringsIndexOffset =
+      topDict.getEntryForOperator(op.charStrings)!.operandList.first.value
+          as int;
 
   final charStringsData = CFFIndexWithData<Uint8List>.fromByteData(
     byteData.sublistView(entry.offset + charStringsIndexOffset),
@@ -66,8 +64,9 @@ CFF1Table _readCFF1Table(ByteData byteData, TableRecordEntry entry) {
   final dictOffset =
       entry.offset + (privateEntry.operandList.last.value as int);
   final dictLength = privateEntry.operandList.first.value as int;
-  final privateDict =
-      CFFDict.fromByteData(byteData.sublistView(dictOffset, dictLength));
+  final privateDict = CFFDict.fromByteData(
+    byteData.sublistView(dictOffset, dictLength),
+  );
 
   /// Local subroutines for each Private DICT
   final localSubrsDataList = <CFFIndexWithData<Uint8List>>[];

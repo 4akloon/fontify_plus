@@ -43,16 +43,18 @@ void main() {
       expect(flag.isRepeating, isFalse);
     });
 
-    test('reads a second byte as the repeat count when the repeat bit is set',
-        () {
-      final bytes = ByteData(2)
-        ..setUint8(0, 0x01 | 0x08)
-        ..setUint8(1, 7);
+    test(
+      'reads a second byte as the repeat count when the repeat bit is set',
+      () {
+        final bytes = ByteData(2)
+          ..setUint8(0, 0x01 | 0x08)
+          ..setUint8(1, 7);
 
-      final flag = SimpleGlyphFlag.fromByteData(bytes, 0);
+        final flag = SimpleGlyphFlag.fromByteData(bytes, 0);
 
-      expect(flag.repeatTimes, 7);
-    });
+        expect(flag.repeatTimes, 7);
+      },
+    );
   });
 
   group('SimpleGlyphFlag.createForPoint', () {

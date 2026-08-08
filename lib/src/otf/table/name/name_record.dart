@@ -21,18 +21,18 @@ class NameRecord implements BinaryCodable {
     this.platformID,
     this.encodingID,
     this.languageID,
-  )   : nameID = -1,
-        length = -1,
-        offset = -1;
+  ) : nameID = -1,
+      length = -1,
+      offset = -1;
 
   factory NameRecord.fromByteData(ByteData byteData, int offset) => NameRecord(
-        byteData.getUint16(offset),
-        byteData.getUint16(offset + 2),
-        byteData.getUint16(offset + 4),
-        byteData.getUint16(offset + 6),
-        byteData.getUint16(offset + 8),
-        byteData.getUint16(offset + 10),
-      );
+    byteData.getUint16(offset),
+    byteData.getUint16(offset + 2),
+    byteData.getUint16(offset + 4),
+    byteData.getUint16(offset + 6),
+    byteData.getUint16(offset + 8),
+    byteData.getUint16(offset + 10),
+  );
 
   final int platformID;
   final int encodingID;
@@ -51,15 +51,14 @@ class NameRecord implements BinaryCodable {
     int? nameID,
     int? length,
     int? offset,
-  }) =>
-      NameRecord(
-        platformID ?? this.platformID,
-        encodingID ?? this.encodingID,
-        languageID ?? this.languageID,
-        nameID ?? this.nameID,
-        length ?? this.length,
-        offset ?? this.offset,
-      );
+  }) => NameRecord(
+    platformID ?? this.platformID,
+    encodingID ?? this.encodingID,
+    languageID ?? this.languageID,
+    nameID ?? this.nameID,
+    length ?? this.length,
+    offset ?? this.offset,
+  );
 
   @override
   void encodeToBinary(ByteData byteData) {

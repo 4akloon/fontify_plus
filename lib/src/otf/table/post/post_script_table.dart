@@ -11,7 +11,7 @@ import 'post_script_version_20.dart';
 /// The `post` table: PostScript metadata and, optionally, glyph names.
 class PostScriptTable extends FontTable {
   PostScriptTable(super.entry, this.header, this.data)
-      : super.fromTableRecordEntry();
+    : super.fromTableRecordEntry();
 
   factory PostScriptTable.fromByteData(
     ByteData byteData,

@@ -43,14 +43,19 @@ void main() {
       ];
 
       for (final operator in named) {
-        expect(dictOperatorNames.containsKey(operator), isTrue,
-            reason: '$operator has no display name');
+        expect(
+          dictOperatorNames.containsKey(operator),
+          isTrue,
+          reason: '$operator has no display name',
+        );
       }
     });
 
     test('the display name map has no duplicate operators', () {
       expect(
-          dictOperatorNames.keys.toSet(), hasLength(dictOperatorNames.length));
+        dictOperatorNames.keys.toSet(),
+        hasLength(dictOperatorNames.length),
+      );
     });
 
     test('dictOperatorNames cannot be modified', () {

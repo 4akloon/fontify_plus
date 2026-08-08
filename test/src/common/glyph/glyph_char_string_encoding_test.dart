@@ -14,11 +14,10 @@ GenericGlyph glyphOf(
   List<Point<num>> points,
   List<bool> onCurve, {
   FillRule fillRule = FillRule.nonzero,
-}) =>
-    GenericGlyph(
-      [Outline(points, onCurve, false, false, fillRule)],
-      const Rectangle(0, 0, 10, 10),
-    );
+}) => GenericGlyph(
+  [Outline(points, onCurve, false, false, fillRule)],
+  const Rectangle(0, 0, 10, 10),
+);
 
 void main() {
   group('GlyphCharStringEncoding.toCharStringCommands', () {
@@ -100,8 +99,9 @@ void main() {
 
       final commands = runZoned(
         () => glyph.toCharStringCommands(_optimizer),
-        zoneSpecification:
-            ZoneSpecification(print: (self, parent, zone, line) {}),
+        zoneSpecification: ZoneSpecification(
+          print: (self, parent, zone, line) {},
+        ),
       );
 
       expect(commands, isNotEmpty);

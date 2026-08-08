@@ -9,9 +9,9 @@ import 'reader.dart';
 import 'writer.dart';
 
 /// Reads OpenType font from a file.
-OpenTypeFont readFromFile(String path) =>
-    OTFReader.fromByteData(ByteData.sublistView(File(path).readAsBytesSync()))
-        .read();
+OpenTypeFont readFromFile(String path) => OTFReader.fromByteData(
+  ByteData.sublistView(File(path).readAsBytesSync()),
+).read();
 
 /// Writes OpenType font to a file.
 void writeToFile(String path, OpenTypeFont font) {

@@ -19,7 +19,7 @@ SimpleGlyph _triangle() {
     [],
     [
       for (var i = 0; i < points.length; i++)
-        SimpleGlyphFlag.createForPoint(0, 0, true)
+        SimpleGlyphFlag.createForPoint(0, 0, true),
     ],
     points,
   );
@@ -43,22 +43,23 @@ void main() {
 
   group('SimpleGlyph round trip', () {
     test(
-        'round-trips a single-contour glyph through encodeToBinary and fromByteData',
-        () {
-      final glyph = _triangle();
-      final bytes = ByteData(glyph.size);
+      'round-trips a single-contour glyph through encodeToBinary and fromByteData',
+      () {
+        final glyph = _triangle();
+        final bytes = ByteData(glyph.size);
 
-      glyph.encodeToBinary(bytes);
-      final decoded = SimpleGlyph.fromByteData(bytes, glyph.header, 0);
+        glyph.encodeToBinary(bytes);
+        final decoded = SimpleGlyph.fromByteData(bytes, glyph.header, 0);
 
-      expect(decoded.header.numberOfContours, 1);
-      expect(decoded.endPtsOfContours, [2]);
-      expect(decoded.pointList, [
-        const math.Point<num>(0, 0),
-        const math.Point<num>(10, 0),
-        const math.Point<num>(10, 10),
-      ]);
-    });
+        expect(decoded.header.numberOfContours, 1);
+        expect(decoded.endPtsOfContours, [2]);
+        expect(decoded.pointList, [
+          const math.Point<num>(0, 0),
+          const math.Point<num>(10, 0),
+          const math.Point<num>(10, 10),
+        ]);
+      },
+    );
 
     test('round-trips repeated flags without losing any point', () {
       final points = [

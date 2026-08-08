@@ -71,15 +71,15 @@ class SimpleGlyphFlag implements BinaryCodable {
   final bool reserved;
 
   Map<int, bool> get _valueForMaskMap => {
-        _kOnCurvePointValue: onCurvePoint,
-        _kXshortVectorValue: xShortVector,
-        _kYshortVectorValue: yShortVector,
-        _kXisSameValue: xIsSameOrPositive,
-        _kYisSameValue: yIsSameOrPositive,
-        _kOverlapSimpleValue: overlapSimple,
-        _kReservedValue: reserved,
-        _kRepeatFlagValue: isRepeating,
-      };
+    _kOnCurvePointValue: onCurvePoint,
+    _kXshortVectorValue: xShortVector,
+    _kYshortVectorValue: yShortVector,
+    _kXisSameValue: xIsSameOrPositive,
+    _kYisSameValue: yIsSameOrPositive,
+    _kOverlapSimpleValue: overlapSimple,
+    _kReservedValue: reserved,
+    _kRepeatFlagValue: isRepeating,
+  };
 
   bool get isRepeating => repeat != null;
 
@@ -93,15 +93,15 @@ class SimpleGlyphFlag implements BinaryCodable {
 
   /// This flag, standing for itself and [times] further points.
   SimpleGlyphFlag repeated(int times) => SimpleGlyphFlag(
-        onCurvePoint,
-        xShortVector,
-        yShortVector,
-        times,
-        xIsSameOrPositive,
-        yIsSameOrPositive,
-        overlapSimple,
-        reserved,
-      );
+    onCurvePoint,
+    xShortVector,
+    yShortVector,
+    times,
+    xIsSameOrPositive,
+    yIsSameOrPositive,
+    overlapSimple,
+    reserved,
+  );
 
   int get intValue {
     var value = 0;

@@ -42,8 +42,10 @@ void main() {
       final bytes = ByteData(table.size);
 
       table.encodeToBinary(bytes);
-      final decoded =
-          CmapSegmentMappingToDeltaValuesTable.fromByteData(bytes, 0);
+      final decoded = CmapSegmentMappingToDeltaValuesTable.fromByteData(
+        bytes,
+        0,
+      );
 
       expect(decoded.segCount, 2);
       expect(decoded.startCode, [10, 30]);
@@ -60,8 +62,10 @@ void main() {
       final bytes = ByteData(table.size);
 
       table.encodeToBinary(bytes);
-      final decoded =
-          CmapSegmentMappingToDeltaValuesTable.fromByteData(bytes, 0);
+      final decoded = CmapSegmentMappingToDeltaValuesTable.fromByteData(
+        bytes,
+        0,
+      );
 
       expect(decoded.idDelta.single, lessThan(0));
       expect(decoded.idDelta.single, table.idDelta.single);

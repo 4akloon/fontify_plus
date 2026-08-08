@@ -65,8 +65,10 @@ void main() {
       final text = withExponent.toString();
 
       expect(text, contains('e-'));
-      expect(realNumberSize(withExponent),
-          lessThan(1 + ((text.length + 1) / 2).ceil() + 1));
+      expect(
+        realNumberSize(withExponent),
+        lessThan(1 + ((text.length + 1) / 2).ceil() + 1),
+      );
     });
   });
 

@@ -23,18 +23,17 @@ class PostScriptTableHeader implements BinaryCodable {
   factory PostScriptTableHeader.fromByteData(
     ByteData byteData,
     TableRecordEntry entry,
-  ) =>
-      PostScriptTableHeader(
-        Revision.fromInt32(byteData.getInt32(entry.offset)),
-        byteData.getFixed(entry.offset + 4),
-        byteData.getFWord(entry.offset + 8),
-        byteData.getFWord(entry.offset + 10),
-        byteData.getUint32(entry.offset + 12),
-        byteData.getUint32(entry.offset + 16),
-        byteData.getUint32(entry.offset + 20),
-        byteData.getUint32(entry.offset + 24),
-        byteData.getUint32(entry.offset + 28),
-      );
+  ) => PostScriptTableHeader(
+    Revision.fromInt32(byteData.getInt32(entry.offset)),
+    byteData.getFixed(entry.offset + 4),
+    byteData.getFWord(entry.offset + 8),
+    byteData.getFWord(entry.offset + 10),
+    byteData.getUint32(entry.offset + 12),
+    byteData.getUint32(entry.offset + 16),
+    byteData.getUint32(entry.offset + 20),
+    byteData.getUint32(entry.offset + 24),
+    byteData.getUint32(entry.offset + 28),
+  );
 
   factory PostScriptTableHeader.create(Revision version) =>
       PostScriptTableHeader(

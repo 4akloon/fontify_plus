@@ -31,8 +31,11 @@ void main() {
 
   group('platform constants', () {
     test('are distinct', () {
-      expect({kPlatformUnicode, kPlatformMacintosh, kPlatformWindows},
-          hasLength(3));
+      expect({
+        kPlatformUnicode,
+        kPlatformMacintosh,
+        kPlatformWindows,
+      }, hasLength(3));
     });
   });
 

@@ -48,7 +48,8 @@ void main() {
 
       expect(
         arc.first.p0.distanceTo(
-            Vector2(1, 1) + Vector2(math.cos(start), math.sin(start)) * 3),
+          Vector2(1, 1) + Vector2(math.cos(start), math.sin(start)) * 3,
+        ),
         lessThan(_kEpsilon),
       );
       expect(

@@ -26,18 +26,19 @@ void main() {
 
   group('ScriptTable round trip', () {
     test(
-        'round-trips a default-only table through encodeToBinary and fromByteData',
-        () {
-      final table = ScriptTable(4, 0, [], [], _kLangSys);
-      final scriptRecord = ScriptRecord('latn', 0);
-      final bytes = ByteData(table.size);
+      'round-trips a default-only table through encodeToBinary and fromByteData',
+      () {
+        final table = ScriptTable(4, 0, [], [], _kLangSys);
+        final scriptRecord = ScriptRecord('latn', 0);
+        final bytes = ByteData(table.size);
 
-      table.encodeToBinary(bytes);
-      final decoded = ScriptTable.fromByteData(bytes, 0, scriptRecord);
+        table.encodeToBinary(bytes);
+        final decoded = ScriptTable.fromByteData(bytes, 0, scriptRecord);
 
-      expect(decoded.langSysCount, 0);
-      expect(decoded.defaultLangSys!.featureIndices, [0]);
-    });
+        expect(decoded.langSysCount, 0);
+        expect(decoded.defaultLangSys!.featureIndices, [0]);
+      },
+    );
 
     test('round-trips a table with a listed lang system', () {
       final record = LanguageSystemRecord('ENG ', 0);

@@ -67,7 +67,7 @@ void main() {
     test('round-trips through the CFF2 count width', () {
       final original = CFFIndexWithData<Uint8List>.create(
         [
-          Uint8List.fromList([9])
+          Uint8List.fromList([9]),
         ],
         false,
       );
@@ -83,7 +83,7 @@ void main() {
     test('picks the smallest offSize that fits the total size', () {
       final index = CFFIndexWithData<Uint8List>.create(
         [
-          Uint8List.fromList([1])
+          Uint8List.fromList([1]),
         ],
         true,
       )..recalculateOffsets();
@@ -115,7 +115,7 @@ void main() {
       // recomputes the layout itself.
       final index = CFFIndexWithData<Uint8List>.create(
         [
-          Uint8List.fromList([1, 2, 3])
+          Uint8List.fromList([1, 2, 3]),
         ],
         true,
       );
@@ -128,7 +128,7 @@ void main() {
     test('throws when asked to encode before offsets are calculated', () {
       final index = CFFIndexWithData<Uint8List>.create(
         [
-          Uint8List.fromList([1])
+          Uint8List.fromList([1]),
         ],
         true,
       );

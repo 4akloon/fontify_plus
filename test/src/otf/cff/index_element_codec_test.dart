@@ -72,7 +72,9 @@ void main() {
       final decoded = codec.decode(bytes);
 
       expect(
-          decoded.getEntryForOperator(op.weight)!.operandList.single.value, 42);
+        decoded.getEntryForOperator(op.weight)!.operandList.single.value,
+        42,
+      );
     });
   });
 }

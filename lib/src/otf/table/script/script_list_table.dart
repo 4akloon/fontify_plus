@@ -8,12 +8,12 @@ import 'script_table.dart';
 
 /// Alphabetically ordered (by tag) list of script records
 List<ScriptRecord> _defaultScriptRecordList() => [
-      /// Default
-      ScriptRecord('DFLT', null),
+  /// Default
+  ScriptRecord('DFLT', null),
 
-      /// Latin
-      ScriptRecord('latn', null),
-    ];
+  /// Latin
+  ScriptRecord('latn', null),
+];
 
 const _kDefaultLangSys = LanguageSystemTable(
   0,

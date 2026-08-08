@@ -57,10 +57,20 @@ class SimpleGlyph implements BinaryCodable {
       i += flag.repeatTimes;
     }
 
-    final (xCoordinates, afterX) =
-        readCoordinates(byteData, offset, flags, numberOfPoints, GlyphAxis.x);
-    final (yCoordinates, _) =
-        readCoordinates(byteData, afterX, flags, numberOfPoints, GlyphAxis.y);
+    final (xCoordinates, afterX) = readCoordinates(
+      byteData,
+      offset,
+      flags,
+      numberOfPoints,
+      GlyphAxis.x,
+    );
+    final (yCoordinates, _) = readCoordinates(
+      byteData,
+      afterX,
+      flags,
+      numberOfPoints,
+      GlyphAxis.y,
+    );
 
     final xAbs = relToAbsCoordinates(xCoordinates);
     final yAbs = relToAbsCoordinates(yCoordinates);
@@ -99,8 +109,9 @@ class SimpleGlyph implements BinaryCodable {
 
     for (final flag in flags) {
       for (final axis in GlyphAxis.values) {
-        coordinatesSize +=
-            axis.isShort(flag) ? 1 : (axis.isSameOrPositive(flag) ? 0 : 2);
+        coordinatesSize += axis.isShort(flag)
+            ? 1
+            : (axis.isSameOrPositive(flag) ? 0 : 2);
       }
     }
 

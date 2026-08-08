@@ -11,11 +11,11 @@ class CFF2TableHeader implements BinaryCodable {
   );
 
   factory CFF2TableHeader.fromByteData(ByteData byteData) => CFF2TableHeader(
-        byteData.getUint8(0),
-        byteData.getUint8(1),
-        byteData.getUint8(2),
-        byteData.getUint16(3),
-      );
+    byteData.getUint8(0),
+    byteData.getUint8(1),
+    byteData.getUint8(2),
+    byteData.getUint16(3),
+  );
 
   factory CFF2TableHeader.create() =>
       CFF2TableHeader(_kMajorVersion2, 0, _kCFF2HeaderSize, null);

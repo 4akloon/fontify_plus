@@ -7,13 +7,15 @@ import 'package:test/test.dart';
 
 void main() {
   group('validateAndFormat type checking', () {
-    test('throws when an argument\'s raw type is not among its allowed types',
-        () {
-      expect(
-        () => {CliArgument.normalize: 'not a bool'}.validateAndFormat(),
-        throwsA(isA<CliArgumentException>()),
-      );
-    });
+    test(
+      'throws when an argument\'s raw type is not among its allowed types',
+      () {
+        expect(
+          () => {CliArgument.normalize: 'not a bool'}.validateAndFormat(),
+          throwsA(isA<CliArgumentException>()),
+        );
+      },
+    );
 
     test('allows a null value for a non-required argument', () {
       expect(
@@ -63,16 +65,18 @@ void main() {
       );
     });
 
-    test('passes for a valid, existing directory and a non-negative indent',
-        () {
-      final formatted = {
-        CliArgument.svgDir: '.',
-        CliArgument.fontFile: 'font.otf',
-        CliArgument.indent: 2,
-      }.validateAndFormat();
+    test(
+      'passes for a valid, existing directory and a non-negative indent',
+      () {
+        final formatted = {
+          CliArgument.svgDir: '.',
+          CliArgument.fontFile: 'font.otf',
+          CliArgument.indent: 2,
+        }.validateAndFormat();
 
-      expect(formatted[CliArgument.svgDir], isA<Directory>());
-      expect(formatted[CliArgument.fontFile], isA<File>());
-    });
+        expect(formatted[CliArgument.svgDir], isA<Directory>());
+        expect(formatted[CliArgument.fontFile], isA<File>());
+      },
+    );
   });
 }

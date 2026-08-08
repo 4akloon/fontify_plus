@@ -23,8 +23,9 @@ void main() {
         glyphWithCode(0xE000),
       ]);
 
-      final format4 =
-          table.data.whereType<CmapSegmentMappingToDeltaValuesTable>().first;
+      final format4 = table.data
+          .whereType<CmapSegmentMappingToDeltaValuesTable>()
+          .first;
 
       expect(format4.startCode, contains(0xE000));
     });
@@ -44,8 +45,9 @@ void main() {
         glyphWithCode(0xE000),
       ]);
 
-      final format4 =
-          table.data.whereType<CmapSegmentMappingToDeltaValuesTable>().first;
+      final format4 = table.data
+          .whereType<CmapSegmentMappingToDeltaValuesTable>()
+          .first;
 
       expect(format4.startCode.last, 0xFFFF);
       expect(format4.endCode.last, 0xFFFF);

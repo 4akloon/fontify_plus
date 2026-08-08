@@ -22,7 +22,7 @@ SimpleGlyph _triangle() {
     [],
     [
       for (var i = 0; i < points.length; i++)
-        SimpleGlyphFlag.createForPoint(0, 0, true)
+        SimpleGlyphFlag.createForPoint(0, 0, true),
     ],
     points,
   );

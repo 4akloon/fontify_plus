@@ -14,11 +14,13 @@ math.Point<double> cubicAt(
 ) {
   final u = 1 - t;
 
-  final x = u * u * u * p0.x +
+  final x =
+      u * u * u * p0.x +
       3 * u * u * t * p1.x +
       3 * u * t * t * p2.x +
       t * t * t * p3.x;
-  final y = u * u * u * p0.y +
+  final y =
+      u * u * u * p0.y +
       3 * u * u * t * p1.y +
       3 * u * t * t * p2.y +
       t * t * t * p3.y;
@@ -100,8 +102,13 @@ void main() {
       for (var i = 0; i <= 10; i++) {
         final t = i / 10;
         final onQuad = quadAt(qp0, qp1, qp2, t);
-        final onCubic =
-            cubicAt(qp0, cubicControls[0], cubicControls[1], qp2, t);
+        final onCubic = cubicAt(
+          qp0,
+          cubicControls[0],
+          cubicControls[1],
+          qp2,
+          t,
+        );
 
         expect(onQuad.x, closeTo(onCubic.x, 1e-9));
         expect(onQuad.y, closeTo(onCubic.y, 1e-9));
@@ -132,7 +139,9 @@ void main() {
       final chain = cubicCurveToQuadratics(p0, p1, p2, p3, tolerance);
 
       expect(
-          worstDeviation(p0, p1, p2, p3, chain), lessThanOrEqualTo(tolerance));
+        worstDeviation(p0, p1, p2, p3, chain),
+        lessThanOrEqualTo(tolerance),
+      );
     });
 
     test('a tighter tolerance never produces fewer segments', () {

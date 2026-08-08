@@ -108,28 +108,30 @@ void main() {
       );
     });
 
-    test('falls back to the source spacing when the end tangents are parallel',
-        () {
-      // The 2x2 solve is singular here, so the midpoint constraint cannot be
-      // met by a single cubic. Keeping the source's own control spacing gives
-      // a usable starting shape that CubicOffsetter then subdivides; what
-      // matters is that the end points stay exact and nothing blows up.
-      const distance = 0.5;
-      final offset = approximateOffset(_arch, distance)!;
+    test(
+      'falls back to the source spacing when the end tangents are parallel',
+      () {
+        // The 2x2 solve is singular here, so the midpoint constraint cannot be
+        // met by a single cubic. Keeping the source's own control spacing gives
+        // a usable starting shape that CubicOffsetter then subdivides; what
+        // matters is that the end points stay exact and nothing blows up.
+        const distance = 0.5;
+        final offset = approximateOffset(_arch, distance)!;
 
-      expect(
-        offset.p0.distanceTo(offsetPointAt(_arch, 0, distance)),
-        lessThan(_kEpsilon),
-      );
-      expect(
-        offset.p3.distanceTo(offsetPointAt(_arch, 1, distance)),
-        lessThan(_kEpsilon),
-      );
-      expect(
-        offset.p0.distanceTo(offset.p1),
-        closeTo(_arch.p0.distanceTo(_arch.p1), _kEpsilon),
-      );
-    });
+        expect(
+          offset.p0.distanceTo(offsetPointAt(_arch, 0, distance)),
+          lessThan(_kEpsilon),
+        );
+        expect(
+          offset.p3.distanceTo(offsetPointAt(_arch, 1, distance)),
+          lessThan(_kEpsilon),
+        );
+        expect(
+          offset.p0.distanceTo(offset.p1),
+          closeTo(_arch.p0.distanceTo(_arch.p1), _kEpsilon),
+        );
+      },
+    );
 
     test('handles parallel end tangents by translating', () {
       final line = Cubic.line(Vector2(0, 0), Vector2(10, 0));

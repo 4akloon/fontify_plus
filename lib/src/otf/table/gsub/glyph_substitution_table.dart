@@ -46,12 +46,12 @@ class GlyphSubstitutionTable extends FontTable {
   }
 
   factory GlyphSubstitutionTable.create() => GlyphSubstitutionTable(
-        null,
-        GlyphSubstitutionTableHeader.create(),
-        ScriptListTable.create(),
-        FeatureListTable.create(),
-        LookupListTable.create(),
-      );
+    null,
+    GlyphSubstitutionTableHeader.create(),
+    ScriptListTable.create(),
+    FeatureListTable.create(),
+    LookupListTable.create(),
+  );
 
   final GlyphSubstitutionTableHeader header;
 

@@ -9,10 +9,10 @@ import 'operator.dart';
 /// One charstring operator together with the operands it consumes.
 class CharStringCommand implements BinaryCodable {
   CharStringCommand(this.operator, this.operandList)
-      : assert(
-          operator.context == CFFOperatorContext.charString,
-          "Operator's context must be CharString",
-        );
+    : assert(
+        operator.context == CFFOperatorContext.charString,
+        "Operator's context must be CharString",
+      );
 
   factory CharStringCommand.hmoveto(int dx) =>
       CharStringCommand(hmoveto, _operands([dx]));
@@ -68,8 +68,9 @@ class CharStringCommand implements BinaryCodable {
   int get size =>
       operator.size + operandList.fold<int>(0, (p, e) => p + e.size);
 
-  static List<CharStringOperand> _operands(List<num> values) =>
-      [for (final value in values) CharStringOperand(value)];
+  static List<CharStringOperand> _operands(List<num> values) => [
+    for (final value in values) CharStringOperand(value),
+  ];
 
   CharStringCommand copy() => CharStringCommand(operator, [...operandList]);
 

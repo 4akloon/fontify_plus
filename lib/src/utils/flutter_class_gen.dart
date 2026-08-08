@@ -25,12 +25,12 @@ class FlutterClassGenerator {
     String? fontFileName,
     String? package,
     int? indent,
-  })  : _indent = ' ' * (indent ?? _kDefaultIndent),
-        _className = toDartIdentifier(className ?? _kDefaultClassName),
-        _familyName = familyName ?? kDefaultFontFamily,
-        _fontFileName = fontFileName ?? _kDefaultFontFileName,
-        _iconVarNames = _allocateNames(glyphList),
-        _package = package?.isEmpty ?? true ? null : package;
+  }) : _indent = ' ' * (indent ?? _kDefaultIndent),
+       _className = toDartIdentifier(className ?? _kDefaultClassName),
+       _familyName = familyName ?? kDefaultFontFamily,
+       _fontFileName = fontFileName ?? _kDefaultFontFileName,
+       _iconVarNames = _allocateNames(glyphList),
+       _package = package?.isEmpty ?? true ? null : package;
 
   final List<GenericGlyph> glyphList;
   final String _fontFileName;
@@ -82,7 +82,8 @@ class FlutterClassGenerator {
     ];
   }
 
-  String _header() => '''
+  String _header() =>
+      '''
 // Generated code: do not hand-edit.
 
 // Generated using $kVendorName.
@@ -92,7 +93,8 @@ import 'package:flutter/widgets.dart';
 
 ''';
 
-  String get _docComment => '''
+  String get _docComment =>
+      '''
 /// Identifiers for the icons.
 ///
 /// Use with the [Icon] class to show specific icons.

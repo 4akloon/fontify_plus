@@ -174,19 +174,20 @@ void main() {
       );
     });
 
-    test('does not merge hhcurveto when only one side carries a leading delta',
-        () {
-      final optimizer = CharStringOptimizer(true);
-      final result = optimizer.optimize([
-        CharStringCommand.hhcurveto([9, 1, 2, 3, 4]),
-        CharStringCommand.hhcurveto([5, 6, 7, 8]),
-      ]);
-
-      expect(result, hasLength(2));
-    });
-
     test(
-        'does not merge hhcurveto when both sides have a leading delta, '
+      'does not merge hhcurveto when only one side carries a leading delta',
+      () {
+        final optimizer = CharStringOptimizer(true);
+        final result = optimizer.optimize([
+          CharStringCommand.hhcurveto([9, 1, 2, 3, 4]),
+          CharStringCommand.hhcurveto([5, 6, 7, 8]),
+        ]);
+
+        expect(result, hasLength(2));
+      },
+    );
+
+    test('does not merge hhcurveto when both sides have a leading delta, '
         'even if the values are equal', () {
       // A leading delta adjusts only the first curve of the sequence it is
       // part of. Merging would keep prev's adjustment but silently drop

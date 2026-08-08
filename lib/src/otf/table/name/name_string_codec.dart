@@ -8,11 +8,11 @@ import 'name_record.dart';
 /// records this package writes are Macintosh Roman and Windows UTF-16BE.
 List<int> Function(String) encoderFor(NameRecord record) =>
     record.platformID == kPlatformWindows
-        ? toUCS2byteList
-        : (string) => string.codeUnits;
+    ? toUCS2byteList
+    : (string) => string.codeUnits;
 
 /// The inverse of [encoderFor].
 String Function(List<int>) decoderFor(NameRecord record) =>
     record.platformID == kPlatformWindows
-        ? fromUCS2byteList
-        : String.fromCharCodes;
+    ? fromUCS2byteList
+    : String.fromCharCodes;

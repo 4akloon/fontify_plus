@@ -26,8 +26,8 @@ String generate(List<String> names, {String? package}) {
 
 /// Names of the generated `static const IconData` members.
 List<String> memberNames(String source) => RegExp(
-      r'static const IconData (\w+) =',
-    ).allMatches(source).map((m) => m.group(1)!).toList();
+  r'static const IconData (\w+) =',
+).allMatches(source).map((m) => m.group(1)!).toList();
 
 void main() {
   group('FlutterClassGenerator', () {
@@ -91,7 +91,9 @@ void main() {
       final source = generate(['icon'], package: 'design_system');
 
       expect(
-          source, contains("static const iconFontPackage = 'design_system'"));
+        source,
+        contains("static const iconFontPackage = 'design_system'"),
+      );
       expect(source, contains('fontPackage: iconFontPackage'));
     });
 

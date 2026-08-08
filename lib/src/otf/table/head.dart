@@ -34,12 +34,12 @@ class HeaderTable extends FontTable {
     this.macStyle,
     this.lowestRecPPEM,
     this.indexToLocFormat,
-  )   : majorVersion = 1,
-        minorVersion = 0,
-        fontDirectionHint = 2,
-        glyphDataFormat = 0,
-        magicNumber = _kMagicNumber,
-        super.fromTableRecordEntry();
+  ) : majorVersion = 1,
+      minorVersion = 0,
+      fontDirectionHint = 2,
+      glyphDataFormat = 0,
+      magicNumber = _kMagicNumber,
+      super.fromTableRecordEntry();
 
   HeaderTable._(
     TableRecordEntry super.entry,

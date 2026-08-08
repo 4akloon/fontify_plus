@@ -40,8 +40,10 @@ Map<CliArgument, dynamic> parseArguments(
     throw CliHelpException();
   }
 
-  final posArgsLength =
-      math.min(_kPositionalArguments.length, argResults.rest.length);
+  final posArgsLength = math.min(
+    _kPositionalArguments.length,
+    argResults.rest.length,
+  );
 
   return <CliArgument, dynamic>{
     for (final e in kOptionNames.entries) e.key: argResults[e.value],

@@ -28,7 +28,8 @@ CFF1Table _buildCFF1Table(
 
   final topDictStringEntryMap = {
     op.version: name.getStringByNameId(NameID.version),
-    op.notice: '${name.getStringByNameId(NameID.copyright)} '
+    op.notice:
+        '${name.getStringByNameId(NameID.copyright)} '
         '${name.getStringByNameId(NameID.urlVendor)}',
     op.fullName: fontName,
     op.weight: name.getStringByNameId(NameID.fontSubfamily),
@@ -72,7 +73,7 @@ CFF1Table _buildCFF1Table(
     CFFIndexWithData<CFFDict>.create([CFFDict.empty()], true),
     [
       CFFDict([
-        CFFDictEntry([CFFOperand.fromValue(0)], op.nominalWidthX)
+        CFFDictEntry([CFFOperand.fromValue(0)], op.nominalWidthX),
       ]),
     ],
     <CFFIndexWithData<Uint8List>>[],

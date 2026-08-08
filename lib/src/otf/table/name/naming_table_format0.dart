@@ -23,7 +23,7 @@ const _kNameRecordTemplateList = [
 
 class NamingTableFormat0 extends NamingTable {
   NamingTableFormat0(super.entry, this.header, this.stringList)
-      : super.fromTableRecordEntry();
+    : super.fromTableRecordEntry();
 
   factory NamingTableFormat0.create(
     String fontName,
@@ -95,19 +95,18 @@ class NamingTableFormat0 extends NamingTable {
     String fontName,
     String? description,
     Revision revision,
-  ) =>
-      {
-        NameID.copyright: 'Copyright $kVendorName ${DateTime.now().year}',
-        NameID.fontFamily: fontName,
-        NameID.fontSubfamily: 'Regular',
-        NameID.uniqueID: fontName,
-        NameID.fullFontName: fontName,
-        NameID.version: 'Version ${revision.major}.${revision.minor}',
-        NameID.postScriptName: fontName.getPostScriptString(),
-        NameID.manufacturer: kVendorName,
-        NameID.description: description ?? 'Generated using $kVendorName',
-        NameID.urlVendor: kVendorUrl,
-      };
+  ) => {
+    NameID.copyright: 'Copyright $kVendorName ${DateTime.now().year}',
+    NameID.fontFamily: fontName,
+    NameID.fontSubfamily: 'Regular',
+    NameID.uniqueID: fontName,
+    NameID.fullFontName: fontName,
+    NameID.version: 'Version ${revision.major}.${revision.minor}',
+    NameID.postScriptName: fontName.getPostScriptString(),
+    NameID.manufacturer: kVendorName,
+    NameID.description: description ?? 'Generated using $kVendorName',
+    NameID.urlVendor: kVendorUrl,
+  };
 
   final NamingTableFormat0Header header;
   final List<String> stringList;

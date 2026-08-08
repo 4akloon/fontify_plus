@@ -26,7 +26,8 @@ List<CmapSegment> generateSegments(List<int> charCodeList) {
   void saveSegment() {
     segmentList.add(
       CmapSegment(
-        startCharCode, prevCharCode,
+        startCharCode,
+        prevCharCode,
         startGlyphId + 1, // +1 because of .notdef
       ),
     );

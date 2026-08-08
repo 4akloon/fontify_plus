@@ -74,7 +74,8 @@ extension GlyphTransform on GenericGlyph {
 
   /// Copies the outlines with every point put through [transform].
   List<Outline> _mapPoints(
-      math.Point<num> Function(math.Point<num>) transform) {
+    math.Point<num> Function(math.Point<num>) transform,
+  ) {
     return [
       for (final outline in outlines)
         outline.copy()

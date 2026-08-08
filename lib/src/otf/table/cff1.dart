@@ -27,8 +27,7 @@ class CFF1Table extends CFFTable implements CalculatableOffsets {
     HeaderTable head,
     HorizontalMetricsTable hmtx,
     NamingTable name,
-  ) =>
-      _buildCFF1Table(glyphList, head, hmtx, name);
+  ) => _buildCFF1Table(glyphList, head, hmtx, name);
 
   final CFF1TableHeader header;
   final CFFIndexWithData<Uint8List> nameIndex;

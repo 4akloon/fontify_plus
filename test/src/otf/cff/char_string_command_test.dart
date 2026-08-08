@@ -38,15 +38,21 @@ void main() {
     test('hhcurveto/vvcurveto require 4, 5, 8, 9... operands', () {
       expect(() => CharStringCommand.hhcurveto([1, 2, 3]), throwsArgumentError);
       expect(
-          CharStringCommand.hhcurveto([1, 2, 3, 4]).operandList, hasLength(4));
-      expect(CharStringCommand.hhcurveto([1, 2, 3, 4, 5]).operandList,
-          hasLength(5));
+        CharStringCommand.hhcurveto([1, 2, 3, 4]).operandList,
+        hasLength(4),
+      );
+      expect(
+        CharStringCommand.hhcurveto([1, 2, 3, 4, 5]).operandList,
+        hasLength(5),
+      );
       expect(
         () => CharStringCommand.hhcurveto([1, 2, 3, 4, 5, 6]),
         throwsArgumentError,
       );
       expect(
-          CharStringCommand.vvcurveto([1, 2, 3, 4]).operandList, hasLength(4));
+        CharStringCommand.vvcurveto([1, 2, 3, 4]).operandList,
+        hasLength(4),
+      );
     });
 
     test('rrcurveto requires a multiple of six operands', () {
@@ -61,8 +67,10 @@ void main() {
   group('CharStringCommand.size', () {
     test('is the operator plus every operand\'s size', () {
       final command = CharStringCommand.rmoveto(5, 6);
-      final operandSizes =
-          command.operandList.fold<int>(0, (p, o) => p + o.size);
+      final operandSizes = command.operandList.fold<int>(
+        0,
+        (p, o) => p + o.size,
+      );
 
       expect(command.size, command.operator.size + operandSizes);
     });

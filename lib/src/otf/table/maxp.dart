@@ -17,21 +17,21 @@ const _kTableSizeForVersion = {
 
 class MaximumProfileTable extends FontTable {
   MaximumProfileTable.v0(super.entry, this.numGlyphs)
-      : version = _kVersion0,
-        maxPoints = null,
-        maxContours = null,
-        maxCompositePoints = null,
-        maxCompositeContours = null,
-        maxZones = null,
-        maxTwilightPoints = null,
-        maxStorage = null,
-        maxFunctionDefs = null,
-        maxInstructionDefs = null,
-        maxStackElements = null,
-        maxSizeOfInstructions = null,
-        maxComponentElements = null,
-        maxComponentDepth = null,
-        super.fromTableRecordEntry();
+    : version = _kVersion0,
+      maxPoints = null,
+      maxContours = null,
+      maxCompositePoints = null,
+      maxCompositeContours = null,
+      maxZones = null,
+      maxTwilightPoints = null,
+      maxStorage = null,
+      maxFunctionDefs = null,
+      maxInstructionDefs = null,
+      maxStackElements = null,
+      maxSizeOfInstructions = null,
+      maxComponentElements = null,
+      maxComponentDepth = null,
+      super.fromTableRecordEntry();
 
   MaximumProfileTable.v1(
     super.entry,
@@ -49,8 +49,8 @@ class MaximumProfileTable extends FontTable {
     this.maxSizeOfInstructions,
     this.maxComponentElements,
     this.maxComponentDepth,
-  )   : version = _kVersion1,
-        super.fromTableRecordEntry();
+  ) : version = _kVersion1,
+      super.fromTableRecordEntry();
 
   factory MaximumProfileTable.create(int numGlyphs, GlyphDataTable? glyf) {
     final isOpenType = glyf == null;
@@ -68,7 +68,6 @@ class MaximumProfileTable extends FontTable {
       0, // Composite glyphs are not supported
       2, // The twilight zone is used
       0, // 0 max points for the twilight zone
-
       /// Constants taken from FontForge
       1,
       1,

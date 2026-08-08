@@ -7,24 +7,23 @@ import 'package:test/test.dart';
 GenericGlyph squareGlyph({
   required num side,
   Rectangle<num>? bounds,
-}) =>
-    GenericGlyph(
+}) => GenericGlyph(
+  [
+    Outline(
       [
-        Outline(
-          [
-            const Point(0, 0),
-            Point(side, 0),
-            Point(side, side),
-            const Point(0, 0),
-          ],
-          [true, true, true, true],
-          false,
-          false,
-          FillRule.nonzero,
-        ),
+        const Point(0, 0),
+        Point(side, 0),
+        Point(side, side),
+        const Point(0, 0),
       ],
-      bounds ?? Rectangle(0, 0, side, side),
-    );
+      [true, true, true, true],
+      false,
+      false,
+      FillRule.nonzero,
+    ),
+  ],
+  bounds ?? Rectangle(0, 0, side, side),
+);
 
 void main() {
   group('GlyphTransform.resize', () {
@@ -46,8 +45,10 @@ void main() {
       // inside it. fontHeight maps the ARTBOARD onto the em, so the ink
       // scales by 1000/20, not 1000/10. metrics truncates to integer font
       // units, so the ratio is chosen to divide evenly.
-      final glyph =
-          squareGlyph(side: 10, bounds: const Rectangle(0, 0, 20, 20));
+      final glyph = squareGlyph(
+        side: 10,
+        bounds: const Rectangle(0, 0, 20, 20),
+      );
 
       final resized = glyph.resize(fontHeight: 1000);
 
@@ -57,8 +58,10 @@ void main() {
     test('scales by the ascender/descender band against the ink', () {
       // Normalization maps the ink's own longest side onto the band, unlike
       // fontHeight above.
-      final glyph =
-          squareGlyph(side: 10, bounds: const Rectangle(0, 0, 20, 20));
+      final glyph = squareGlyph(
+        side: 10,
+        bounds: const Rectangle(0, 0, 20, 20),
+      );
 
       final resized = glyph.resize(ascender: 1000, descender: 0);
 

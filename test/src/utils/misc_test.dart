@@ -51,7 +51,9 @@ void main() {
 
     test('toDoublePoint converts both components', () {
       expect(
-          const math.Point(1, 2).toDoublePoint(), const math.Point(1.0, 2.0));
+        const math.Point(1, 2).toDoublePoint(),
+        const math.Point(1.0, 2.0),
+      );
     });
 
     test('getReflectionOf mirrors its argument across the receiver', () {

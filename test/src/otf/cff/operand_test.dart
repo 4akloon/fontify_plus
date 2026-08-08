@@ -67,7 +67,7 @@ void main() {
       32768,
       -32769,
       1 << 30,
-      -(1 << 30)
+      -(1 << 30),
     ]) {
       test('round-trips $value', () {
         expect(roundTrip(value), value);
@@ -132,10 +132,12 @@ void main() {
       expect(CFFOperand(5, 99).size, 99);
     });
 
-    test('accessing size on a null-valued operand with no fixed size throws',
-        () {
-      expect(() => CFFOperand(null, null).size, throwsStateError);
-    });
+    test(
+      'accessing size on a null-valued operand with no fixed size throws',
+      () {
+        expect(() => CFFOperand(null, null).size, throwsStateError);
+      },
+    );
 
     test('encoding a null-valued operand throws', () {
       final operand = CFFOperand(null, 1);

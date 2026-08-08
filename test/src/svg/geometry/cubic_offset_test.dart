@@ -56,8 +56,10 @@ void main() {
   group('offsetCubic', () {
     test('offsets a straight segment as a single segment', () {
       final line = Cubic.line(Vector2(0, 0), Vector2(10, 0));
-      final offset =
-          const CubicOffsetter(distance: 1, tolerance: tolerance).offset(line);
+      final offset = const CubicOffsetter(
+        distance: 1,
+        tolerance: tolerance,
+      ).offset(line);
 
       expect(offset, hasLength(1));
       expect(offset.single.p0.y, closeTo(1, 1e-9));
@@ -73,8 +75,10 @@ void main() {
       );
 
       for (final distance in [1.0, -1.0]) {
-        final offset = CubicOffsetter(distance: distance, tolerance: tolerance)
-            .offset(curve);
+        final offset = CubicOffsetter(
+          distance: distance,
+          tolerance: tolerance,
+        ).offset(curve);
 
         expect(_isContinuous(offset), isTrue, reason: 'chain must not break');
         expect(
@@ -95,10 +99,12 @@ void main() {
       );
 
       expect(
-          const CubicOffsetter(distance: 1, tolerance: tolerance)
-              .offset(curve)
-              .length,
-          lessThan(8));
+        const CubicOffsetter(
+          distance: 1,
+          tolerance: tolerance,
+        ).offset(curve).length,
+        lessThan(8),
+      );
     });
 
     test('starts and ends exactly on the offset end points', () {
@@ -143,8 +149,10 @@ void main() {
 
       // 0.665 is half of the 1.33 stroke width these icon sets use, against a
       // corner radius well under that.
-      final offset = const CubicOffsetter(distance: 0.665, tolerance: tolerance)
-          .offset(tight);
+      final offset = const CubicOffsetter(
+        distance: 0.665,
+        tolerance: tolerance,
+      ).offset(tight);
 
       expect(
         offset.length,
@@ -162,9 +170,10 @@ void main() {
         Vector2(0.6, 0.6),
       );
 
-      final offset =
-          const CubicOffsetter(distance: -0.665, tolerance: tolerance)
-              .offset(tight);
+      final offset = const CubicOffsetter(
+        distance: -0.665,
+        tolerance: tolerance,
+      ).offset(tight);
 
       expect(
         _worstDeviation(tight, offset, -0.665),

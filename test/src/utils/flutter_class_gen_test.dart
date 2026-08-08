@@ -89,16 +89,17 @@ void main() {
 
   group('FlutterClassGenerator icon members', () {
     test(
-        'emits one IconData constant per glyph, named after its allocated identifier',
-        () {
-      final source = FlutterClassGenerator([
-        _glyph('arrow_up', 0xE001),
-        _glyph('arrow_down', 0xE002),
-      ]).generate();
+      'emits one IconData constant per glyph, named after its allocated identifier',
+      () {
+        final source = FlutterClassGenerator([
+          _glyph('arrow_up', 0xE001),
+          _glyph('arrow_down', 0xE002),
+        ]).generate();
 
-      expect(source, contains('static const IconData arrowUp ='));
-      expect(source, contains('static const IconData arrowDown ='));
-    });
+        expect(source, contains('static const IconData arrowUp ='));
+        expect(source, contains('static const IconData arrowDown ='));
+      },
+    );
 
     test('encodes the char code as a hex IconData constructor argument', () {
       final source = FlutterClassGenerator([_glyph('icon', 0xE001)]).generate();
@@ -107,8 +108,9 @@ void main() {
     });
 
     test('documents each constant with the glyph\'s original name', () {
-      final source =
-          FlutterClassGenerator([_glyph('arrow_up', 0xE001)]).generate();
+      final source = FlutterClassGenerator([
+        _glyph('arrow_up', 0xE001),
+      ]).generate();
 
       expect(source, contains('/// arrow_up'));
     });

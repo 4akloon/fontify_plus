@@ -72,16 +72,15 @@ class OS2Table extends FontTable {
     GlyphSubstitutionTable gsub,
     String achVendID, {
     int version = kOS2Version5,
-  }) =>
-      buildOS2Table(
-        hmtx,
-        head,
-        hhea,
-        cmap,
-        gsub,
-        achVendID,
-        version: version,
-      );
+  }) => buildOS2Table(
+    hmtx,
+    head,
+    hhea,
+    cmap,
+    gsub,
+    achVendID,
+    version: version,
+  );
 
   final int version;
 

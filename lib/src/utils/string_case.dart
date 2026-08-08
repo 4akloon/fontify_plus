@@ -25,7 +25,8 @@ List<String> splitWords(String source) {
     word.write(char);
 
     final next = i + 1 == source.length ? null : source[i + 1];
-    final endsWord = next == null ||
+    final endsWord =
+        next == null ||
         _separators.contains(next) ||
         (!isAllCaps && _upperCase.hasMatch(next));
 

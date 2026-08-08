@@ -8,20 +8,21 @@ import 'package:test/test.dart';
 void main() {
   group('formatArguments', () {
     test(
-        'formats svgDir/fontFile/classFile/configFile paths into File/Directory',
-        () {
-      final formatted = formatArguments({
-        CliArgument.svgDir: './svg',
-        CliArgument.fontFile: 'font.otf',
-        CliArgument.classFile: 'icons.dart',
-        CliArgument.configFile: 'fontify_plus.yaml',
-      });
+      'formats svgDir/fontFile/classFile/configFile paths into File/Directory',
+      () {
+        final formatted = formatArguments({
+          CliArgument.svgDir: './svg',
+          CliArgument.fontFile: 'font.otf',
+          CliArgument.classFile: 'icons.dart',
+          CliArgument.configFile: 'fontify_plus.yaml',
+        });
 
-      expect(formatted[CliArgument.svgDir], isA<Directory>());
-      expect(formatted[CliArgument.fontFile], isA<File>());
-      expect(formatted[CliArgument.classFile], isA<File>());
-      expect(formatted[CliArgument.configFile], isA<File>());
-    });
+        expect(formatted[CliArgument.svgDir], isA<Directory>());
+        expect(formatted[CliArgument.fontFile], isA<File>());
+        expect(formatted[CliArgument.classFile], isA<File>());
+        expect(formatted[CliArgument.configFile], isA<File>());
+      },
+    );
 
     test('leaves an already-int indent as-is', () {
       final formatted = formatArguments({CliArgument.indent: 4});

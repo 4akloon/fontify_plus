@@ -41,12 +41,14 @@ CharStringCommand shortestCurveto(List<int> dlist) {
 
   if (dlist[4] == 0) {
     return CharStringCommand.vvcurveto(
-        _compact(dlist, zeroAt: 4, leadingAt: 0));
+      _compact(dlist, zeroAt: 4, leadingAt: 0),
+    );
   }
 
   if (dlist[5] == 0) {
     return CharStringCommand.hhcurveto(
-        _compact(dlist, zeroAt: 5, leadingAt: 1));
+      _compact(dlist, zeroAt: 5, leadingAt: 1),
+    );
   }
 
   return CharStringCommand.rrcurveto(dlist);

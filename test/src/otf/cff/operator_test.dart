@@ -28,12 +28,14 @@ void main() {
       );
     });
 
-    test('a one-byte and a two-byte operator with the same b0 are distinct',
-        () {
-      // b0=12 alone (escape) differs from b0=12,b1=7 (FontMatrix): the
-      // combined intValue distinguishes them.
-      expect(op.escape, isNot(op.fontMatrix));
-    });
+    test(
+      'a one-byte and a two-byte operator with the same b0 are distinct',
+      () {
+        // b0=12 alone (escape) differs from b0=12,b1=7 (FontMatrix): the
+        // combined intValue distinguishes them.
+        expect(op.escape, isNot(op.fontMatrix));
+      },
+    );
 
     test('equality does not consider context, only the byte value', () {
       // A real limitation: a dict operator and a charstring operator that
@@ -46,8 +48,10 @@ void main() {
     });
 
     test('equal operators have equal hash codes', () {
-      expect(op.charStrings.hashCode,
-          const CFFOperator(CFFOperatorContext.dict, 17).hashCode);
+      expect(
+        op.charStrings.hashCode,
+        const CFFOperator(CFFOperatorContext.dict, 17).hashCode,
+      );
     });
 
     test('toString names a known dict operator', () {

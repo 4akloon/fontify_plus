@@ -21,12 +21,12 @@ class OpenTypeFontBuilder {
     bool? useOpenType,
     bool? usePostV2,
     bool? normalize,
-  })  : fontName = (fontName?.isEmpty ?? true) ? kDefaultFontFamily : fontName!,
-        revision = revision ?? kDefaultFontRevision,
-        achVendID = achVendID ?? kDefaultAchVendID,
-        useOpenType = useOpenType ?? true,
-        usePostV2 = usePostV2 ?? false,
-        normalize = normalize ?? false;
+  }) : fontName = (fontName?.isEmpty ?? true) ? kDefaultFontFamily : fontName!,
+       revision = revision ?? kDefaultFontRevision,
+       achVendID = achVendID ?? kDefaultAchVendID,
+       useOpenType = useOpenType ?? true,
+       usePostV2 = usePostV2 ?? false,
+       normalize = normalize ?? false;
 
   final List<GenericGlyph> glyphList;
   final String fontName;
@@ -96,8 +96,12 @@ class OpenTypeFontBuilder {
     required int descender,
   }) {
     final glyf = useOpenType ? null : GlyphDataTable.fromGlyphs(fullGlyphList);
-    final head =
-        HeaderTable.create(glyphMetricsList, glyf, revision, unitsPerEm);
+    final head = HeaderTable.create(
+      glyphMetricsList,
+      glyf,
+      revision,
+      unitsPerEm,
+    );
     final hmtx = HorizontalMetricsTable.create(glyphMetricsList, unitsPerEm);
     final hhea = HorizontalHeaderTable.create(
       glyphMetricsList,

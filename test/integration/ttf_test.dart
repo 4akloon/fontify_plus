@@ -356,12 +356,12 @@ void main() {
 
     setUpAll(() {
       MockableDateTime.mockedDate = DateTime.utc(2020, 2, 2, 2, 2);
-      originalByteData =
-          ByteData.sublistView(File(_kTestFontAssetPath).readAsBytesSync());
+      originalByteData = ByteData.sublistView(
+        File(_kTestFontAssetPath).readAsBytesSync(),
+      );
       font = OTFReader.fromByteData(originalByteData).read();
 
-      final glyphNameList = (font.post.data as PostScriptVersion20)
-          .glyphNames
+      final glyphNameList = (font.post.data as PostScriptVersion20).glyphNames
           .map((s) => s.string)
           .toList();
       final glyphList = font.glyf.glyphList
@@ -435,16 +435,18 @@ void main() {
     late ByteData byteData;
 
     setUpAll(() {
-      byteData =
-          ByteData.sublistView(File(_kTestCFF2fontAssetPath).readAsBytesSync());
+      byteData = ByteData.sublistView(
+        File(_kTestCFF2fontAssetPath).readAsBytesSync(),
+      );
       font = OTFReader.fromByteData(byteData).read();
     });
 
     test('CFF2 Read & Write', () {
       final table = font.cff2;
 
-      final originalCFF2byteList =
-          byteData.buffer.asUint8List(table.entry!.offset, table.size).toList();
+      final originalCFF2byteList = byteData.buffer
+          .asUint8List(table.entry!.offset, table.size)
+          .toList();
       final encodedCFF2byteData = ByteData(table.size);
 
       expect(table.size, table.entry!.length);
@@ -453,8 +455,9 @@ void main() {
         ..recalculateOffsets()
         ..encodeToBinary(encodedCFF2byteData);
 
-      final encodedCFF2byteList =
-          encodedCFF2byteData.buffer.asUint8List().toList();
+      final encodedCFF2byteList = encodedCFF2byteData.buffer
+          .asUint8List()
+          .toList();
       expect(encodedCFF2byteList, originalCFF2byteList);
     });
 
@@ -484,8 +487,9 @@ void main() {
       final genericList = font.glyf.glyphList
           .map((e) => GenericGlyph.fromSimpleTrueTypeGlyph(e))
           .toList();
-      final simpleList =
-          genericList.map((e) => e.toSimpleTrueTypeGlyph()).toList();
+      final simpleList = genericList
+          .map((e) => e.toSimpleTrueTypeGlyph())
+          .toList();
 
       for (var i = 0; i < genericList.length; i++) {
         expect(simpleList[i].pointList, font.glyf.glyphList[i].pointList);
@@ -505,8 +509,9 @@ void main() {
         }
       }
 
-      final simpleList =
-          genericList.map((e) => e.toSimpleTrueTypeGlyph()).toList();
+      final simpleList = genericList
+          .map((e) => e.toSimpleTrueTypeGlyph())
+          .toList();
 
       // Those were compacted more than they were originally. Expecting just new size.
       final changedForReason = {
@@ -532,7 +537,8 @@ void main() {
   });
 
   group('Utils', () {
-    const testString = '[INFO] :谷���新道, ひば���ヶ丘２丁���,'
+    const testString =
+        '[INFO] :谷���新道, ひば���ヶ丘２丁���,'
         ' ひばりヶ���, 東久留米市 (Higashikurume)';
 
     test('Printable ASCII string', () {

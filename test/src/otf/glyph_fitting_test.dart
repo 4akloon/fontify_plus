@@ -38,8 +38,10 @@ void main() {
     test('resizes against the artboard (bounds), without centering', () {
       const fitting = ArtboardFitting(fontHeight: 1000);
       // A 10-unit square ink inside a 20-unit artboard.
-      final glyph =
-          _squareGlyph(side: 10, bounds: const Rectangle(0, 0, 20, 20));
+      final glyph = _squareGlyph(
+        side: 10,
+        bounds: const Rectangle(0, 0, 20, 20),
+      );
 
       final fitted = fitting.fit(glyph);
 

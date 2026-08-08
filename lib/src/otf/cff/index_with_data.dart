@@ -10,7 +10,7 @@ import 'index_element_codec.dart';
 /// An INDEX together with the elements it describes.
 class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
   CFFIndexWithData(this.index, this.data, this.isCFF1)
-      : _codec = IndexElementCodec.forType<T>();
+    : _codec = IndexElementCodec.forType<T>();
 
   /// Decodes INDEX and its data from [ByteData]
   factory CFFIndexWithData.fromByteData(ByteData byteData, bool isCFF1) {
@@ -28,7 +28,8 @@ class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
 
       dataList.add(
         codec.decode(
-            byteData.sublistView(indexSize + relativeOffset, elementLength)),
+          byteData.sublistView(indexSize + relativeOffset, elementLength),
+        ),
       );
     }
 

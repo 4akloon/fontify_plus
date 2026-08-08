@@ -57,8 +57,9 @@ class GlyphDataTable extends FontTable {
       }
     }
 
-    final simpleGlyphList =
-        glyphListCopy.map((e) => e.toSimpleTrueTypeGlyph()).toList();
+    final simpleGlyphList = glyphListCopy
+        .map((e) => e.toSimpleTrueTypeGlyph())
+        .toList();
 
     return GlyphDataTable(null, simpleGlyphList);
   }

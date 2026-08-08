@@ -13,24 +13,24 @@ import 'package:test/test.dart';
 const _kUnitsPerEm = 1000;
 
 List<GenericGlyphMetrics> _metricsList() => [
-      GenericGlyphMetrics.empty(), // .notdef
-      GenericGlyphMetrics(0, 700, 0, 800), // one icon glyph
-    ];
+  GenericGlyphMetrics.empty(), // .notdef
+  GenericGlyphMetrics(0, 700, 0, 800), // one icon glyph
+];
 
 List<GenericGlyph> _fullGlyphList() => [
-      GenericGlyph.empty(), // .notdef, no charCode
-      GenericGlyph.empty()..metadata.charCode = 0xE001,
-    ];
+  GenericGlyph.empty(), // .notdef, no charCode
+  GenericGlyph.empty()..metadata.charCode = 0xE001,
+];
 
 HorizontalMetricsTable _hmtx() =>
     HorizontalMetricsTable.create(_metricsList(), _kUnitsPerEm);
 
 HeaderTable _head() => HeaderTable.create(
-      _metricsList(),
-      null,
-      const Revision(1, 0),
-      _kUnitsPerEm,
-    );
+  _metricsList(),
+  null,
+  const Revision(1, 0),
+  _kUnitsPerEm,
+);
 
 HorizontalHeaderTable _hhea(HorizontalMetricsTable hmtx) =>
     HorizontalHeaderTable.create(_metricsList(), hmtx, 800, -200);

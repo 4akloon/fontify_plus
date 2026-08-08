@@ -3,7 +3,7 @@ import 'char_string_operator.dart';
 
 class CharStringOptimizer {
   CharStringOptimizer(bool isCFF1)
-      : _limits = CharStringInterpreterLimits(isCFF1);
+    : _limits = CharStringInterpreterLimits(isCFF1);
 
   final CharStringInterpreterLimits _limits;
 

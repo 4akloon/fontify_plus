@@ -10,8 +10,8 @@ const _kDefaultFeatureTableList = [
 ];
 
 List<FeatureRecord> _createDefaultFeatureRecordList() => [
-      FeatureRecord('liga', null),
-    ];
+  FeatureRecord('liga', null),
+];
 
 /// Every layout feature the font declares.
 class FeatureListTable implements BinaryCodable {

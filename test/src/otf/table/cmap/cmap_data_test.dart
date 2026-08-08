@@ -13,18 +13,24 @@ void main() {
     final segments = [CmapSegment(10, 20, 1)];
 
     test('dispatches format 0 to CmapByteEncodingTable', () {
-      expect(CmapData.create(segments, kCmapFormat0),
-          isA<CmapByteEncodingTable>());
+      expect(
+        CmapData.create(segments, kCmapFormat0),
+        isA<CmapByteEncodingTable>(),
+      );
     });
 
     test('dispatches format 4 to CmapSegmentMappingToDeltaValuesTable', () {
-      expect(CmapData.create(segments, kCmapFormat4),
-          isA<CmapSegmentMappingToDeltaValuesTable>());
+      expect(
+        CmapData.create(segments, kCmapFormat4),
+        isA<CmapSegmentMappingToDeltaValuesTable>(),
+      );
     });
 
     test('dispatches format 12 to CmapSegmentedCoverageTable', () {
-      expect(CmapData.create(segments, kCmapFormat12),
-          isA<CmapSegmentedCoverageTable>());
+      expect(
+        CmapData.create(segments, kCmapFormat12),
+        isA<CmapSegmentedCoverageTable>(),
+      );
     });
 
     test('returns null for an unsupported format', () {

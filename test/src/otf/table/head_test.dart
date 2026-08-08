@@ -7,9 +7,9 @@ import 'package:fontify_plus/src/utils/otf.dart';
 import 'package:test/test.dart';
 
 List<GenericGlyphMetrics> _metricsList() => [
-      GenericGlyphMetrics.empty(),
-      GenericGlyphMetrics(-5, 700, -10, 800),
-    ];
+  GenericGlyphMetrics.empty(),
+  GenericGlyphMetrics(-5, 700, -10, 800),
+];
 
 void main() {
   group('HeaderTable.create', () {

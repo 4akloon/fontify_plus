@@ -9,13 +9,15 @@ void main() {
       expect(glyphs, hasLength(2));
     });
 
-    test('.notdef has no char code, but two outlines (an outer and inner box)',
-        () {
-      final glyphs = generateDefaultGlyphList(1000);
+    test(
+      '.notdef has no char code, but two outlines (an outer and inner box)',
+      () {
+        final glyphs = generateDefaultGlyphList(1000);
 
-      expect(glyphs[0].metadata.charCode, isNull);
-      expect(glyphs[0].outlines, hasLength(2));
-    });
+        expect(glyphs[0].metadata.charCode, isNull);
+        expect(glyphs[0].outlines, hasLength(2));
+      },
+    );
 
     test('.notdef spans from x=0 to the ascender height', () {
       final glyphs = generateDefaultGlyphList(1000);

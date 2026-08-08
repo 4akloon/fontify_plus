@@ -14,8 +14,10 @@ const _kEpsilon = 1e-5;
 /// The stroke arrives travelling +x and leaves travelling +y. Offsetting to
 /// the left puts the offset edges at y = 1, so this is the *inner* side: the
 /// two edges overrun each other.
-List<Cubic> joinInner(
-        {LineJoin join = LineJoin.miter, double miterLimit = 4}) =>
+List<Cubic> joinInner({
+  LineJoin join = LineJoin.miter,
+  double miterLimit = 4,
+}) =>
     StrokeJoiner(
       StrokeProperties(width: 2, join: join, miterLimit: miterLimit),
     ).join(
@@ -27,8 +29,10 @@ List<Cubic> joinInner(
     );
 
 /// The same corner taken the other way, so the offset edges pull apart.
-List<Cubic> joinOuter(
-        {LineJoin join = LineJoin.miter, double miterLimit = 4}) =>
+List<Cubic> joinOuter({
+  LineJoin join = LineJoin.miter,
+  double miterLimit = 4,
+}) =>
     StrokeJoiner(
       StrokeProperties(width: 2, join: join, miterLimit: miterLimit),
     ).join(
@@ -65,15 +69,16 @@ void main() {
       // A curve written as a chain of cubics meets itself tangentially at each
       // junction. Inserting join geometry there would litter the outline with
       // degenerate arcs.
-      final joined = const StrokeJoiner(
-        StrokeProperties(width: 2, join: LineJoin.round),
-      ).join(
-        vertex: Vector2(5, 0),
-        from: Vector2(5, 1),
-        to: Vector2(5.0001, 1),
-        incoming: Vector2(1, 0),
-        outgoing: Vector2(1, 0),
-      );
+      final joined =
+          const StrokeJoiner(
+            StrokeProperties(width: 2, join: LineJoin.round),
+          ).join(
+            vertex: Vector2(5, 0),
+            from: Vector2(5, 1),
+            to: Vector2(5.0001, 1),
+            incoming: Vector2(1, 0),
+            outgoing: Vector2(1, 0),
+          );
 
       expect(joined, hasLength(1));
       expect(joined.single.curvatureAt(0.5).abs(), lessThan(_kEpsilon));
@@ -171,7 +176,9 @@ void main() {
 
       expect(geometry, hasLength(1));
       expect(
-          geometry.single.p3.distanceTo(Vector2(10, 0.5)), lessThan(_kEpsilon));
+        geometry.single.p3.distanceTo(Vector2(10, 0.5)),
+        lessThan(_kEpsilon),
+      );
     });
 
     test('bridges straight across when the inner tangents never cross', () {

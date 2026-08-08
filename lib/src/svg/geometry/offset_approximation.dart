@@ -12,17 +12,18 @@ Vector2 offsetPointAt(Cubic curve, double t, double distance) =>
 
 /// The straight line between the offset end points.
 Cubic offsetChord(Cubic curve, double distance) => Cubic.line(
-      offsetPointAt(curve, 0, distance),
-      offsetPointAt(curve, 1, distance),
-    );
+  offsetPointAt(curve, 0, distance),
+  offsetPointAt(curve, 1, distance),
+);
 
 /// Worst distance between [candidate] and the true offset of [curve].
 double maxOffsetDeviation(Cubic curve, Cubic candidate, double distance) {
   var worst = 0.0;
 
   for (final t in _errorSamples) {
-    final deviation =
-        candidate.pointAt(t).distanceTo(offsetPointAt(curve, t, distance));
+    final deviation = candidate
+        .pointAt(t)
+        .distanceTo(offsetPointAt(curve, t, distance));
 
     if (deviation > worst) {
       worst = deviation;
@@ -57,9 +58,11 @@ Cubic? approximateOffset(Cubic curve, double distance) {
   double beta;
 
   if (determinant.abs() > kZeroLength) {
-    alpha = (target.x * -3 * endTangent.y - -3 * endTangent.x * target.y) /
+    alpha =
+        (target.x * -3 * endTangent.y - -3 * endTangent.x * target.y) /
         determinant;
-    beta = (3 * startTangent.x * target.y - target.x * 3 * startTangent.y) /
+    beta =
+        (3 * startTangent.x * target.y - target.x * 3 * startTangent.y) /
         determinant;
   } else {
     // Parallel end tangents: the offset is essentially a translation, so keep

@@ -7,10 +7,7 @@ import '../../utils/exception.dart';
 class CFFIndex extends BinaryCodable {
   CFFIndex(this.count, this.offSize, this.offsetList, this.isCFF1);
 
-  CFFIndex.empty(this.isCFF1)
-      : count = 0,
-        offSize = 1,
-        offsetList = [];
+  CFFIndex.empty(this.isCFF1) : count = 0, offSize = 1, offsetList = [];
 
   factory CFFIndex.fromByteData(ByteData byteData, bool isCFF1) {
     var offset = 0;

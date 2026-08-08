@@ -9,8 +9,7 @@ Outline outlineOf(
   bool compact = false,
   bool quad = false,
   FillRule fillRule = FillRule.nonzero,
-}) =>
-    Outline(points, onCurve, compact, quad, fillRule);
+}) => Outline(points, onCurve, compact, quad, fillRule);
 
 void main() {
   group('Outline.copy', () {
@@ -52,8 +51,12 @@ void main() {
     });
 
     test('throws for a compact outline with no quadratic curves', () {
-      final outline =
-          outlineOf([const Point(0, 0)], [true], compact: true, quad: false);
+      final outline = outlineOf(
+        [const Point(0, 0)],
+        [true],
+        compact: true,
+        quad: false,
+      );
 
       expect(outline.decompactImplicitPoints, throwsUnsupportedError);
     });
@@ -64,7 +67,7 @@ void main() {
           const Point(0, 0),
           const Point(2, 4),
           const Point(6, 4),
-          const Point(8, 0)
+          const Point(8, 0),
         ],
         [true, false, false, true],
         compact: true,
@@ -132,7 +135,7 @@ void main() {
           const Point(2, 4),
           const Point(4, 4),
           const Point(6, 4),
-          const Point(8, 0)
+          const Point(8, 0),
         ],
         [true, false, true, false, true],
         quad: true,
@@ -158,7 +161,7 @@ void main() {
           const Point(2, 4),
           const Point(5, 5),
           const Point(6, 4),
-          const Point(8, 0)
+          const Point(8, 0),
         ],
         [true, false, true, false, true],
         quad: true,
@@ -319,30 +322,32 @@ void main() {
       expect(outline.pointList.last, const Point(0, 0));
     });
 
-    test('round-trips through cubicToQuad and back to the same on-curve points',
-        () {
-      final outline = outlineOf(
-        [
-          const Point(0, 0),
-          const Point(0, 20),
-          const Point(20, 20),
-          const Point(20, 0),
-        ],
-        [true, false, false, true],
-      );
+    test(
+      'round-trips through cubicToQuad and back to the same on-curve points',
+      () {
+        final outline = outlineOf(
+          [
+            const Point(0, 0),
+            const Point(0, 20),
+            const Point(20, 20),
+            const Point(20, 0),
+          ],
+          [true, false, false, true],
+        );
 
-      outline.cubicToQuad();
-      outline.quadToCubic();
+        outline.cubicToQuad();
+        outline.quadToCubic();
 
-      final onCurvePoints = [
-        for (var i = 0; i < outline.pointList.length; i++)
-          if (outline.isOnCurveList[i]) outline.pointList[i],
-      ];
+        final onCurvePoints = [
+          for (var i = 0; i < outline.pointList.length; i++)
+            if (outline.isOnCurveList[i]) outline.pointList[i],
+        ];
 
-      // This describes one open cubic segment from (0,0) to (20,0), not a
-      // closed loop — there is no implicit closing point to recover here.
-      expect(onCurvePoints.first, const Point(0, 0));
-      expect(onCurvePoints.last, const Point(20, 0));
-    });
+        // This describes one open cubic segment from (0,0) to (20,0), not a
+        // closed loop — there is no implicit closing point to recover here.
+        expect(onCurvePoints.first, const Point(0, 0));
+        expect(onCurvePoints.last, const Point(20, 0));
+      },
+    );
   });
 }

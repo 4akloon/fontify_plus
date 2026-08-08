@@ -78,15 +78,19 @@ void main() {
     test('round-trips multiple entries through binary', () {
       final dict = CFFDict([
         CFFDictEntry([CFFOperand.fromValue(1)], op.weight),
-        CFFDictEntry(
-            [CFFOperand.fromValue(2), CFFOperand.fromValue(3)], op.fontBBox),
+        CFFDictEntry([
+          CFFOperand.fromValue(2),
+          CFFOperand.fromValue(3),
+        ], op.fontBBox),
       ]);
 
       final decoded = encodeDecode(dict);
 
       expect(decoded.entryList, hasLength(2));
       expect(
-          decoded.getEntryForOperator(op.weight)!.operandList.single.value, 1);
+        decoded.getEntryForOperator(op.weight)!.operandList.single.value,
+        1,
+      );
       expect(
         decoded
             .getEntryForOperator(op.fontBBox)!

@@ -27,23 +27,24 @@ void main() {
 
   group('LigatureSubstitutionSubtable round trip', () {
     test(
-        'round-trips an empty ligature set through encodeToBinary and fromByteData',
-        () {
-      const subtable = LigatureSubstitutionSubtable(
-        1,
-        6,
-        0,
-        [],
-        kDefaultCoverageTable,
-      );
-      final bytes = ByteData(subtable.size);
+      'round-trips an empty ligature set through encodeToBinary and fromByteData',
+      () {
+        const subtable = LigatureSubstitutionSubtable(
+          1,
+          6,
+          0,
+          [],
+          kDefaultCoverageTable,
+        );
+        final bytes = ByteData(subtable.size);
 
-      subtable.encodeToBinary(bytes);
-      final decoded = LigatureSubstitutionSubtable.fromByteData(bytes, 0);
+        subtable.encodeToBinary(bytes);
+        final decoded = LigatureSubstitutionSubtable.fromByteData(bytes, 0);
 
-      expect(decoded.substFormat, 1);
-      expect(decoded.ligatureSetCount, 0);
-      expect(decoded.coverageTable, isA<CoverageTableFormat1>());
-    });
+        expect(decoded.substFormat, 1);
+        expect(decoded.ligatureSetCount, 0);
+        expect(decoded.coverageTable, isA<CoverageTableFormat1>());
+      },
+    );
   });
 }

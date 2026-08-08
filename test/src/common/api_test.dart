@@ -49,7 +49,9 @@ void main() {
 
     test('uses the requested font name', () {
       final result = svgToOtf(
-          svgMap: {'a': svgWithViewBox('0 0 16 16')}, fontName: 'My Icons');
+        svgMap: {'a': svgWithViewBox('0 0 16 16')},
+        fontName: 'My Icons',
+      );
 
       expect(result.font.familyName, 'My Icons');
     });
@@ -87,8 +89,9 @@ void main() {
 
   group('generateFlutterClass', () {
     test('names the class as requested', () {
-      final result =
-          svgToOtf(svgMap: {'arrow-up': svgWithViewBox('0 0 16 16')});
+      final result = svgToOtf(
+        svgMap: {'arrow-up': svgWithViewBox('0 0 16 16')},
+      );
 
       final source = generateFlutterClass(
         glyphList: result.glyphList,

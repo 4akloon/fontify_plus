@@ -20,8 +20,8 @@ extension OTFByteDateExt on ByteData {
   void setUFWord(int offset, int value) => setUint16(offset, value);
 
   Uint8List getByteList(int offset, int length) => Uint8List.fromList(
-        [for (var i = 0; i < length; i++) getUint8(offset + i)],
-      );
+    [for (var i = 0; i < length; i++) getUint8(offset + i)],
+  );
 
   void setByteList(int offset, Uint8List list) {
     for (var i = 0; i < list.length; i++) {
@@ -47,8 +47,8 @@ extension OTFByteDateExt on ByteData {
   /// A view of [length] bytes starting at [offset], or to the end when
   /// [length] is omitted.
   ByteData sublistView(int offset, [int? length]) => ByteData.sublistView(
-        this,
-        offset,
-        length == null ? null : offset + length,
-      );
+    this,
+    offset,
+    length == null ? null : offset + length,
+  );
 }

@@ -17,8 +17,9 @@ void main() {
 
     test('CFF1 with a glyph width writes it as a leading operand', () {
       const writer = CharStringWriter(isCFF1: true);
-      final withWidth =
-          writer.writeCommands([CharStringCommand.hmoveto(5)], glyphWidth: 500);
+      final withWidth = writer.writeCommands([
+        CharStringCommand.hmoveto(5),
+      ], glyphWidth: 500);
       final withoutWidth = const CharStringWriter(isCFF1: true).writeCommands(
         [CharStringCommand.hmoveto(5)],
       );
@@ -28,8 +29,9 @@ void main() {
 
     test('CFF2 ignores a glyph width even if one is given', () {
       const writer = CharStringWriter(isCFF1: false);
-      final withWidth =
-          writer.writeCommands([CharStringCommand.hmoveto(5)], glyphWidth: 500);
+      final withWidth = writer.writeCommands([
+        CharStringCommand.hmoveto(5),
+      ], glyphWidth: 500);
       final withoutWidth = writer.writeCommands([CharStringCommand.hmoveto(5)]);
 
       expect(withWidth.lengthInBytes, withoutWidth.lengthInBytes);
@@ -37,10 +39,12 @@ void main() {
 
     test('a glyph width of null writes no leading operand even for CFF1', () {
       const writer = CharStringWriter(isCFF1: true);
-      final withNullWidth =
-          writer.writeCommands([CharStringCommand.hmoveto(5)]);
-      final direct = const CharStringWriter(isCFF1: false)
-          .writeCommands([CharStringCommand.hmoveto(5)]);
+      final withNullWidth = writer.writeCommands([
+        CharStringCommand.hmoveto(5),
+      ]);
+      final direct = const CharStringWriter(
+        isCFF1: false,
+      ).writeCommands([CharStringCommand.hmoveto(5)]);
 
       expect(withNullWidth.lengthInBytes, direct.lengthInBytes);
     });

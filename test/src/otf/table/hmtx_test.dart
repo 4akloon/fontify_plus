@@ -64,7 +64,7 @@ void main() {
       final table = HorizontalMetricsTable.create(
         [
           GenericGlyphMetrics(0, 100, 0, 100),
-          GenericGlyphMetrics(0, 700, 0, 800)
+          GenericGlyphMetrics(0, 700, 0, 800),
         ],
         1000,
       );
@@ -82,14 +82,15 @@ void main() {
     });
 
     test(
-        'getMinRightSideBearing and getMaxExtent read against the given metrics',
-        () {
-      final metricsList = [GenericGlyphMetrics(0, 700, 0, 800)];
-      final table = HorizontalMetricsTable.create(metricsList, 1000);
+      'getMinRightSideBearing and getMaxExtent read against the given metrics',
+      () {
+        final metricsList = [GenericGlyphMetrics(0, 700, 0, 800)];
+        final table = HorizontalMetricsTable.create(metricsList, 1000);
 
-      expect(table.getMinRightSideBearing(metricsList), 0);
-      expect(table.getMaxExtent(metricsList), 700);
-    });
+        expect(table.getMinRightSideBearing(metricsList), 0);
+        expect(table.getMaxExtent(metricsList), 700);
+      },
+    );
   });
 
   group('HorizontalMetricsTable round trip', () {

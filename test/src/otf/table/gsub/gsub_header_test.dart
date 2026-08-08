@@ -23,43 +23,46 @@ void main() {
 
   group('GlyphSubstitutionTableHeader round trip', () {
     test(
-        'round-trips a version-1.0 header through encodeToBinary and fromByteData',
-        () {
-      final header = GlyphSubstitutionTableHeader.create()
-        ..scriptListOffset = 10
-        ..featureListOffset = 20
-        ..lookupListOffset = 30;
-      final bytes = ByteData(header.size);
+      'round-trips a version-1.0 header through encodeToBinary and fromByteData',
+      () {
+        final header = GlyphSubstitutionTableHeader.create()
+          ..scriptListOffset = 10
+          ..featureListOffset = 20
+          ..lookupListOffset = 30;
+        final bytes = ByteData(header.size);
 
-      header.encodeToBinary(bytes);
+        header.encodeToBinary(bytes);
 
-      final decoded = GlyphSubstitutionTableHeader.fromByteData(
-        bytes,
-        TableRecordEntry('GSUB', 0, 0, bytes.lengthInBytes),
-      );
+        final decoded = GlyphSubstitutionTableHeader.fromByteData(
+          bytes,
+          TableRecordEntry('GSUB', 0, 0, bytes.lengthInBytes),
+        );
 
-      expect(decoded.isV10, isTrue);
-      expect(decoded.scriptListOffset, 10);
-      expect(decoded.featureListOffset, 20);
-      expect(decoded.lookupListOffset, 30);
-      expect(decoded.featureVariationsOffset, isNull);
-    });
+        expect(decoded.isV10, isTrue);
+        expect(decoded.scriptListOffset, 10);
+        expect(decoded.featureListOffset, 20);
+        expect(decoded.lookupListOffset, 30);
+        expect(decoded.featureVariationsOffset, isNull);
+      },
+    );
 
-    test('round-trips a version-1.1 header, including featureVariationsOffset',
-        () {
-      final header = GlyphSubstitutionTableHeader(1, 1, 10, 20, 30, 40);
-      final bytes = ByteData(header.size);
+    test(
+      'round-trips a version-1.1 header, including featureVariationsOffset',
+      () {
+        final header = GlyphSubstitutionTableHeader(1, 1, 10, 20, 30, 40);
+        final bytes = ByteData(header.size);
 
-      header.encodeToBinary(bytes);
+        header.encodeToBinary(bytes);
 
-      final decoded = GlyphSubstitutionTableHeader.fromByteData(
-        bytes,
-        TableRecordEntry('GSUB', 0, 0, bytes.lengthInBytes),
-      );
+        final decoded = GlyphSubstitutionTableHeader.fromByteData(
+          bytes,
+          TableRecordEntry('GSUB', 0, 0, bytes.lengthInBytes),
+        );
 
-      expect(decoded.isV10, isFalse);
-      expect(decoded.size, 14);
-      expect(decoded.featureVariationsOffset, 40);
-    });
+        expect(decoded.isV10, isFalse);
+        expect(decoded.size, 14);
+        expect(decoded.featureVariationsOffset, 40);
+      },
+    );
   });
 }

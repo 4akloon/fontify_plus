@@ -6,9 +6,9 @@ import 'package:test/test.dart';
 /// nearly every path, so it cannot be invoked in-process without killing the
 /// test runner.
 Future<ProcessResult> _runCli(List<String> args) => Process.run(
-      Platform.executable,
-      ['run', 'bin/fontify_plus.dart', ...args],
-    );
+  Platform.executable,
+  ['run', 'bin/fontify_plus.dart', ...args],
+);
 
 void main() {
   late Directory tempDir;
@@ -29,13 +29,15 @@ void main() {
       expect(result.stdout, contains('Usage:'));
     });
 
-    test('no positional args prints a usage error and exits with code 64',
-        () async {
-      final result = await _runCli([]);
+    test(
+      'no positional args prints a usage error and exits with code 64',
+      () async {
+        final result = await _runCli([]);
 
-      expect(result.exitCode, 64);
-      expect(result.stdout, contains('Usage:'));
-    });
+        expect(result.exitCode, 64);
+        expect(result.stdout, contains('Usage:'));
+      },
+    );
 
     test('a non-existent input directory exits with code 64', () async {
       final result = await _runCli([

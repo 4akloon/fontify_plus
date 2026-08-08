@@ -11,9 +11,9 @@ const _kEpsilon = 1e-5;
 
 /// The stroke runs along +x and ends at the origin, so the cap spans from
 /// (0, 1) to (0, -1) and may bulge toward +x.
-List<Cubic> capAt(LineCap cap) =>
-    StrokeCapper(StrokeProperties(width: 2, cap: cap))
-        .cap(Vector2.zero(), Vector2(1, 0));
+List<Cubic> capAt(LineCap cap) => StrokeCapper(
+  StrokeProperties(width: 2, cap: cap),
+).cap(Vector2.zero(), Vector2(1, 0));
 
 /// Points sampled along a chain, for measuring how far it reaches.
 Iterable<Vector2> samples(List<Cubic> chain) sync* {
@@ -56,8 +56,9 @@ void main() {
       // Both sweep directions are equally short at half a turn, so the sign
       // cannot be recovered from the end points alone — getting it wrong put
       // the cap inside the stroke.
-      final reach =
-          samples(capAt(LineCap.round)).map((p) => p.x).reduce(math.max);
+      final reach = samples(
+        capAt(LineCap.round),
+      ).map((p) => p.x).reduce(math.max);
 
       expect(reach, closeTo(1, 0.01));
       expect(
@@ -76,8 +77,10 @@ void main() {
       final geometry = capAt(LineCap.square);
 
       expect(geometry, hasLength(3));
-      expect(samples(geometry).map((p) => p.x).reduce(math.max),
-          closeTo(1, _kEpsilon));
+      expect(
+        samples(geometry).map((p) => p.x).reduce(math.max),
+        closeTo(1, _kEpsilon),
+      );
     });
 
     test('a wider stroke caps proportionally further out', () {

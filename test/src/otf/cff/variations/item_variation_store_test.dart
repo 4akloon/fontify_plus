@@ -11,15 +11,15 @@ import 'package:test/test.dart';
 // produces them — encodeToBinary recomputes them, but size (called before
 // encoding, as every BinaryEncodable expects) trusts the stored count as-is.
 ItemVariationStore _store() => ItemVariationStore(
-      1,
-      12, // 8 fixed bytes + 4 bytes for the one subtable offset
-      1,
-      [0], // placeholder, overwritten by encodeToBinary
-      VariationRegionList(1, 1, [RegionAxisCoordinates(0, 0x4000, 0x8000)]),
-      [
-        ItemVariationData(2, 1, 1, [0]),
-      ],
-    );
+  1,
+  12, // 8 fixed bytes + 4 bytes for the one subtable offset
+  1,
+  [0], // placeholder, overwritten by encodeToBinary
+  VariationRegionList(1, 1, [RegionAxisCoordinates(0, 0x4000, 0x8000)]),
+  [
+    ItemVariationData(2, 1, 1, [0]),
+  ],
+);
 
 void main() {
   group('ItemVariationStore.encodeToBinary', () {

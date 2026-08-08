@@ -63,17 +63,16 @@ class OpenTypeFont implements BinaryCodable {
     bool? useOpenType,
     bool? usePostV2,
     bool? normalize,
-  }) =>
-      OpenTypeFontBuilder(
-        glyphList: glyphList,
-        fontName: fontName,
-        description: description,
-        revision: revision,
-        achVendID: achVendID,
-        useOpenType: useOpenType,
-        usePostV2: usePostV2,
-        normalize: normalize,
-      ).build();
+  }) => OpenTypeFontBuilder(
+    glyphList: glyphList,
+    fontName: fontName,
+    description: description,
+    revision: revision,
+    achVendID: achVendID,
+    useOpenType: useOpenType,
+    usePostV2: usePostV2,
+    normalize: normalize,
+  ).build();
 
   final OffsetTable offsetTable;
   final Map<String, FontTable> tableMap;

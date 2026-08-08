@@ -36,11 +36,11 @@ class RawBytesCodec extends IndexElementCodec<Uint8List> {
 
   @override
   Uint8List decode(ByteData byteData) => Uint8List.fromList(
-        byteData.buffer.asUint8List(
-          byteData.offsetInBytes,
-          byteData.lengthInBytes,
-        ),
-      );
+    byteData.buffer.asUint8List(
+      byteData.offsetInBytes,
+      byteData.lengthInBytes,
+    ),
+  );
 
   @override
   void encode(ByteData byteData, Uint8List element) =>

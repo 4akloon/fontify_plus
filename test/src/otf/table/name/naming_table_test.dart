@@ -25,8 +25,11 @@ void main() {
 
   group('NamingTable.fromByteData', () {
     test('format 0 dispatches to NamingTableFormat0', () {
-      final built =
-          NamingTableFormat0.create('My Icons', null, const Revision(1, 0));
+      final built = NamingTableFormat0.create(
+        'My Icons',
+        null,
+        const Revision(1, 0),
+      );
       final bytes = ByteData(built.size);
       built.encodeToBinary(bytes);
 

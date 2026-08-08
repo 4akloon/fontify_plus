@@ -15,14 +15,14 @@ import 'package:test/test.dart';
 const _kUnitsPerEm = 1000;
 
 List<GenericGlyphMetrics> _metricsList() => [
-      GenericGlyphMetrics.empty(),
-      GenericGlyphMetrics(0, 700, 0, 800),
-    ];
+  GenericGlyphMetrics.empty(),
+  GenericGlyphMetrics(0, 700, 0, 800),
+];
 
 List<GenericGlyph> _fullGlyphList() => [
-      GenericGlyph.empty(),
-      GenericGlyph.empty()..metadata.charCode = 0xE001,
-    ];
+  GenericGlyph.empty(),
+  GenericGlyph.empty()..metadata.charCode = 0xE001,
+];
 
 OS2Table _built({int version = kOS2Version5}) {
   final hmtx = HorizontalMetricsTable.create(_metricsList(), _kUnitsPerEm);

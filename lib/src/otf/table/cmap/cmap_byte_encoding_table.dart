@@ -26,11 +26,11 @@ class CmapByteEncodingTable extends CmapData {
       );
 
   factory CmapByteEncodingTable.create() => CmapByteEncodingTable(
-        kCmapFormat0,
-        _kByteEncodingTableSize,
-        0,
-        List.filled(256, 0), // Not using standard mac glyphs
-      );
+    kCmapFormat0,
+    _kByteEncodingTableSize,
+    0,
+    List.filled(256, 0), // Not using standard mac glyphs
+  );
 
   final int length;
   final int language;

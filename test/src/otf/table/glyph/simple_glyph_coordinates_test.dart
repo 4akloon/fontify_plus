@@ -50,14 +50,30 @@ void main() {
       }
 
       final bytes = ByteData(size);
-      final afterX =
-          writeCoordinates(bytes, 0, flags, xs, flags.length, GlyphAxis.x);
+      final afterX = writeCoordinates(
+        bytes,
+        0,
+        flags,
+        xs,
+        flags.length,
+        GlyphAxis.x,
+      );
       writeCoordinates(bytes, afterX, flags, ys, flags.length, GlyphAxis.y);
 
-      final (decodedX, afterReadX) =
-          readCoordinates(bytes, 0, flags, flags.length, GlyphAxis.x);
-      final (decodedY, _) =
-          readCoordinates(bytes, afterReadX, flags, flags.length, GlyphAxis.y);
+      final (decodedX, afterReadX) = readCoordinates(
+        bytes,
+        0,
+        flags,
+        flags.length,
+        GlyphAxis.x,
+      );
+      final (decodedY, _) = readCoordinates(
+        bytes,
+        afterReadX,
+        flags,
+        flags.length,
+        GlyphAxis.y,
+      );
 
       expect(decodedX, xs);
       expect(decodedY, ys);

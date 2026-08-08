@@ -12,21 +12,21 @@ import 'encoding_record.dart';
 
 /// Encoding records to write, ordered by platform and encoding ID.
 List<EncodingRecord> _defaultEncodingRecords() => [
-      /// Unicode (2.0 or later semantics BMP only), format 4
-      EncodingRecord.create(kPlatformUnicode, 3),
+  /// Unicode (2.0 or later semantics BMP only), format 4
+  EncodingRecord.create(kPlatformUnicode, 3),
 
-      /// Unicode (2.0 or later semantics, non-BMP allowed), format 12
-      EncodingRecord.create(kPlatformUnicode, 4),
+  /// Unicode (2.0 or later semantics, non-BMP allowed), format 12
+  EncodingRecord.create(kPlatformUnicode, 4),
 
-      /// Macintosh, format 0
-      EncodingRecord.create(kPlatformMacintosh, 0),
+  /// Macintosh, format 0
+  EncodingRecord.create(kPlatformMacintosh, 0),
 
-      /// Windows (Unicode BMP-only UCS-2), format 4
-      EncodingRecord.create(kPlatformWindows, 1),
+  /// Windows (Unicode BMP-only UCS-2), format 4
+  EncodingRecord.create(kPlatformWindows, 1),
 
-      /// Windows (Unicode UCS-4), format 12
-      EncodingRecord.create(kPlatformWindows, 10),
-    ];
+  /// Windows (Unicode UCS-4), format 12
+  EncodingRecord.create(kPlatformWindows, 10),
+];
 
 /// Subtable format for each record above, in the same order.
 const _kDefaultEncodingRecordFormatList = [
@@ -40,7 +40,7 @@ const _kDefaultEncodingRecordFormatList = [
 /// The `cmap` table: which character code selects which glyph.
 class CharacterToGlyphTable extends FontTable {
   CharacterToGlyphTable(super.entry, this.header, this.data)
-      : super.fromTableRecordEntry();
+    : super.fromTableRecordEntry();
 
   factory CharacterToGlyphTable.fromByteData(
     ByteData byteData,

@@ -9,15 +9,21 @@ import 'package:test/test.dart';
 void main() {
   group('NamingTableFormat0.create', () {
     test('familyName is the font name it was given', () {
-      final table =
-          NamingTableFormat0.create('My Icons', null, const Revision(1, 0));
+      final table = NamingTableFormat0.create(
+        'My Icons',
+        null,
+        const Revision(1, 0),
+      );
 
       expect(table.familyName, 'My Icons');
     });
 
     test('writes every string once per platform template', () {
-      final table =
-          NamingTableFormat0.create('My Icons', null, const Revision(1, 0));
+      final table = NamingTableFormat0.create(
+        'My Icons',
+        null,
+        const Revision(1, 0),
+      );
 
       // 10 NameIDs, written for 2 platform templates (Mac + Windows).
       expect(table.header.nameRecordList, hasLength(20));
@@ -31,19 +37,27 @@ void main() {
       );
 
       expect(
-          table.getStringByNameId(NameID.description), 'A custom description');
+        table.getStringByNameId(NameID.description),
+        'A custom description',
+      );
     });
 
     test('falls back to a generated description when none is given', () {
-      final table =
-          NamingTableFormat0.create('My Icons', null, const Revision(1, 0));
+      final table = NamingTableFormat0.create(
+        'My Icons',
+        null,
+        const Revision(1, 0),
+      );
 
       expect(table.getStringByNameId(NameID.description), isNotNull);
     });
 
     test('resolves every name ID this format writes', () {
-      final table =
-          NamingTableFormat0.create('My Icons', null, const Revision(1, 0));
+      final table = NamingTableFormat0.create(
+        'My Icons',
+        null,
+        const Revision(1, 0),
+      );
 
       for (final id in NameID.values) {
         expect(table.getStringByNameId(id), isNotNull, reason: '$id');
@@ -53,8 +67,11 @@ void main() {
 
   group('NamingTableFormat0 round trip', () {
     test('round-trips through encodeToBinary and fromByteData', () {
-      final table =
-          NamingTableFormat0.create('My Icons', null, const Revision(1, 0));
+      final table = NamingTableFormat0.create(
+        'My Icons',
+        null,
+        const Revision(1, 0),
+      );
       final bytes = ByteData(table.size);
 
       table.encodeToBinary(bytes);

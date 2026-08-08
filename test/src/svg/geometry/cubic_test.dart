@@ -31,17 +31,19 @@ void main() {
       }
     });
 
-    test('spaces its controls evenly, so it stays straight under splitting',
-        () {
-      final line = Cubic.line(Vector2(0, 0), Vector2(9, 0));
-      final (left, right) = line.splitAt(0.5);
+    test(
+      'spaces its controls evenly, so it stays straight under splitting',
+      () {
+        final line = Cubic.line(Vector2(0, 0), Vector2(9, 0));
+        final (left, right) = line.splitAt(0.5);
 
-      for (final half in [left, right]) {
-        for (final control in [half.p1, half.p2]) {
-          expect(control.y, closeTo(0, _kEpsilon));
+        for (final half in [left, right]) {
+          for (final control in [half.p1, half.p2]) {
+            expect(control.y, closeTo(0, _kEpsilon));
+          }
         }
-      }
-    });
+      },
+    );
   });
 
   group('pointAt', () {
@@ -54,7 +56,8 @@ void main() {
       const t = 0.3;
       const u = 1 - t;
 
-      final expected = _curve.p0 * (u * u * u) +
+      final expected =
+          _curve.p0 * (u * u * u) +
           _curve.p1 * (3 * u * u * t) +
           _curve.p2 * (3 * u * t * t) +
           _curve.p3 * (t * t * t);
@@ -137,7 +140,9 @@ void main() {
       );
 
       expect(
-          left.curvatureAt(0.5) * left.reversed.curvatureAt(0.5), lessThan(0));
+        left.curvatureAt(0.5) * left.reversed.curvatureAt(0.5),
+        lessThan(0),
+      );
     });
 
     test('is zero where the curve does not move', () {
