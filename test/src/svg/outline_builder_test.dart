@@ -133,10 +133,25 @@ void main() {
         [curved, line(10, 0, 0, 0)],
       ]).single;
 
-      // Start, the curve's two controls and its end, then the straight
-      // segment's end.
-      expect(outline.isOnCurveList, [true, false, false, true, true]);
+      // Start, then the curve's two controls and its end. The closing
+      // straight segment lands back on the start, and that repeat is dropped:
+      // a contour's closing segment is implicit.
+      expect(outline.isOnCurveList, [true, false, false, true]);
     });
+
+    test(
+      'keeps the final point of a contour that does not close on itself',
+      () {
+        // dropRepeatedStart must remove only a genuine repeat. An open chain
+        // ends somewhere else, and losing that point would shorten the outline.
+        final outline = fromContours([
+          [line(0, 0, 1, 0), line(1, 0, 1, 1)],
+        ]).single;
+
+        expect(outline.pointList, hasLength(3));
+        expect(outline.pointList.last, const math.Point<num>(1, 9));
+      },
+    );
 
     test('emits one outline per contour', () {
       expect(fromContours([triangle, triangle]), hasLength(2));
