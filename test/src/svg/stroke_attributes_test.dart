@@ -45,6 +45,15 @@ void main() {
       expect(result.join, LineJoin.bevel);
     });
 
+    test('returns null for a fully transparent stroke', () {
+      // vgc reports `stroke-opacity="0"` as a Stroke with zero alpha, not as
+      // no stroke at all.
+      expect(
+        strokePropertiesOf(const vg.Stroke(color: vg.Color(0x00000000))),
+        isNull,
+      );
+    });
+
     test('returns null for a non-positive width', () {
       // A zero-width stroke paints nothing. Offsetting by it would fold the
       // two walls onto the centreline rather than produce no contour at all.

@@ -93,6 +93,45 @@ void main() {
       expect(geometry.shapes, isEmpty);
     });
 
+    test('drops a path whose fill is fully transparent', () {
+      // vgc reports a transparent fill as a Fill with zero alpha, not as no
+      // fill. Icon sets use this for invisible hit targets, which would
+      // otherwise fill the whole glyph.
+      expect(
+        parse('<path fill="#00000000" d="M0 0 H24 V24 H0 Z"/>').shapes,
+        isEmpty,
+      );
+      expect(
+        parse(
+          '<path fill="#000" fill-opacity="0" d="M0 0 H24 V24 H0 Z"/>',
+        ).shapes,
+        isEmpty,
+      );
+    });
+
+    test('drops a path whose stroke is fully transparent', () {
+      expect(
+        parse(
+          '<path fill="none" stroke="#000" stroke-opacity="0" '
+          'd="M0 12 H24"/>',
+        ).shapes,
+        isEmpty,
+      );
+    });
+
+    test('keeps a path filled with a gradient', () {
+      // A gradient paints whatever its stops say, so the base colour's alpha
+      // must not be what decides.
+      final geometry = parse(
+        '<defs><linearGradient id="g"><stop offset="0" stop-color="#000"/>'
+        '<stop offset="1" stop-color="#fff"/></linearGradient></defs>'
+        '<path fill="url(#g)" d="M0 0 H24 V24 H0 Z"/>',
+      );
+
+      expect(geometry.shapes, hasLength(1));
+      expect(geometry.shapes.single.filled, isTrue);
+    });
+
     test('preserves the evenodd fill rule', () {
       final geometry = parse(
         '<path fill-rule="evenodd" d="M2 2h20v20H2Z M6 6h12v12H6Z"/>',
@@ -143,6 +182,34 @@ void main() {
       );
 
       expect(geometry.shapes, hasLength(2));
+    });
+
+    test('does not leak mask geometry when the mask contains a clip', () {
+      // The stream becomes saveLayer, content, mask, clip, mask shape, restore,
+      // mask shape, restore, restore. A depth counter decrements on the clip's
+      // own restore and lets the rest of the mask through as ink.
+      final geometry = parse(
+        '<defs><clipPath id="c"><rect width="6" height="24"/></clipPath>'
+        '<mask id="m"><g clip-path="url(#c)">'
+        '<rect width="12" height="24" fill="#fff"/></g>'
+        '<rect x="12" width="12" height="24" fill="#fff"/></mask></defs>'
+        '<g mask="url(#m)"><path d="M0 0 H24 V24 H0 Z"/></g>',
+      );
+
+      expect(geometry.shapes, hasLength(1));
+    });
+
+    test('does not leak mask geometry when the mask contains a group', () {
+      // An opacity group inside the mask emits its own saveLayer/restore pair,
+      // with the same effect on a depth counter as the clip above.
+      final geometry = parse(
+        '<defs><mask id="m"><g opacity="0.5">'
+        '<rect width="12" height="24" fill="#fff"/></g>'
+        '<rect x="12" width="12" height="24" fill="#fff"/></mask></defs>'
+        '<g mask="url(#m)"><path d="M0 0 H24 V24 H0 Z"/></g>',
+      );
+
+      expect(geometry.shapes, hasLength(1));
     });
 
     test('keeps a clip path out of the ink', () {

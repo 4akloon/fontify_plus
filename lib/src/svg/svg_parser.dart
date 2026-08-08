@@ -68,28 +68,36 @@ SvgGeometry parseSvgGeometry(String name, String xmlString) {
 List<SvgShape> _shapesOf(String name, vg.VectorInstructions instructions) {
   final shapes = <SvgShape>[];
 
-  // How many mask regions are currently open. A masked group emits
-  // `saveLayer, content, mask, mask shape, restore, restore`, so everything
-  // between `mask` and its matching `restore` is the mask's own geometry and
-  // must not become ink.
-  var maskDepth = 0;
+  // The layers currently open, innermost last, each recording whether it is a
+  // mask region. A masked group emits
+  // `saveLayer, content, mask, mask shape, restore, restore`, so geometry
+  // between `mask` and its own `restore` describes the mask, not the icon.
+  //
+  // A depth counter is not enough. `saveLayer` and `clip` each open a layer and
+  // each is closed by its own `restore`, so a clip or an opacity group nested
+  // inside a mask emits a `restore` first — decrementing on that would end the
+  // mask region early and let the rest of the mask through as ink.
+  final layers = <bool>[];
 
   for (final command in instructions.commands) {
     switch (command.type) {
       case vg.DrawCommandType.mask:
-        maskDepth++;
-      case vg.DrawCommandType.restore:
-        if (maskDepth > 0) {
-          maskDepth--;
-        }
+        layers.add(true);
+      case vg.DrawCommandType.saveLayer:
+        layers.add(false);
       case vg.DrawCommandType.clip:
+        layers.add(false);
         _warnDropped(name, 'a clip path');
+      case vg.DrawCommandType.restore:
+        if (layers.isNotEmpty) {
+          layers.removeLast();
+        }
       case vg.DrawCommandType.text:
         _warnDropped(name, 'text');
       case vg.DrawCommandType.image:
         _warnDropped(name, 'an image');
       case vg.DrawCommandType.path:
-        if (maskDepth > 0) {
+        if (layers.contains(true)) {
           continue;
         }
 
@@ -99,7 +107,6 @@ List<SvgShape> _shapesOf(String name, vg.VectorInstructions instructions) {
           shapes.add(shape);
         }
       case vg.DrawCommandType.vertices:
-      case vg.DrawCommandType.saveLayer:
       case vg.DrawCommandType.pattern:
       case vg.DrawCommandType.textPosition:
         break;
@@ -122,7 +129,7 @@ SvgShape? _shapeOf(
 
   final paint = instructions.paints[paintId];
   final stroke = strokePropertiesOf(paint.stroke);
-  final filled = paint.fill != null;
+  final filled = _paints(paint.fill);
 
   // Neither filled nor stroked: the author switched this geometry off.
   if (!filled && stroke == null) {
@@ -134,6 +141,26 @@ SvgShape? _shapeOf(
     filled: filled,
     stroke: stroke,
   );
+}
+
+/// Whether a fill puts ink on the page.
+///
+/// vgc reports a fully transparent fill as a `Fill` whose colour has zero alpha
+/// rather than as no fill at all, so `fill="#00000000"` and `fill-opacity="0"`
+/// both arrive here non-null. Icon sets use exactly that to carry invisible hit
+/// targets, which would otherwise fill the whole glyph.
+bool _paints(vg.Fill? fill) {
+  if (fill == null) {
+    return false;
+  }
+
+  // A gradient paints whatever its stops say; the base colour is not the
+  // question.
+  if (fill.shader != null) {
+    return true;
+  }
+
+  return fill.color.value >> 24 & 0xFF != 0;
 }
 
 void _warnDropped(String name, String what) => logger.logOnce(

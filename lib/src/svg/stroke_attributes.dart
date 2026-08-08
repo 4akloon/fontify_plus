@@ -19,6 +19,13 @@ StrokeProperties? strokePropertiesOf(vg.Stroke? stroke) {
     return null;
   }
 
+  // A fully transparent stroke paints nothing. vgc reports it as a Stroke with
+  // zero alpha rather than as no stroke, so `stroke-opacity="0"` arrives here
+  // looking perfectly strokeable.
+  if (stroke.shader == null && stroke.color.value >> 24 & 0xFF == 0) {
+    return null;
+  }
+
   final width = stroke.width ?? _kInitialWidth;
 
   // A non-positive width paints nothing. Offsetting by it would fold the two
