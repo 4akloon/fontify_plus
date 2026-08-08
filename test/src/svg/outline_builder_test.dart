@@ -37,6 +37,14 @@ void main() {
       expect(outline.pointList.first, const math.Point<num>(0, 10));
     });
 
+    test('flips y in the right direction, not merely by the height', () {
+      // At y = 0 a flip and an offset agree, so the test above cannot tell
+      // `height - y` from `height + y`. A non-zero y separates them.
+      final outline = fromPath('M0 2 L1 2').single;
+
+      expect(outline.pointList.first, const math.Point<num>(0, 8));
+    });
+
     test('marks every point on-curve for straight segments', () {
       final outline = fromPath('M0 0 L1 0 L1 1 L0 1 Z').single;
 
@@ -137,6 +145,82 @@ void main() {
       // straight segment lands back on the start, and that repeat is dropped:
       // a contour's closing segment is implicit.
       expect(outline.isOnCurveList, [true, false, false, true]);
+    });
+
+    test('judges a flat-ended cubic straight despite rounding', () {
+      // A cubic whose controls sit on its own end points IS a straight line.
+      // The `along` of the second control computes as |chord|^2 / |chord|,
+      // and `Vector2` is Float32List-backed, so that lands an ulp above the
+      // chord length for about half of all endpoints — measured 1998 of 4000,
+      // e.g. end (1.24, 0.25) gives along 1.264950613 vs length 1.264950601.
+      // Without slack in the bounds every one of those costs three points
+      // where one would do, which is the blow-up `_isStraight` exists to stop.
+      for (var i = 0; i < 200; i++) {
+        final end = Vector2(0.5 + i * 0.37, 0.25 + i * 0.11);
+        final outline = fromContours([
+          [
+            Cubic(Vector2(0, 0), Vector2(0, 0), end, end),
+            Cubic.line(end, Vector2(0, 0)),
+          ],
+        ]).single;
+
+        expect(
+          outline.isOnCurveList,
+          everyElement(isTrue),
+          reason: 'a flat-ended cubic ending at $end was judged curved',
+        );
+      }
+    });
+
+    test('treats controls that overshoot the chord as curved', () {
+      // The other side of the same bound. Both controls lie on the chord's
+      // line — perpendicular distance zero — but far outside the segment, so
+      // the curve doubles back. The slack added for the rounding case above
+      // must not be widened into accepting this.
+      final overshooting = Cubic(
+        Vector2(0, 0),
+        Vector2(-5, 0),
+        Vector2(15, 0),
+        Vector2(10, 0),
+      );
+      final outline = fromContours([
+        [overshooting, line(10, 0, 0, 0)],
+      ]).single;
+
+      expect(outline.isOnCurveList, [true, false, false, true]);
+    });
+
+    test('keeps a ring whose final segment is a curve', () {
+      // The shape the dropped repeat produces most often: the contour ends
+      // off-curve, because the closing on-curve point was the repeat.
+      final closingCurve = Cubic(
+        Vector2(10, 0),
+        Vector2(10, 5),
+        Vector2(0, 5),
+        Vector2(0, 0),
+      );
+      final outline = fromContours([
+        [line(0, 0, 10, 0), closingCurve],
+      ]).single;
+
+      expect(outline.isOnCurveList, [true, true, false, false]);
+      expect(outline.pointList, hasLength(4));
+    });
+
+    test('keeps a two-point contour rather than collapsing it to one', () {
+      // A degenerate loop is judged straight and yields two coincident points.
+      // Dropping the repeat there would hand the encoders a one-point outline.
+      final degenerate = Cubic(
+        Vector2(3, 3),
+        Vector2(3, 3),
+        Vector2(3, 3),
+        Vector2(3, 3),
+      );
+      final outline = fromContours([
+        [degenerate],
+      ]).single;
+
+      expect(outline.pointList.length, greaterThanOrEqualTo(2));
     });
 
     test(

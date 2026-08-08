@@ -116,7 +116,14 @@ bool _isStraight(Cubic segment) {
     final along = offset.dot(direction);
     final perpendicular = (offset - direction * along).length;
 
-    if (perpendicular > _kStraightTolerance || along < 0 || along > length) {
+    // The bounds carry the same slack as the perpendicular test. A cubic with
+    // flat ends (p1 == p0, p2 == p3) computes `along` for p2 as
+    // |chord|^2 / |chord|, which lands an ulp above `length` about half the
+    // time; without slack such a segment is called curved and costs three
+    // points instead of one — the exact blow-up this test exists to prevent.
+    if (perpendicular > _kStraightTolerance ||
+        along < -_kStraightTolerance ||
+        along > length + _kStraightTolerance) {
       return false;
     }
   }
@@ -158,7 +165,9 @@ class _ContourAccumulator {
   /// Only an on-curve point is a candidate: an off-curve control that happens
   /// to land on the start is a real control point, not a closing repeat.
   void dropRepeatedStart() {
-    if (_points.length < 2 || !_isOnCurve.last) {
+    // Below three points there is no contour left to shorten: dropping from
+    // two to one would hand the encoders a single-point outline.
+    if (_points.length < 3 || !_isOnCurve.last) {
       return;
     }
 
