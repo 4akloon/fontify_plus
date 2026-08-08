@@ -201,7 +201,13 @@ class Outline {
     _hasQuadCurves = true;
   }
 
-  /// Converts every quadratic bezier to a cubic one
+  /// Converts every quadratic bezier to a cubic one.
+  ///
+  /// Assumes the contour is already decompacted (see
+  /// [decompactImplicitPoints]) and so ends on-curve: a contour ending
+  /// off-curve closes back to its own start without that point ever being
+  /// written down, and this only reconstructs it by looking one point ahead —
+  /// which requires that point to exist.
   void quadToCubic() {
     if (hasCompactCurves) {
       throw UnsupportedError('Outline mustn\'t contain compact curves');
