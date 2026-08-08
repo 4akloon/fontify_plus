@@ -61,7 +61,7 @@ void main() {
 
     test('counts "E-" as a single nibble', () {
       // Without that collapsing, the exponent sign would cost an extra pair.
-      final withExponent = 1.5e-10;
+      const withExponent = 1.5e-10;
       final text = withExponent.toString();
 
       expect(text, contains('e-'));

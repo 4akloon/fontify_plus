@@ -65,7 +65,8 @@ class CharStringCommand implements BinaryCodable {
   final List<CharStringOperand> operandList;
 
   @override
-  int get size => operator.size + operandList.fold<int>(0, (p, e) => e.size);
+  int get size =>
+      operator.size + operandList.fold<int>(0, (p, e) => p + e.size);
 
   static List<CharStringOperand> _operands(List<num> values) =>
       [for (final value in values) CharStringOperand(value)];
