@@ -1,11 +1,17 @@
 import 'dart:math' as math;
 
 import 'package:fontify_plus/src/common/generic_glyph.dart';
-import 'package:fontify_plus/src/svg/stroke.dart';
-import 'package:fontify_plus/src/svg/stroke_outliner.dart';
+import 'package:fontify_plus/src/svg/stroke/stroke_outliner.dart';
+import 'package:fontify_plus/src/svg/stroke/stroke_properties.dart';
+import 'package:fontify_plus/src/svg/stroke/stroke_properties_resolver.dart';
 import 'package:fontify_plus/src/svg/svg.dart';
 import 'package:path_parsing/path_parsing.dart';
 import 'package:test/test.dart';
+
+/// Outlines [pathData] as a one-liner, which is all these tests need of
+/// [StrokeOutliner].
+String? outlineStrokeToPathData(String pathData, StrokeProperties stroke) =>
+    StrokeOutliner(stroke).outline(pathData);
 
 /// Signed area of a closed polygon via the shoelace formula.
 ///
@@ -115,7 +121,7 @@ void main() {
   group('StrokeProperties', () {
     StrokeProperties? resolveFrom(String svg) {
       final parsed = Svg.parse('t', svg, outlineStrokes: false);
-      return StrokeProperties.resolve(parsed.elementList.first);
+      return resolveStroke(parsed.elementList.first);
     }
 
     test('reads stroke geometry from the element', () {

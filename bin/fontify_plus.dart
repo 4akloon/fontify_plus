@@ -42,7 +42,7 @@ void _run(CliArguments parsedArgs) {
   final isVerbose = parsedArgs.verbose ?? kDefaultVerbose;
 
   if (isVerbose) {
-    logger.setFilterLevel(Level.trace);
+    logger.level = Level.trace;
   }
 
   if (parsedArgs.classFile?.existsSync() ?? false) {

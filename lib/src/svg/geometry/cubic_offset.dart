@@ -1,0 +1,90 @@
+import 'cubic.dart';
+import 'offset_approximation.dart';
+
+/// Recursion cap, as a backstop behind the degeneracy check.
+const _maxDepth = 8;
+
+/// How close `distance * curvature` may come to 1 before the offset is treated
+/// as degenerate.
+///
+/// The offset curve's speed is proportional to `1 - distance * curvature`, so
+/// at 1 it stalls and beyond it reverses: the true offset grows a cusp and
+/// doubles back on itself. No cubic tracks that, and subdividing only produces
+/// more segments that each fail the same way.
+const _degenerateCurvature = 0.95;
+
+/// Parameters at which curvature is sampled when testing for degeneracy.
+const _curvatureSamples = 8;
+
+/// Approximates the offset of a cubic as a chain of cubics.
+///
+/// The offset of a cubic is not itself a cubic — it is generally a curve of
+/// much higher degree — so it has to be approximated. Doing that directly beats
+/// flattening the source to a polyline and refitting: the end points and end
+/// tangents of the offset are known exactly, so only the control point
+/// distances need solving, and the result tracks the true offset with far fewer
+/// segments than fitting to sampled points ever recovers.
+class CubicOffsetter {
+  const CubicOffsetter({required this.distance, required this.tolerance});
+
+  /// How far to the left of the source curve the offset runs. Negative offsets
+  /// run to the right.
+  final double distance;
+
+  /// How far the result may stray from the true offset.
+  final double tolerance;
+
+  List<Cubic> offset(Cubic curve) {
+    final result = <Cubic>[];
+
+    _offset(curve, result, 0);
+
+    return result;
+  }
+
+  void _offset(Cubic curve, List<Cubic> out, int depth) {
+    final candidate = approximateOffset(curve, distance);
+
+    if (candidate != null &&
+        (depth >= _maxDepth ||
+            maxOffsetDeviation(curve, candidate, distance) <= tolerance)) {
+      out.add(candidate);
+      return;
+    }
+
+    // Inside a turn tighter than the offset itself there is no curve to
+    // converge on. This is the normal case at a rounded corner narrower than
+    // the stroke, not an error: the inner wall folds over itself and the
+    // nonzero rule absorbs the overlap, so take the best approximation and
+    // stop.
+    if (_isDegenerate(curve)) {
+      out.add(candidate ?? offsetChord(curve, distance));
+      return;
+    }
+
+    if (depth >= _maxDepth) {
+      // No usable approximation and no budget left: fall back to the chord so
+      // the contour stays closed rather than dropping a piece of the outline.
+      out.add(offsetChord(curve, distance));
+      return;
+    }
+
+    final (left, right) = curve.splitAt(0.5);
+
+    _offset(left, out, depth + 1);
+    _offset(right, out, depth + 1);
+  }
+
+  /// Whether offsetting [curve] collapses somewhere along it.
+  bool _isDegenerate(Cubic curve) {
+    for (var i = 0; i <= _curvatureSamples; i++) {
+      final curvature = curve.curvatureAt(i / _curvatureSamples);
+
+      if (distance * curvature >= _degenerateCurvature) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+}

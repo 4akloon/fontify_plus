@@ -1,6 +1,6 @@
 import 'package:args/args.dart';
 
-import 'arguments.dart';
+import 'cli_argument.dart';
 
 void defineOptions(ArgParser argParser) {
   argParser

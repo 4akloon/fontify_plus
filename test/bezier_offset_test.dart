@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
-import 'package:fontify_plus/src/svg/bezier_offset.dart';
+import 'package:fontify_plus/src/svg/geometry/arc.dart';
+import 'package:fontify_plus/src/svg/geometry/cubic.dart';
+import 'package:fontify_plus/src/svg/geometry/cubic_offset.dart';
 import 'package:test/test.dart';
 import 'package:vector_math/vector_math.dart';
 
@@ -57,7 +59,8 @@ void main() {
   group('offsetCubic', () {
     test('offsets a straight segment as a single segment', () {
       final line = Cubic.line(Vector2(0, 0), Vector2(10, 0));
-      final offset = offsetCubic(line, 1, tolerance);
+      final offset =
+          const CubicOffsetter(distance: 1, tolerance: tolerance).offset(line);
 
       expect(offset, hasLength(1));
       expect(offset.single.p0.y, closeTo(1, 1e-9));
@@ -73,7 +76,8 @@ void main() {
       );
 
       for (final distance in [1.0, -1.0]) {
-        final offset = offsetCubic(curve, distance, tolerance);
+        final offset = CubicOffsetter(distance: distance, tolerance: tolerance)
+            .offset(curve);
 
         expect(_isContinuous(offset), isTrue, reason: 'chain must not break');
         expect(
@@ -93,7 +97,11 @@ void main() {
         Vector2(10, 0),
       );
 
-      expect(offsetCubic(curve, 1, tolerance).length, lessThan(8));
+      expect(
+          const CubicOffsetter(distance: 1, tolerance: tolerance)
+              .offset(curve)
+              .length,
+          lessThan(8));
     });
 
     test('starts and ends exactly on the offset end points', () {
@@ -105,7 +113,10 @@ void main() {
       );
       const distance = 0.5;
 
-      final offset = offsetCubic(curve, distance, tolerance);
+      final offset = const CubicOffsetter(
+        distance: distance,
+        tolerance: tolerance,
+      ).offset(curve);
 
       expect(
         offset.first.p0.distanceTo(
@@ -135,7 +146,8 @@ void main() {
 
       // 0.665 is half of the 1.33 stroke width these icon sets use, against a
       // corner radius well under that.
-      final offset = offsetCubic(tight, 0.665, tolerance);
+      final offset = const CubicOffsetter(distance: 0.665, tolerance: tolerance)
+          .offset(tight);
 
       expect(
         offset.length,
@@ -153,7 +165,9 @@ void main() {
         Vector2(0.6, 0.6),
       );
 
-      final offset = offsetCubic(tight, -0.665, tolerance);
+      final offset =
+          const CubicOffsetter(distance: -0.665, tolerance: tolerance)
+              .offset(tight);
 
       expect(
         _worstDeviation(tight, offset, -0.665),

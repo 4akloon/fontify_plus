@@ -70,6 +70,20 @@ font at all.** If you are on 0.4.x, upgrade.
   unused constructor.
 * **Breaking:** minimum Dart SDK is now 3.5.
 * Upgrade all dependencies, including `xml` 6 to 7.
+* Drop the `recase` and `logger` dependencies. `recase` was pulled in for one
+  call; `logger` for four lines of levelled output. Both are now a few lines of
+  local code, which also removes their transitive `clock` and `meta`.
+* Restructure the source into one responsibility per file. Stroke outlining,
+  Bézier geometry, CFF, the OTF tables and the CLI each became a directory of
+  focused files rather than one large one; existing import paths still work
+  through barrel files. Behaviour is unchanged — the generated font is
+  byte-for-byte identical.
+* Remove the CFF charstring interpreter's read path. It was unreachable, and it
+  did not advance the read offset past multi-byte operands, so it would have
+  misparsed any charstring it was pointed at. `CharStringInterpreter` is now
+  `CharStringWriter`.
+* Remove `CFFOperand.forceLargeInt`. No caller set it, and `size` did not
+  account for it, so enabling it would have produced a corrupt table.
 
 ## 0.4.3
 

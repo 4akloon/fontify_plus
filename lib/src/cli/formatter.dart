@@ -1,6 +1,7 @@
 import 'dart:io';
 
-import 'arguments.dart';
+import 'cli_argument.dart';
+import 'cli_exception.dart';
 
 typedef CliArgumentFormatter = dynamic Function(dynamic arg);
 
