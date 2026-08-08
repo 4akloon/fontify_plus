@@ -19,6 +19,7 @@ enum CliArgument {
   ignoreShapes,
   outlineStrokes,
   normalize,
+  useOpenType,
 
   // Others
   recursive,
@@ -42,6 +43,7 @@ const kArgAllowedTypes = <CliArgument, List<Type>>{
   CliArgument.normalize: [bool],
   CliArgument.ignoreShapes: [bool],
   CliArgument.outlineStrokes: [bool],
+  CliArgument.useOpenType: [bool],
   CliArgument.recursive: [bool],
   CliArgument.verbose: [bool],
   CliArgument.help: [bool],
@@ -61,6 +63,7 @@ const kOptionNames = EnumClass<CliArgument, String>({
   CliArgument.normalize: 'normalize',
   CliArgument.ignoreShapes: 'ignore-shapes',
   CliArgument.outlineStrokes: 'outline-strokes',
+  CliArgument.useOpenType: 'opentype',
 
   CliArgument.recursive: 'recursive',
   CliArgument.verbose: 'verbose',
@@ -83,6 +86,7 @@ const kConfigKeys = EnumClass<CliArgument, String>({
   CliArgument.normalize: 'normalize',
   CliArgument.ignoreShapes: 'ignore_shapes',
   CliArgument.outlineStrokes: 'outline_strokes',
+  CliArgument.useOpenType: 'opentype',
 
   CliArgument.recursive: 'recursive',
   CliArgument.verbose: 'verbose',

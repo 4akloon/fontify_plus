@@ -78,6 +78,7 @@ void _run(CliArguments parsedArgs) {
     ignoreShapes: parsedArgs.ignoreShapes,
     outlineStrokes: parsedArgs.outlineStrokes,
     normalize: parsedArgs.normalize,
+    useOpenType: parsedArgs.useOpenType,
     fontName: parsedArgs.fontName,
   );
 

@@ -35,6 +35,10 @@ class SvgToOtfResult {
 ///
 /// Turn it on only for icons collected from mismatched sources, where the
 /// viewBoxes disagree and forcing a uniform size is the lesser evil.
+/// * If [useOpenType] is set to true, the font carries OpenType (CFF)
+/// outlines. Otherwise TrueType outlines are generated, which requires
+/// approximating each cubic curve with quadratics. Defaults to true: CFF
+/// stores cubics directly, so it is both smaller and exact.
 /// * [fontName] is a name for a generated font.
 ///
 /// Returns an instance of [SvgToOtfResult] class containing glyphs and a font.
@@ -43,6 +47,7 @@ SvgToOtfResult svgToOtf({
   bool? ignoreShapes,
   bool? outlineStrokes,
   bool? normalize,
+  bool? useOpenType,
   String? fontName,
 }) {
   normalize ??= false;
@@ -76,7 +81,7 @@ SvgToOtfResult svgToOtf({
     glyphList: glyphList,
     fontName: fontName,
     normalize: normalize,
-    useOpenType: true,
+    useOpenType: useOpenType,
     usePostV2: false,
   );
 

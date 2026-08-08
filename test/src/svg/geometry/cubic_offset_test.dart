@@ -1,6 +1,3 @@
-import 'dart:math' as math;
-
-import 'package:fontify_plus/src/svg/geometry/arc.dart';
 import 'package:fontify_plus/src/svg/geometry/cubic.dart';
 import 'package:fontify_plus/src/svg/geometry/cubic_offset.dart';
 import 'package:test/test.dart';
@@ -173,40 +170,6 @@ void main() {
         _worstDeviation(tight, offset, -0.665),
         lessThanOrEqualTo(tolerance),
       );
-    });
-  });
-
-  group('arcToCubics', () {
-    test('splits a full turn into quarter arcs', () {
-      expect(arcToCubics(Vector2.zero(), 1, 0, 2 * math.pi), hasLength(4));
-    });
-
-    test('stays on the circle', () {
-      final arc = arcToCubics(Vector2(3, 4), 2, 0.5, math.pi);
-
-      for (final segment in arc) {
-        for (var i = 0; i <= 20; i++) {
-          expect(
-            segment.pointAt(i / 20).distanceTo(Vector2(3, 4)),
-            closeTo(2, 0.001),
-            reason: 'a cubic approximation of an arc must hug the circle',
-          );
-        }
-      }
-    });
-
-    test('runs the requested way round', () {
-      final centre = Vector2.zero();
-
-      final clockwise = arcToCubics(centre, 1, 0, -math.pi);
-      final counter = arcToCubics(centre, 1, 0, math.pi);
-
-      expect(clockwise.first.pointAt(0.5).y, lessThan(0));
-      expect(counter.first.pointAt(0.5).y, greaterThan(0));
-    });
-
-    test('returns nothing for a zero sweep', () {
-      expect(arcToCubics(Vector2.zero(), 1, 0, 0), isEmpty);
     });
   });
 }

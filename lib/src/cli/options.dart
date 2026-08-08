@@ -59,6 +59,13 @@ void defineOptions(ArgParser argParser) {
           'Font glyphs are fill-only, so outline-style icons need this.',
       defaultsTo: true,
     )
+    ..addFlag(
+      kOptionNames[CliArgument.useOpenType]!,
+      help: 'Stores outlines as CFF rather than TrueType. CFF holds the cubic '
+          'curves an SVG is drawn with directly; TrueType has to approximate '
+          'them with quadratics, which costs points.',
+      defaultsTo: true,
+    )
     ..addSeparator('Other options:')
     ..addOption(
       kOptionNames[CliArgument.configFile]!,

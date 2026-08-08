@@ -16,6 +16,7 @@ class CliArguments {
     this.ignoreShapes,
     this.outlineStrokes,
     this.normalize,
+    this.useOpenType,
     this.verbose,
     this.configFile,
   );
@@ -36,6 +37,7 @@ class CliArguments {
         map[CliArgument.ignoreShapes] as bool?,
         map[CliArgument.outlineStrokes] as bool?,
         map[CliArgument.normalize] as bool?,
+        map[CliArgument.useOpenType] as bool?,
         map[CliArgument.verbose] as bool?,
         map[CliArgument.configFile] as File?,
       );
@@ -53,6 +55,10 @@ class CliArguments {
   /// Whether stroked paths are converted into the filled region they cover.
   final bool? outlineStrokes;
   final bool? normalize;
+
+  /// Whether outlines are stored as CFF (cubic) rather than TrueType
+  /// (quadratic).
+  final bool? useOpenType;
   final bool? verbose;
   final File? configFile;
 }

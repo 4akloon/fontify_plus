@@ -51,14 +51,9 @@ class GlyphDataTable extends FontTable {
 
     for (final glyph in glyphListCopy) {
       for (final outline in glyph.outlines) {
-        if (!outline.hasQuadCurves) {
-          // TODO: implement cubic -> quad approximation
-          throw UnimplementedError(
-            'Cubic to quadratic curve conversion not supported',
-          );
-        }
-
-        outline.compactImplicitPoints();
+        outline
+          ..cubicToQuad()
+          ..compactImplicitPoints();
       }
     }
 

@@ -1,0 +1,115 @@
+import 'dart:math' as math;
+
+import 'package:fontify_plus/src/svg/geometry/arc.dart';
+import 'package:test/test.dart';
+import 'package:vector_math/vector_math.dart';
+
+/// [Vector2] is float32-backed, so seven significant digits is the ceiling.
+const _kEpsilon = 1e-5;
+
+void main() {
+  group('arcToCubics', () {
+    test('splits a full turn into quarter arcs', () {
+      expect(arcToCubics(Vector2.zero(), 1, 0, 2 * math.pi), hasLength(4));
+    });
+
+    test('never spans more than a quarter turn', () {
+      // Error grows sharply past a quarter, so the count is what keeps the
+      // approximation honest.
+      for (final sweep in [0.1, 1.0, math.pi, 5.0, 2 * math.pi]) {
+        for (final segment in arcToCubics(Vector2.zero(), 1, 0, sweep)) {
+          final start = segment.tangentAt(0);
+          final end = segment.tangentAt(1);
+
+          expect(start.dot(end), greaterThan(-_kEpsilon));
+        }
+      }
+    });
+
+    test('stays on the circle', () {
+      final arc = arcToCubics(Vector2(3, 4), 2, 0.5, math.pi);
+
+      for (final segment in arc) {
+        for (var i = 0; i <= 20; i++) {
+          expect(
+            segment.pointAt(i / 20).distanceTo(Vector2(3, 4)),
+            closeTo(2, 0.001),
+            reason: 'a cubic approximation of an arc must hug the circle',
+          );
+        }
+      }
+    });
+
+    test('starts and ends at the requested angles', () {
+      const start = 0.4;
+      const sweep = 1.9;
+
+      final arc = arcToCubics(Vector2(1, 1), 3, start, sweep);
+
+      expect(
+        arc.first.p0.distanceTo(
+            Vector2(1, 1) + Vector2(math.cos(start), math.sin(start)) * 3),
+        lessThan(_kEpsilon),
+      );
+      expect(
+        arc.last.p3.distanceTo(
+          Vector2(1, 1) +
+              Vector2(math.cos(start + sweep), math.sin(start + sweep)) * 3,
+        ),
+        lessThan(_kEpsilon),
+      );
+    });
+
+    test('joins its segments end to end', () {
+      final arc = arcToCubics(Vector2.zero(), 1, 0, 2 * math.pi);
+
+      for (var i = 1; i < arc.length; i++) {
+        expect(arc[i - 1].p3.distanceTo(arc[i].p0), lessThan(_kEpsilon));
+      }
+    });
+
+    test('runs the requested way round', () {
+      final clockwise = arcToCubics(Vector2.zero(), 1, 0, -math.pi);
+      final counter = arcToCubics(Vector2.zero(), 1, 0, math.pi);
+
+      expect(clockwise.first.pointAt(0.5).y, lessThan(0));
+      expect(counter.first.pointAt(0.5).y, greaterThan(0));
+    });
+
+    test('returns nothing for a zero sweep', () {
+      expect(arcToCubics(Vector2.zero(), 1, 0, 0), isEmpty);
+    });
+
+    test('returns nothing for a zero radius', () {
+      expect(arcToCubics(Vector2.zero(), 0, 0, math.pi), isEmpty);
+    });
+  });
+
+  group('shortSweep', () {
+    test('leaves a sweep within half a turn alone', () {
+      for (final sweep in [0.0, 1.0, -1.0, math.pi, -math.pi]) {
+        expect(shortSweep(sweep), closeTo(sweep, 1e-12));
+      }
+    });
+
+    test('takes the other way round when that is shorter', () {
+      expect(shortSweep(1.5 * math.pi), closeTo(-0.5 * math.pi, 1e-12));
+      expect(shortSweep(-1.5 * math.pi), closeTo(0.5 * math.pi, 1e-12));
+    });
+
+    test('always lands within half a turn', () {
+      for (var i = -10; i <= 10; i++) {
+        expect(shortSweep(i * 1.3).abs(), lessThanOrEqualTo(math.pi + 1e-12));
+      }
+    });
+
+    test('preserves the angle it describes', () {
+      for (var i = -10; i <= 10; i++) {
+        final sweep = i * 1.3;
+        final difference = (shortSweep(sweep) - sweep) / (2 * math.pi);
+
+        expect(difference, closeTo(difference.roundToDouble(), 1e-12));
+      }
+    });
+  });
+}
