@@ -57,7 +57,7 @@ class GlyphSubstitutionTableHeader implements BinaryCodable {
   bool get isV10 => majorVersion == 1 && minorVersion == 0;
 
   @override
-  int get size => isV10 ? 10 : 12;
+  int get size => isV10 ? 10 : 14;
 
   @override
   void encodeToBinary(ByteData byteData) {
@@ -69,7 +69,7 @@ class GlyphSubstitutionTableHeader implements BinaryCodable {
       ..setUint16(8, lookupListOffset!);
 
     if (!isV10) {
-      byteData.getUint32(10);
+      byteData.setUint32(10, featureVariationsOffset!);
     }
   }
 }
