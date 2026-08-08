@@ -76,6 +76,7 @@ void _run(CliArguments parsedArgs) {
   final otfResult = svgToOtf(
     svgMap: svgMap,
     ignoreShapes: parsedArgs.ignoreShapes,
+    outlineStrokes: parsedArgs.outlineStrokes,
     normalize: parsedArgs.normalize,
     fontName: parsedArgs.fontName,
   );

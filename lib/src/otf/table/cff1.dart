@@ -1,4 +1,4 @@
-part of fontify_plus.otf.cff;
+part of 'cff.dart';
 
 const _kCFF1HeaderSize = 4;
 

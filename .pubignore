@@ -1,0 +1,7 @@
+# Internal development docs — design specs and notes. Not part of the published
+# package, and "docs" (plural) also trips pub's layout convention check.
+docs/
+
+# Scratch and tooling that only matters in the repo.
+.github/
+CONTRIBUTING.md

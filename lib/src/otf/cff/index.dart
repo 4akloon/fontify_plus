@@ -183,14 +183,19 @@ class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
     index = _calculateIndex();
   }
 
-  // Memoize the result of _calculateIndex to avoid redundant calculations
-  CFFIndex? _cachedIndex;
-
+  /// NOTE: This is called three times per font write — when creating the
+  /// font's ByteData, when creating the sublistView and when encoding.
+  ///
+  /// It must NOT be naively memoized. Element sizes are not stable across a
+  /// write: [_recalculateTopDictOffsets] first resets the Top DICT's offset
+  /// operands to 1-byte placeholders, then grows them to their real width once
+  /// the layout settles. A cache populated during the placeholder pass reports
+  /// an element smaller than the one [encodeToBinary] actually writes, and the
+  /// sub-view it sizes overflows.
+  ///
+  /// Any future memoization has to be invalidated by, or validated against, the
+  /// live element sizes — which costs the same O(n) walk as recomputing.
   CFFIndex _calculateIndex() {
-    if (_cachedIndex != null) {
-      return _cachedIndex!;
-    }
-
     final lengthCallback = _getByteLengthCallback();
 
     final dataSizeList = data.map(lengthCallback).toList();
@@ -217,7 +222,6 @@ class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
       throw TableDataFormatException('INDEX offset overflow');
     }
 
-    _cachedIndex = newIndex;
     return newIndex;
   }
 
@@ -246,6 +250,7 @@ class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
 
     if (data.isEmpty) {
       index.encodeToBinary(byteData.sublistView(0, index.size));
+      return;
     }
 
     var offset = 0;
@@ -256,10 +261,22 @@ class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
     offset += indexSize;
 
     final encoder = _getEncoder();
+    final lengthCallback = _getByteLengthCallback();
 
     for (var i = 0; i < index.count; i++) {
       final element = data[i];
       final elementSize = index.offsetList[i + 1] - index.offsetList[i];
+
+      // The offsets in [index] are laid out ahead of encoding, so they must
+      // still agree with the elements being written. If they drift, the
+      // sub-view below is sized wrong and the failure surfaces as an opaque
+      // RangeError deep inside the element's own encoder.
+      assert(
+        elementSize == lengthCallback(element),
+        'INDEX element $i size mismatch: index reserves $elementSize bytes, '
+        'element encodes to ${lengthCallback(element)}. The index is stale '
+        'relative to the data it describes.',
+      );
 
       encoder(byteData.sublistView(offset, elementSize), element);
       offset += elementSize;

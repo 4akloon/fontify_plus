@@ -1,4 +1,4 @@
-part of fontify_plus.otf.cff;
+part of '../table/cff.dart';
 
 const _kFormat0 = 0;
 const _kFormat1 = 1;

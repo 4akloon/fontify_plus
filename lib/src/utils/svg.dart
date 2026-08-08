@@ -12,7 +12,7 @@ extension XmlElementExt on XmlElement {
     String? namespace,
     bool zeroIfAbsent = true,
   }) {
-    final attr = getAttribute(name, namespace: namespace);
+    final attr = getAttribute(name, namespaceUri: namespace);
 
     if (attr == null) {
       return zeroIfAbsent ? 0 : null;

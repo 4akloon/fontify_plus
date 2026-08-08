@@ -60,7 +60,7 @@ class RectElement extends SvgElement implements PathConvertible {
     final d =
         'M${x + rx} ${y}h${width - rx * 2}${topRight}v${height - ry * 2}${bottomRight}h${-(width - rx * 2)}${bottomLeft}v${-(height - ry * 2)}${topLeft}z';
 
-    return PathElement(null, d, parent, null, transform: transform);
+    return PathElement(null, d, parent, xmlElement, transform: transform);
   }
 }
 
@@ -91,7 +91,7 @@ class CircleElement extends SvgElement implements PathConvertible {
     final d =
         'M${cx - r},${cy}A$r,$r 0,0,0 ${cx + r},${cy}A$r,$r 0,0,0 ${cx - r},${cy}z';
 
-    return PathElement(null, d, parent, null, transform: transform);
+    return PathElement(null, d, parent, xmlElement, transform: transform);
   }
 }
 
@@ -114,7 +114,7 @@ class PolylineElement extends SvgElement implements PathConvertible {
   PathElement getPath() {
     final d = 'M${points}z';
 
-    return PathElement(null, d, parent, null, transform: transform);
+    return PathElement(null, d, parent, xmlElement, transform: transform);
   }
 }
 
@@ -137,7 +137,7 @@ class PolygonElement extends SvgElement implements PathConvertible {
   PathElement getPath() {
     final d = 'M${points}z';
 
-    return PathElement(null, d, parent, null, transform: transform);
+    return PathElement(null, d, parent, xmlElement, transform: transform);
   }
 }
 
@@ -178,6 +178,6 @@ class LineElement extends SvgElement implements PathConvertible {
     final d =
         'M$x1 $y1 ${x1 + _kW} ${y1 + _kW} ${x2 + _kW} ${y2 + _kW} $x2 $y2 z';
 
-    return PathElement(null, d, parent, null, transform: transform);
+    return PathElement(null, d, parent, xmlElement, transform: transform);
   }
 }

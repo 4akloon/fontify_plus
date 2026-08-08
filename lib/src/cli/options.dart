@@ -47,7 +47,14 @@ void defineOptions(ArgParser argParser) {
     )
     ..addFlag(
       kOptionNames[CliArgument.ignoreShapes]!,
-      help: 'Disables SVG shape-to-path conversion (circle, rect, etc.).',
+      help: 'Discards SVG shape elements (circle, rect, etc.) instead of '
+          'converting them to paths. Enabling this silently drops geometry.',
+      defaultsTo: false,
+    )
+    ..addFlag(
+      kOptionNames[CliArgument.outlineStrokes]!,
+      help: 'Converts stroked paths into the filled region the stroke covers. '
+          'Font glyphs are fill-only, so outline-style icons need this.',
       defaultsTo: true,
     )
     ..addSeparator('Other options:')

@@ -21,6 +21,7 @@ const _kArgAllowedTypes = <CliArgument, List<Type>>{
   CliArgument.fontName: [String],
   CliArgument.normalize: [bool],
   CliArgument.ignoreShapes: [bool],
+  CliArgument.outlineStrokes: [bool],
   CliArgument.recursive: [bool],
   CliArgument.verbose: [bool],
   CliArgument.help: [bool],
@@ -41,6 +42,7 @@ const kOptionNames = EnumClass<CliArgument, String>({
   CliArgument.fontName: 'font-name',
   CliArgument.normalize: 'normalize',
   CliArgument.ignoreShapes: 'ignore-shapes',
+  CliArgument.outlineStrokes: 'outline-strokes',
 
   CliArgument.recursive: 'recursive',
   CliArgument.verbose: 'verbose',
@@ -61,6 +63,7 @@ const kConfigKeys = EnumClass<CliArgument, String>({
   CliArgument.fontName: 'font_name',
   CliArgument.normalize: 'normalize',
   CliArgument.ignoreShapes: 'ignore_shapes',
+  CliArgument.outlineStrokes: 'outline_strokes',
 
   CliArgument.recursive: 'recursive',
   CliArgument.verbose: 'verbose',
@@ -87,6 +90,7 @@ enum CliArgument {
   // Font-related
   fontName,
   ignoreShapes,
+  outlineStrokes,
   normalize,
 
   // Others
@@ -110,6 +114,7 @@ class CliArguments {
     this.fontName,
     this.recursive,
     this.ignoreShapes,
+    this.outlineStrokes,
     this.normalize,
     this.verbose,
     this.configFile,
@@ -132,6 +137,7 @@ class CliArguments {
       map[CliArgument.fontName] as String?,
       map[CliArgument.recursive] as bool?,
       map[CliArgument.ignoreShapes] as bool?,
+      map[CliArgument.outlineStrokes] as bool?,
       map[CliArgument.normalize] as bool?,
       map[CliArgument.verbose] as bool?,
       map[CliArgument.configFile] as File?,
@@ -147,6 +153,9 @@ class CliArguments {
   final String? fontName;
   final bool? recursive;
   final bool? ignoreShapes;
+
+  /// Whether stroked paths are converted into the filled region they cover.
+  final bool? outlineStrokes;
   final bool? normalize;
   final bool? verbose;
   final File? configFile;

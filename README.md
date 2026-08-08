@@ -9,6 +9,11 @@ and generate Flutter-compatible class that contains identifiers for the icons
 The package is written fully in Dart and doesn't require any external dependency.
 Compatible with dart2js and dart2native.
 
+Outline-style icon sets — the kind Figma, Hugeicons, Lucide and Feather export —
+are drawn with strokes rather than fills. Font glyphs are fill-only, so
+fontify_plus converts each stroke into the region it covers before encoding it.
+That happens by default; see [Stroked icons](#stroked-icons).
+
 [CupertinoIcons]: https://api.flutter.dev/flutter/cupertino/CupertinoIcons-class.html
 [Icons]: https://api.flutter.dev/flutter/material/Icons-class.html
 
@@ -125,6 +130,33 @@ The example of API usage is located in [example folder][].
 [svgToOtf]: https://pub.dev/documentation/fontify_plus/latest/fontify_plus/svgToOtf.html
 [generateFlutterClass]: https://pub.dev/documentation/fontify_plus/latest/fontify_plus/generateFlutterClass.html
 
+## Stroked icons
+
+A font glyph is a filled region — the format has no concept of stroke width,
+caps or joins. An SVG like this describes the *centreline* of a stroke, an
+infinitely thin path enclosing zero area:
+
+```svg
+<svg viewBox="0 0 16 16" fill="none">
+  <path d="M8 2.66667V13.3333M13.3333 8H2.66666"
+        stroke="currentColor" stroke-width="1.33" stroke-linecap="round" />
+</svg>
+```
+
+Filled as-is it is invisible, which is why outline-style icons come out blank or
+hairline thin in naive converters.
+
+fontify_plus computes the area the stroke covers and fills that instead,
+honouring `stroke-width`, `stroke-linecap`, `stroke-linejoin` and
+`stroke-miterlimit`, including values inherited from an ancestor `<g>`. No
+preparation is needed — export from Figma and convert.
+
+Pass `--no-outline-strokes` to disable it and treat path data as fill geometry,
+as older versions did.
+
+For export settings, troubleshooting and the cases that need outlining in Figma
+first, see [doc/figma-export.md](doc/figma-export.md).
+
 ## Notes
 
 - Generated OpenType font is using CFF table.
@@ -134,11 +166,11 @@ The example of API usage is located in [example folder][].
 - SVG `<g>` element's children are expanded to the root with transformations applied.
 Anything else related to the group is ignored and group referencing is not supported.
 - Consider using [Non-zero fill rule][].
-- When `ignoreShapes` is set to false,
-every SVG shape's (circle, rect, etc.) outline is converted to path.
-Note that any attributes like "fill" or "stroke" are ignored and only the outline is used,
-so the resulting glyph may look different from SVG icon.
-It's recommended to convert every element in SVG to path.
+- Shapes (circle, rect, etc.) are converted to paths by default. Setting
+`ignoreShapes` to true discards them instead, which silently drops geometry.
+- Paint attributes other than stroke geometry — `fill` colour, gradients,
+opacity — are ignored. A glyph is a single-colour region; colour comes from the
+surrounding text style at render time.
 - When `normalize` is set to false, it's recommended that SVG icons have the same height.
 Otherwise, final result might not look as expected.
 - When Flutter class is generated, static variables names derive from SVG file name
@@ -150,13 +182,16 @@ Suffix '_{i+1}' is added, if name already exists.
 
 ## Planned
 
-- Support svg-to-ttf conversion (cubic-to-quad curves approximation needs to be done).
+- Support svg-to-ttf conversion (cubic-to-quad curves approximation needs to be
+done). The CFF/OTF output path is the supported one today.
 - Support ligatures.
 - Support font variations.
 
 ## Contributing
 
-Any suggestions, issues, pull requests are welcomed.
+Any suggestions, issues, pull requests are welcomed. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for how to get set up and what a change is
+expected to look like.
 
 ## License
 

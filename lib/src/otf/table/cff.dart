@@ -1,5 +1,3 @@
-library fontify_plus.otf.cff;
-
 import 'dart:typed_data';
 
 import '../../common/calculatable_offsets.dart';

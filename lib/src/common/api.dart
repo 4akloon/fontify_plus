@@ -17,10 +17,13 @@ class SvgToOtfResult {
 /// Converts SVG icons to OTF font.
 ///
 /// * [svgMap] contains name (key) to data (value) SVG mapping. Required.
-/// * If [ignoreShapes] is set to false, shapes (circle, rect, etc.) are converted into paths.
-/// Defaults to true.
-/// NOTE: Attributes like "fill" or "stroke" are ignored,
-/// which means only shape's outline will be used.
+/// * If [ignoreShapes] is set to true, shapes (circle, rect, etc.) are
+/// discarded rather than converted into paths. Defaults to false.
+/// * If [outlineStrokes] is set to true, stroked paths are replaced by the
+/// filled region their stroke covers. Defaults to true — font glyphs are
+/// fill-only, so a stroked icon is otherwise invisible.
+/// NOTE: Paint attributes other than stroke geometry (such as "fill" colour)
+/// are ignored — only the shape's outline is used.
 /// * If [normalize] is set to true,
 /// glyphs are resized and centered to fit in coordinates grid (unitsPerEm).
 /// Defaults to true.
@@ -30,6 +33,7 @@ class SvgToOtfResult {
 SvgToOtfResult svgToOtf({
   required Map<String, String> svgMap,
   bool? ignoreShapes,
+  bool? outlineStrokes,
   bool? normalize,
   String? fontName,
 }) {
@@ -37,7 +41,12 @@ SvgToOtfResult svgToOtf({
 
   final svgList = [
     for (final e in svgMap.entries)
-      Svg.parse(e.key, e.value, ignoreShapes: ignoreShapes),
+      Svg.parse(
+        e.key,
+        e.value,
+        ignoreShapes: ignoreShapes,
+        outlineStrokes: outlineStrokes,
+      ),
   ];
 
   if (!normalize) {

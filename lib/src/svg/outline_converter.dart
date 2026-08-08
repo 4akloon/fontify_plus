@@ -54,6 +54,13 @@ class PathToOutlineConverter extends PathProxy {
 
   @override
   void moveTo(double x, double y) {
+    // A moveTo starts a new subpath. Without flushing here, a path such as
+    // "M8 2V13 M13 8H2" — two separate strokes, no Z — would accumulate into a
+    // single outline and render as one zigzag contour.
+    if (_points.isNotEmpty) {
+      close();
+    }
+
     _points.add(math.Point<num>(x, y));
     _isOnCurve.add(true);
   }
@@ -77,7 +84,7 @@ class PathToOutlineConverter extends PathProxy {
     _isOnCurve.addAll([false, false, true]);
   }
 
-  /// Converts SVG <path> to a list of outlines.
+  /// Converts an SVG `<path>` to a list of outlines.
   List<Outline> convert() {
     writeSvgPathDataToPath(path.data, this);
 
