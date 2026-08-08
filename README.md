@@ -143,9 +143,11 @@ Filled as-is it is invisible, which is why outline-style icons come out blank or
 hairline thin in naive converters.
 
 fontify_plus computes the area the stroke covers and fills that instead,
-honouring `stroke-width`, `stroke-linecap`, `stroke-linejoin` and
-`stroke-miterlimit`, including values inherited from an ancestor `<g>`. No
-preparation is needed — export from Figma and convert.
+honouring `stroke-width`, `stroke-linecap`, `stroke-linejoin`,
+`stroke-miterlimit`, `stroke-dasharray` and `stroke-dashoffset`, including
+values inherited from an ancestor `<g>`. A dashed stroke is cut into its dashes
+and each dash is outlined separately. No preparation is needed — export from
+Figma and convert.
 
 Pass `--no-outline-strokes` to disable it and treat path data as fill geometry,
 as older versions did.
@@ -174,10 +176,12 @@ leave it off.
 
 - Generated OpenType font is using CFF table.
 - Generated font is using PostScript Table (post) of version 3.0, i.e., it doesn't contain glyph names.
-- Supported SVG elements: path, g, circle, rect, polyline, polygon, line.
+- Supported SVG elements: path, g, circle, ellipse, rect, polyline, polygon,
+line, use, defs, symbol.
 - SVG transforms are applied to paths according to specs.
 - SVG `<g>` element's children are expanded to the root with transformations applied.
-Anything else related to the group is ignored and group referencing is not supported.
+`<use>` referencing a `<defs>` or `<symbol>` element is supported and expands the
+same way.
 - Consider using [Non-zero fill rule][].
 - Shapes (circle, rect, etc.) are always converted to paths.
 - Paint attributes other than stroke geometry — `fill` colour, gradients,

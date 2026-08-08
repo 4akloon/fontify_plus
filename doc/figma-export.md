@@ -98,8 +98,7 @@ rather than expressing weight some other way.
 ### Parts of an icon are missing
 
 Shape elements were discarded. `<circle>`, `<rect>`, `<line>`, `<polyline>` and
-`<polygon>` are converted to paths by default; passing `--ignore-shapes` drops
-them silently. Do not pass it.
+`<polygon>` are converted to paths by default.
 
 ### An icon renders as a filled blob
 
@@ -122,11 +121,11 @@ shrinks proportionally. Uniform frame sizes fix this.
 
 ## Limitations
 
-fontify_plus models stroke geometry, not stroke *painting*. These are not
-supported, and an icon using them should be outlined in Figma before export:
+fontify_plus models stroke geometry, not stroke *painting*. `stroke-dasharray` /
+`stroke-dashoffset` are honoured — the stroke is cut into dashes and each dash is
+outlined as its own contour. The following are not supported, and an icon using
+them should be outlined in Figma before export:
 
-- `stroke-dasharray` / `stroke-dashoffset` — dashes are ignored; the stroke is
-  outlined as solid.
 - Non-scaling strokes (`vector-effect="non-scaling-stroke"`).
 - Gradients, patterns and opacity. A glyph is a single-colour region; colour
   comes from Flutter at render time.

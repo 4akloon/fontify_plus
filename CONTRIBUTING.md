@@ -17,7 +17,7 @@ how it is laid out, and what a change is expected to look like before it lands.
 
 ## Prerequisites
 
-- Dart SDK 3.5 or newer. CI runs the matrix `3.5` and `stable`, so a change must
+- Dart SDK 3.10 or newer. CI runs the matrix `3.10` and `stable`, so a change must
   work on both.
 
 No Flutter SDK is needed. The package generates a Flutter-compatible class, but
@@ -67,9 +67,13 @@ dart run bin/fontify_plus.dart <svg-dir> <output.otf> -o lib/icons.dart -c MyIco
 
 Conversion runs as a pipeline, and each stage has one job:
 
-1. **Parse** (`lib/src/svg/`) — XML becomes `SvgElement`s. Groups are flattened,
-   shapes (`<circle>`, `<rect>`, …) are converted to paths, and stroked paths are
-   replaced by the filled region their stroke covers.
+1. **Parse** (`lib/src/svg/`) — `vector_graphics_compiler` parses the SVG and
+   flattens it to draw commands; `svg_parser.dart` walks those commands into
+   `SvgShape`s, dropping masked, clipped and invisible geometry along the way.
+   `outline_builder.dart` turns a shape's path commands into `Outline`s, and for
+   a stroked path, `lib/src/svg/stroke/` first converts the stroke into the
+   closed contours of the region it covers, which `outline_builder.dart` then
+   turns into `Outline`s the same way.
 2. **Outline** (`lib/src/common/generic_glyph.dart`) — paths become `Outline`s in
    a format-independent glyph model, with the Y axis flipped into font space.
 3. **Normalize** — glyphs are scaled and centred onto the em square.
@@ -80,8 +84,8 @@ Two properties of the format drive most of the design and are easy to forget:
 
 - **Glyphs are fill-only.** There is no stroke in a font. A stroked SVG path has
   to be converted into the area it covers first, or it collapses to a zero-area
-  centreline and renders blank. That is what `lib/src/svg/stroke_outliner.dart`
-  does.
+  centreline and renders blank. That is what
+  `lib/src/svg/stroke/stroke_outliner.dart` does.
 - **CFF fills by the nonzero winding rule.** Overlapping contours wound the same
   way merge; contours wound opposite cut holes. The stroke outliner leans on this
   instead of running a boolean union, so contour orientation is load-bearing.
@@ -111,7 +115,7 @@ Two properties of the format drive most of the design and are easy to forget:
 - Keep the subject line imperative and specific: *Fix stale CFF INDEX cache*,
   not *bug fixes*.
 - One logical change per PR.
-- CI must be green: format, analyze on 3.5 and stable, tests, and publish
+- CI must be green: format, analyze on 3.10 and stable, tests, and publish
   dry-run.
 - Update `CHANGELOG.md` for anything user-visible, including changed defaults.
 
