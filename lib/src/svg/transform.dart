@@ -51,8 +51,13 @@ class Transform {
   Matrix3? get matrix {
     switch (type) {
       case TransformType.matrix:
-        return Matrix3.fromList(
-          [...parameterList, ...List.filled(9 - parameterList.length, 0)],
+        return _getMatrix(
+          parameterList[0],
+          parameterList[1],
+          parameterList[2],
+          parameterList[3],
+          parameterList[4],
+          parameterList[5],
         );
       case TransformType.translate:
         final dx = parameterList[0];
@@ -61,7 +66,9 @@ class Transform {
         return _getTranslateMatrix(dx, dy);
       case TransformType.scale:
         final sw = parameterList[0];
-        final sh = [...parameterList, .0][1];
+
+        // SVG's scale(sx) with no sy scales both axes by sx.
+        final sh = parameterList.length > 1 ? parameterList[1] : sw;
 
         return _getScaleMatrix(sw, sh);
       case TransformType.rotate:
@@ -109,13 +116,25 @@ Matrix3? generateTransformMatrix(List<Transform> transformList) {
   return matrix;
 }
 
-Matrix3 _getTranslateMatrix(double dx, double dy) {
-  return Matrix3.fromList([1, 0, dx, 0, 1, dy, 0, 0, 1]);
+/// Builds the matrix for SVG's `matrix(a, b, c, d, e, f)`:
+///
+/// ```
+/// | a c e |
+/// | b d f |
+/// | 0 0 1 |
+/// ```
+///
+/// [Matrix3.fromList] fills its argument column by column, so the list has to
+/// be laid out as columns — (a, b, 0), then (c, d, 0), then (e, f, 1) — not as
+/// the row-major a,b,c,d,e,f order the SVG syntax itself uses.
+Matrix3 _getMatrix(double a, double b, double c, double d, double e, double f) {
+  return Matrix3.fromList([a, b, 0, c, d, 0, e, f, 1]);
 }
 
-Matrix3 _getScaleMatrix(double sw, double sh) {
-  return Matrix3.fromList([sw, 0, 0, 0, sh, 0, 0, 0, 1]);
-}
+Matrix3 _getTranslateMatrix(double dx, double dy) =>
+    _getMatrix(1, 0, 0, 1, dx, dy);
+
+Matrix3 _getScaleMatrix(double sw, double sh) => _getMatrix(sw, 0, 0, sh, 0, 0);
 
 Matrix3 _getRotateMatrix(double degrees) {
   return Matrix3.rotationZ(radians(degrees));
