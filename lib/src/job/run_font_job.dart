@@ -49,8 +49,9 @@ FontJobResult runFontJob(FontJob job) {
       .toList();
 
   if (svgFileList.isEmpty) {
-    logger.w(
-      "The input directory doesn't contain any SVG file (${job.inputSvgDir}).",
+    throw FontifyException(
+      "The input directory doesn't contain any SVG file "
+      '(${job.inputSvgDir}).',
     );
   }
 

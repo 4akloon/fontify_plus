@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:fontify_plus/src/job/font_job.dart';
+import 'package:fontify_plus/src/job/fontify_exception.dart';
 import 'package:fontify_plus/src/job/run_font_job.dart';
 import 'package:test/test.dart';
 
@@ -32,5 +33,18 @@ void main() {
     expect(File(fontPath).lengthSync(), greaterThan(0));
     expect(result.classSource, contains('class TestIcons'));
     expect(File(classPath).readAsStringSync(), contains('class TestIcons'));
+  });
+
+  test('runFontJob throws when the SVG directory has no .svg files', () {
+    final empty = Directory('${tempDir.path}/empty')..createSync();
+    final fontPath = '${tempDir.path}/out.otf';
+
+    expect(
+      () => runFontJob(
+        FontJob(inputSvgDir: empty.path, outputFontFile: fontPath),
+      ),
+      throwsA(isA<FontifyException>()),
+    );
+    expect(File(fontPath).existsSync(), isFalse);
   });
 }
