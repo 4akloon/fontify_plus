@@ -1,5 +1,10 @@
 include: package:lints/recommended.yaml
 
+analyzer:
+  exclude:
+    # Flutter web demo; analyzed with `flutter analyze` inside example/.
+    - example/**
+
 linter:
   rules:
     - cancel_subscriptions

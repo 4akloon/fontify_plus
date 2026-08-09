@@ -31,7 +31,7 @@ jobs:
       # The formatter's output changes between SDKs, so only pin it on stable.
       - name: Verify formatting
         if: matrix.sdk == 'stable'
-        run: dart format --output=none --set-exit-if-changed .
+        run: dart format --output=none --set-exit-if-changed bin lib test
 
       - name: Analyze
         run: dart analyze --fatal-infos
