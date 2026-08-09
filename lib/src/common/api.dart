@@ -23,6 +23,9 @@ class SvgToOtfResult {
 /// * If [outlineStrokes] is set to true, stroked paths are replaced by the
 /// filled region their stroke covers. Defaults to true — font glyphs are
 /// fill-only, so a stroked icon is otherwise invisible.
+/// * If [preview] is set to true, each glyph stores a base64-encoded copy of
+/// its input SVG for dartdoc previews in the generated `IconData` class.
+/// Defaults to true.
 /// NOTE: Paint attributes other than stroke geometry (such as "fill" colour)
 /// are ignored — only the shape's outline is used.
 /// * If [normalize] is set to true, each glyph is scaled so that its own

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+* Generated `IconData` dartdoc can embed SVG hover previews (IDE-visible).
+  Controlled via `--[no-]preview` / YAML `preview:` (default on).
+
 ## 0.5.0
 
 * Fix font generation (0.4.x could not produce a font). SVG parsing now uses

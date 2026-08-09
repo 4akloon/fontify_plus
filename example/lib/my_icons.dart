@@ -29,7 +29,10 @@ abstract final class MyIcons {
   /// arrow_right
   ///
   /// <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KICA8cGF0aCBkPSJNNSAxMmgxNE0xMiA1bDcgNy03IDciIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==" width="32"/>
-  static const IconData arrowRight = IconData(0xe000, fontFamily: iconFontFamily);
+  static const IconData arrowRight = IconData(
+    0xe000,
+    fontFamily: iconFontFamily,
+  );
 
   /// plus
   ///
