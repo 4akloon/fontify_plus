@@ -103,10 +103,36 @@ void main() {
       },
     );
 
-    test('encodes the char code as a hex IconData constructor argument', () {
+    test('encodes IconData with indented named arguments', () {
       final source = FlutterClassGenerator([_glyph('icon', 0xE001)]).generate();
 
-      expect(source, contains('IconData(0xe001, fontFamily: iconFontFamily)'));
+      expect(
+        source,
+        contains(
+          'static const IconData icon = IconData(\n'
+          '    0xe001,\n'
+          '    fontFamily: iconFontFamily,\n'
+          '  );',
+        ),
+      );
+    });
+
+    test('includes fontPackage when a package is set', () {
+      final source = FlutterClassGenerator(
+        [_glyph('icon', 0xE001)],
+        package: 'my_icons',
+      ).generate();
+
+      expect(
+        source,
+        contains(
+          'static const IconData icon = IconData(\n'
+          '    0xe001,\n'
+          '    fontFamily: iconFontFamily,\n'
+          '    fontPackage: iconFontPackage,\n'
+          '  );',
+        ),
+      );
     });
 
     test('documents each constant with the glyph\'s original name', () {
