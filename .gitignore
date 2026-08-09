@@ -13,6 +13,9 @@ pubspec.lock
 # Directory created by dartdoc
 doc/api/
 
+# Internal design specs / plans (not the published doc/ guides)
+docs/
+
 # Avoid committing generated JavaScript files
 *.dart.js
 *.info.json
