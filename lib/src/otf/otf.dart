@@ -3,11 +3,8 @@ import 'dart:typed_data';
 import '../common/calculatable_offsets.dart';
 import '../common/codable/binary.dart';
 import '../common/generic_glyph.dart';
-import '../utils.dart';
-import '../utils/misc.dart';
 import '../utils/otf.dart';
-
-import 'defaults.dart';
+import 'otf_builder.dart';
 import 'reader.dart';
 import 'table/all.dart';
 
@@ -28,15 +25,14 @@ const _kTableTagsToEncode = {
   kGSUBTag,
 };
 
+/// {@category api}
 /// An OpenType font.
 /// Contains either TrueType (glyf table) or OpenType (CFF2 table) outlines
 class OpenTypeFont implements BinaryCodable {
   OpenTypeFont(this.offsetTable, this.tableMap);
 
-  factory OpenTypeFont.fromByteData(ByteData byteData) {
-    final reader = OTFReader.fromByteData(byteData);
-    return reader.read();
-  }
+  factory OpenTypeFont.fromByteData(ByteData byteData) =>
+      OTFReader.fromByteData(byteData).read();
 
   /// Generates new OpenType font.
   ///
@@ -45,7 +41,6 @@ class OpenTypeFont implements BinaryCodable {
   ///
   /// * [glyphList] is a list of generic glyphs. Required.
   /// * [fontName] is a font name.
-  ///   If null, glyph names are omitted (PostScriptV3 table is generated).
   /// * [description] is a font description for naming table.
   /// * [revision] is a font revision. Defaults to 1.0.
   /// * [achVendID] is a vendor ID in OS/2 table. Defaults to 4 spaces.
@@ -57,9 +52,9 @@ class OpenTypeFont implements BinaryCodable {
   /// (containing a name for each glyph).
   /// Otherwise, version 3 table (without glyph names) is generated.
   /// Defaults to false.
-  /// * If [normalize] is set to true,
-  /// glyphs are resized and centered to fit in coordinates grid (unitsPerEm).
-  /// Defaults to true.
+  /// * If [normalize] is set to true, each glyph is scaled so that its own
+  /// longest side fills the em square, then centred. Defaults to false —
+  /// see `ArtboardFitting`.
   factory OpenTypeFont.createFromGlyphs({
     required List<GenericGlyph> glyphList,
     String? fontName,
@@ -69,108 +64,16 @@ class OpenTypeFont implements BinaryCodable {
     bool? useOpenType,
     bool? usePostV2,
     bool? normalize,
-  }) {
-    if (fontName?.isEmpty ?? false) {
-      fontName = null;
-    }
-
-    revision ??= kDefaultFontRevision;
-    achVendID ??= kDefaultAchVendID;
-    fontName ??= kDefaultFontFamily;
-    useOpenType ??= true;
-    normalize ??= true;
-    usePostV2 ??= false;
-
-    _generateCharCodes(glyphList);
-
-    // A power of two is recommended only for TrueType outlines
-    final unitsPerEm =
-        useOpenType ? kDefaultOpenTypeUnitsPerEm : kDefaultTrueTypeUnitsPerEm;
-
-    final baselineExtension = normalize ? kDefaultBaselineExtension : 0;
-    final ascender = unitsPerEm - baselineExtension;
-    final descender = -baselineExtension;
-
-    final resizedGlyphList = _resizeAndCenter(
-      glyphList,
-      ascender: normalize ? ascender : null,
-      descender: normalize ? descender : null,
-      fontHeight: normalize ? null : unitsPerEm,
-    );
-
-    final defaultGlyphList = generateDefaultGlyphList(ascender);
-    final fullGlyphList = [
-      ...defaultGlyphList,
-      ...resizedGlyphList,
-    ];
-
-    final defaultGlyphMetricsList =
-        defaultGlyphList.map((g) => g.metrics).toList();
-
-    // If normalization is off every custom glyph's size equals unitsPerEm
-    final customGlyphMetricsList = normalize
-        ? resizedGlyphList.map((g) => g.metrics).toList()
-        : List.filled(
-            resizedGlyphList.length,
-            GenericGlyphMetrics.square(unitsPerEm),
-          );
-
-    final glyphMetricsList = [
-      ...defaultGlyphMetricsList,
-      ...customGlyphMetricsList,
-    ];
-
-    final glyf = useOpenType ? null : GlyphDataTable.fromGlyphs(fullGlyphList);
-    final head =
-        HeaderTable.create(glyphMetricsList, glyf, revision, unitsPerEm);
-    final loca = useOpenType
-        ? null
-        : IndexToLocationTable.create(head.indexToLocFormat, glyf!);
-    final hmtx = HorizontalMetricsTable.create(glyphMetricsList, unitsPerEm);
-    final hhea = HorizontalHeaderTable.create(
-      glyphMetricsList,
-      hmtx,
-      ascender,
-      descender,
-    );
-    final post = PostScriptTable.create(resizedGlyphList, usePostV2);
-    final name = NamingTable.create(fontName, description, revision);
-
-    if (name == null) {
-      throw TableDataFormatException('Unknown "name" table format');
-    }
-
-    final maxp = MaximumProfileTable.create(fullGlyphList.length, glyf);
-    final cmap = CharacterToGlyphTable.create(fullGlyphList);
-    final gsub = GlyphSubstitutionTable.create();
-    final os2 = OS2Table.create(hmtx, head, hhea, cmap, gsub, achVendID);
-
-    final cff =
-        useOpenType ? CFF1Table.create(fullGlyphList, head, hmtx, name) : null;
-
-    final tables = <String, FontTable>{
-      if (!useOpenType) ...{
-        kGlyfTag: glyf!,
-        kLocaTag: loca!,
-      },
-      if (useOpenType) ...{
-        kCFFTag: cff!,
-      },
-      kCmapTag: cmap,
-      kMaxpTag: maxp,
-      kHeadTag: head,
-      kHmtxTag: hmtx,
-      kHheaTag: hhea,
-      kPostTag: post,
-      kNameTag: name,
-      kGSUBTag: gsub,
-      kOS2Tag: os2,
-    };
-
-    final offsetTable = OffsetTable.create(tables.length, useOpenType);
-
-    return OpenTypeFont(offsetTable, tables);
-  }
+  }) => OpenTypeFontBuilder(
+    glyphList: glyphList,
+    fontName: fontName,
+    description: description,
+    revision: revision,
+    achVendID: achVendID,
+    useOpenType: useOpenType,
+    usePostV2: usePostV2,
+    normalize: normalize,
+  ).build();
 
   final OffsetTable offsetTable;
   final Map<String, FontTable> tableMap;
@@ -195,8 +98,37 @@ class OpenTypeFont implements BinaryCodable {
 
   String get familyName => name.familyName;
 
+  int get entryListSize => kTableRecordEntryLength * tableMap.length;
+
+  int get tableListSize =>
+      tableMap.values.fold<int>(0, (p, t) => p + getPaddedTableSize(t.size));
+
+  @override
+  int get size => kOffsetTableLength + entryListSize + tableListSize;
+
   @override
   void encodeToBinary(ByteData byteData) {
+    final entryList = _encodeTables(byteData);
+
+    // The directory entry tags must be in ascending order
+    entryList.sort((e1, e2) => e1.tag.compareTo(e2.tag));
+
+    for (var i = 0; i < entryList.length; i++) {
+      final entryOffset = kOffsetTableLength + i * kTableRecordEntryLength;
+
+      entryList[i].encodeToBinary(
+        byteData.sublistView(entryOffset, kTableRecordEntryLength),
+      );
+    }
+
+    offsetTable.encodeToBinary(byteData.sublistView(0, kOffsetTableLength));
+
+    // Setting checksum for whole font in the head table
+    byteData.setUint32(head.entry!.offset + 8, calculateFontChecksum(byteData));
+  }
+
+  /// Writes every table in encoding order, returning their directory entries.
+  List<TableRecordEntry> _encodeTables(ByteData byteData) {
     var currentTableOffset = kOffsetTableLength + entryListSize;
 
     final entryList = <TableRecordEntry>[];
@@ -215,6 +147,7 @@ class OpenTypeFont implements BinaryCodable {
       final tableSize = table.size;
 
       table.encodeToBinary(byteData.sublistView(currentTableOffset, tableSize));
+
       final encodedTable = ByteData.sublistView(
         byteData,
         currentTableOffset,
@@ -232,57 +165,6 @@ class OpenTypeFont implements BinaryCodable {
       currentTableOffset += getPaddedTableSize(tableSize);
     }
 
-    // The directory entry tags must be in ascending order
-    entryList.sort((e1, e2) => e1.tag.compareTo(e2.tag));
-
-    for (var i = 0; i < entryList.length; i++) {
-      final entryOffset = kOffsetTableLength + i * kTableRecordEntryLength;
-      final entryByteData =
-          byteData.sublistView(entryOffset, kTableRecordEntryLength);
-      entryList[i].encodeToBinary(entryByteData);
-    }
-
-    offsetTable.encodeToBinary(byteData.sublistView(0, kOffsetTableLength));
-
-    // Setting checksum for whole font in the head table
-    final fontChecksum = calculateFontChecksum(byteData);
-    byteData.setUint32(head.entry!.offset + 8, fontChecksum);
-  }
-
-  int get entryListSize => kTableRecordEntryLength * tableMap.length;
-
-  int get tableListSize =>
-      tableMap.values.fold<int>(0, (p, t) => p + getPaddedTableSize(t.size));
-
-  @override
-  int get size => kOffsetTableLength + entryListSize + tableListSize;
-
-  // TODO: I don't like this. Refactor it later. Use "strategy" or something.
-  static List<GenericGlyph> _resizeAndCenter(
-    List<GenericGlyph> glyphList, {
-    int? ascender,
-    int? descender,
-    int? fontHeight,
-  }) {
-    return glyphList.map((g) {
-      if (fontHeight != null) {
-        // Not normalizing glyphs, just resizing them according to unitsPerEm
-        return g.resize(fontHeight: fontHeight);
-      }
-
-      if (ascender != null && descender != null) {
-        return g
-            .resize(ascender: ascender, descender: descender)
-            .center(ascender, descender);
-      }
-
-      throw ArgumentError('ascender/descender or fontHeight must not be null');
-    }).toList();
-  }
-
-  static void _generateCharCodes(List<GenericGlyph> glyphList) {
-    for (var i = 0; i < glyphList.length; i++) {
-      glyphList[i].metadata.charCode = kUnicodePrivateUseAreaStart + i;
-    }
+    return entryList;
   }
 }

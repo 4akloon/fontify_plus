@@ -3,7 +3,7 @@ import 'char_string_operator.dart';
 
 class CharStringOptimizer {
   CharStringOptimizer(bool isCFF1)
-      : _limits = CharStringInterpreterLimits(isCFF1);
+    : _limits = CharStringInterpreterLimits(isCFF1);
 
   final CharStringInterpreterLimits _limits;
 
@@ -32,17 +32,6 @@ class CharStringOptimizer {
     if (op == rlineto) {
       prevOpnds.addAll(currOpnds);
       return true;
-    } else if (op == hlineto || op == vlineto) {
-      final prevIsOdd = prevOpnds.length.isOdd;
-      final currIsOdd = currOpnds.length.isOdd;
-
-      if (prevIsOdd &&
-          currIsOdd &&
-          prevOpnds.first.value == currOpnds.first.value) {
-        currOpnds.removeAt(0);
-        prevOpnds.addAll(currOpnds);
-        return true;
-      }
     } else if (op == rrcurveto) {
       prevOpnds.addAll(currOpnds);
       return true;
@@ -50,21 +39,23 @@ class CharStringOptimizer {
       final prevHasDelta = prevOpnds.length % 4 != 0;
       final currHasDelta = currOpnds.length % 4 != 0;
 
-      final p0prev = prevHasDelta ? prevOpnds.first : null;
-      final p0 = currHasDelta ? currOpnds.first : null;
-
-      // Is axis delta same for two curves
-      if (p0?.value == p0prev?.value) {
-        // Removing delta - it's already present in a previous command
-        if (currHasDelta) {
-          currOpnds.removeAt(0);
-        }
-
+      // A leading delta adjusts only the very first curve of the sequence it
+      // is part of. Two independent commands each declaring one are two
+      // separate one-time adjustments to two separate curves, not the same
+      // value stated twice — dropping either loses that curve's own tangent,
+      // even when the two values happen to be numerically equal. Merging is
+      // only lossless when neither side has one to lose.
+      if (!prevHasDelta && !currHasDelta) {
         prevOpnds.addAll(currOpnds);
         return true;
       }
     }
 
+    // hlineto/vlineto are deliberately not merged here: each is generated
+    // as a fresh, self-contained single delta starting the h/x, v/y
+    // alternation over again, so concatenating two of them either drops one
+    // delta outright or reinterprets it on the wrong axis. There is no
+    // combination that is both simpler and correct.
     return false;
   }
 

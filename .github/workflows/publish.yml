@@ -1,0 +1,44 @@
+# Publishes the package to pub.dev when a release tag is pushed.
+#
+# Tag convention: `v<version>` (e.g. `v0.5.0`).
+#
+# Auth is pub.dev's GitHub Actions OIDC flow (no secrets): `dart-lang/setup-dart`
+# mints a temporary pub.dev credential from the job's `id-token`. For it to be
+# accepted, the package must have automated publishing enabled on pub.dev
+# (Admin -> Automated publishing): repository `4akloon/fontify_plus`, tag pattern
+# `v{{version}}`, and the `pub.dev` GitHub environment required.
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    name: Publish to pub.dev
+    runs-on: ubuntu-latest
+    environment: pub.dev
+    permissions:
+      id-token: write # pub.dev OIDC token exchange
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Parse version from the tag
+        id: meta
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify the pubspec version matches the tag
+        run: grep -qx 'version: ${{ steps.meta.outputs.version }}' pubspec.yaml
+
+      # Mints the temporary pub.dev credential from the job's OIDC token.
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Publish ${{ steps.meta.outputs.version }}
+        run: dart pub publish --force

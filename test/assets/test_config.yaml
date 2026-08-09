@@ -12,7 +12,6 @@ fontify_plus:
 
   font_name: My Icons
   normalize: false
-  ignore_shapes: false
 
   recursive: false
   verbose: false

@@ -1,31 +1,55 @@
-import 'package:logger/logger.dart';
+/// Severity of a log record, from most to least verbose.
+enum Level {
+  trace,
+  debug,
+  info,
+  warning,
+  error,
+}
 
-export 'package:logger/logger.dart';
+/// Minimal levelled logger.
+///
+/// Records go through `print` rather than `dart:io`, so the package keeps
+/// working on the web — the same reason its file access sits behind a
+/// conditional `stub`/`io` export.
+class Logger {
+  Logger({this.level = Level.info});
 
-final _filter = ProductionFilter();
+  /// Records below this level are dropped.
+  Level level;
 
-final Logger logger = Logger(
-  filter: _filter,
-  printer: SimplePrinter(),
-  level: Level.info,
-);
+  final Set<int> _loggedOnce = {};
 
-extension LoggerExt on Logger {
-  static final Set<int> _loggedOnce = {};
+  void t(Object message) => log(Level.trace, message);
 
+  void d(Object message) => log(Level.debug, message);
+
+  void i(Object message) => log(Level.info, message);
+
+  void w(Object message) => log(Level.warning, message);
+
+  void e(Object message) => log(Level.error, message);
+
+  /// Logs [message] the first time it is seen and never again.
+  ///
+  /// Used for advisories about the icon set as a whole, which would otherwise
+  /// repeat once per glyph.
   void logOnce(Level level, Object message) {
-    final hashCode = message.hashCode;
-
-    if (_loggedOnce.contains(hashCode)) {
+    if (!_loggedOnce.add(message.hashCode)) {
       return;
     }
 
     log(level, message);
-    _loggedOnce.add(hashCode);
   }
 
-  // ignore: use_setters_to_change_properties
-  void setFilterLevel(Level level) {
-    _filter.level = level;
+  void log(Level level, Object message) {
+    if (level.index < this.level.index) {
+      return;
+    }
+
+    // ignore: avoid_print
+    print('[${level.name.toUpperCase()}] $message');
   }
 }
+
+final Logger logger = Logger();

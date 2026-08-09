@@ -1,6 +1,6 @@
 import 'package:args/args.dart';
 
-import 'arguments.dart';
+import 'cli_argument.dart';
 
 void defineOptions(ArgParser argParser) {
   argParser
@@ -42,12 +42,25 @@ void defineOptions(ArgParser argParser) {
     ..addFlag(
       kOptionNames[CliArgument.normalize]!,
       help:
-          'Enables glyph normalization for the font. Disable this if every icon has the same size and positioning.',
+          'Scales each glyph so its own longest side fills the em square. '
+          'Only for icons from mismatched sources: it discards how much of '
+          'its artboard each icon was drawn to occupy, so a full-bleed icon '
+          'and a small one come out the same size.',
+      defaultsTo: false,
+    )
+    ..addFlag(
+      kOptionNames[CliArgument.outlineStrokes]!,
+      help:
+          'Converts stroked paths into the filled region the stroke covers. '
+          'Font glyphs are fill-only, so outline-style icons need this.',
       defaultsTo: true,
     )
     ..addFlag(
-      kOptionNames[CliArgument.ignoreShapes]!,
-      help: 'Disables SVG shape-to-path conversion (circle, rect, etc.).',
+      kOptionNames[CliArgument.useOpenType]!,
+      help:
+          'Stores outlines as CFF rather than TrueType. CFF holds the cubic '
+          'curves an SVG is drawn with directly; TrueType has to approximate '
+          'them with quadratics, which costs points.',
       defaultsTo: true,
     )
     ..addSeparator('Other options:')

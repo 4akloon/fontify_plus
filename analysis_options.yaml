@@ -28,6 +28,7 @@ linter:
     - combinators_ordering
     - eol_at_end_of_file
     - leading_newlines_in_multiline_strings
+    - library_names
     - matching_super_parameters
     - no_literal_bool_comparisons
     - only_throw_errors
@@ -35,24 +36,22 @@ linter:
     - prefer_final_locals
     - prefer_if_elements_to_conditional_expressions
     - prefer_null_aware_method_calls
-    - require_trailing_commas
-    - sized_box_shrink_expand
     - type_annotate_public_apis
     - unnecessary_await_in_return
     - unnecessary_breaks
     - unnecessary_raw_strings
     - unreachable_from_main
-    - use_colored_box
     - use_enums
     - use_named_constants
     - use_raw_strings
+    - prefer_const_constructors
+    - prefer_const_declarations
+    # require_trailing_commas is intentionally omitted: it conflicts with Dart's
+    # 3.7+ formatter, which manages commas itself (the Dart team retired the rule
+    # for this reason). `dart format` is the source of truth for commas here.
+    #
+    # Flutter-only rules from the shared set (use_colored_box,
+    # sized_box_shrink_expand) are omitted: this is a pure Dart package.
 
-analyzer:
-  errors:
-    unnecessary_library_name: ignore
-    use_string_in_part_of_directives: ignore
-  exclude: [build/**]
-  strong-mode:
-    implicit-casts: false
-    implicit-dynamic: false
-
+formatter:
+  trailing_commas: preserve

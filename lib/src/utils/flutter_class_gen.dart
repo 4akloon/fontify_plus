@@ -1,31 +1,25 @@
-import 'package:path/path.dart' as p;
-import 'package:recase/recase.dart';
-
 import '../common/constant.dart';
 import '../common/generic_glyph.dart';
 import '../otf/defaults.dart';
+import 'class_gen/dart_identifier.dart';
+import 'class_gen/icon_name_allocator.dart';
 
-const _kUnnamedIconName = 'unnamed';
 const _kDefaultIndent = 2;
 const _kDefaultClassName = 'fontify_plusIcons';
 const _kDefaultFontFileName = 'fontify_plus_icons.otf';
 
-/// Removes any characters that are not valid for variable name.
+/// Generates a Flutter-compatible class holding an [IconData] per glyph.
 ///
-/// Returns a new string.
-String _getVarName(String string) {
-  final replaced = string.replaceAll(RegExp(r'[^a-zA-Z0-9_$]'), '');
-  return RegExp(r'^[a-zA-Z$].*').firstMatch(replaced)?.group(0) ?? '';
-}
-
-/// A helper for generating Flutter-compatible class with IconData objects for each icon.
+/// [IconData]: https://api.flutter.dev/flutter/widgets/IconData-class.html
 class FlutterClassGenerator {
   /// * [glyphList] is a list of non-default glyphs.
   /// * [className] is generated class' name (preferably, in PascalCase).
   /// * [familyName] is font's family name to use in IconData.
-  /// * [package] is the name of a font package. Used to provide a font through package dependency.
+  /// * [package] is the name of a font package. Used to provide a font through
+  /// package dependency.
   /// * [fontFileName] is font file's name. Used in generated docs for class.
-  /// * [indent] is a number of spaces in leading indentation for class' members. Defaults to 2.
+  /// * [indent] is a number of spaces in leading indentation for class'
+  /// members. Defaults to 2.
   FlutterClassGenerator(
     this.glyphList, {
     String? className,
@@ -33,12 +27,12 @@ class FlutterClassGenerator {
     String? fontFileName,
     String? package,
     int? indent,
-  })  : _indent = ' ' * (indent ?? _kDefaultIndent),
-        _className = _getVarName(className ?? _kDefaultClassName),
-        _familyName = familyName ?? kDefaultFontFamily,
-        _fontFileName = fontFileName ?? _kDefaultFontFileName,
-        _iconVarNames = _generateVariableNames(glyphList),
-        _package = package?.isEmpty ?? true ? null : package;
+  }) : _indent = ' ' * (indent ?? _kDefaultIndent),
+       _className = toDartIdentifier(className ?? _kDefaultClassName),
+       _familyName = familyName ?? kDefaultFontFamily,
+       _fontFileName = fontFileName ?? _kDefaultFontFileName,
+       _iconVarNames = _allocateNames(glyphList),
+       _package = package?.isEmpty ?? true ? null : package;
 
   final List<GenericGlyph> glyphList;
   final String _fontFileName;
@@ -48,89 +42,50 @@ class FlutterClassGenerator {
   final String? _package;
   final List<String> _iconVarNames;
 
-  static List<String> _generateVariableNames(List<GenericGlyph> glyphList) {
-    final iconNameSet = <String>{};
+  static List<String> _allocateNames(List<GenericGlyph> glyphList) {
+    final allocator = IconNameAllocator();
 
-    return glyphList.map((g) {
-      final baseName =
-          _getVarName(p.basenameWithoutExtension(g.metadata.name!)).snakeCase;
-      final usingDefaultName = baseName.isEmpty;
-
-      var variableName = usingDefaultName ? _kUnnamedIconName : baseName;
-
-      // Handling same names by adding numeration to them
-      if (iconNameSet.contains(variableName)) {
-        // If name already contains numeration, then splitting it
-        final countMatch = RegExp(r'^(.*)_([0-9]+)$').firstMatch(variableName);
-
-        var variableNameCount = 1;
-        var variableWithoutCount = variableName;
-
-        if (countMatch != null) {
-          variableNameCount = int.parse(countMatch.group(2)!);
-          variableWithoutCount = countMatch.group(1)!;
-        }
-
-        String variableNameWithCount;
-
-        do {
-          variableNameWithCount =
-              '${variableWithoutCount}_${++variableNameCount}';
-        } while (iconNameSet.contains(variableNameWithCount));
-
-        variableName = variableNameWithCount;
-      }
-
-      iconNameSet.add(variableName);
-
-      return variableName;
-    }).toList();
+    return [
+      for (final glyph in glyphList) allocator.allocate(glyph.metadata.name!),
+    ];
   }
 
   bool get _hasPackage => _package != null;
 
-  String get _fontFamilyConst =>
-      "static const iconFontFamily = '$_familyName';";
-
-  String get _fontPackageConst => "static const iconFontPackage = '$_package';";
-
-  List<String> _generateIconConst(int index) {
-    final glyphMeta = glyphList[index].metadata;
-
-    final charCode = glyphMeta.charCode!;
-    final iconName = glyphMeta.name!;
-
-    final varName = _iconVarNames[index];
-    final hexCode = charCode.toRadixString(16);
-
-    final posParamList = [
-      'fontFamily: iconFontFamily',
-      if (_hasPackage) 'fontPackage: iconFontPackage',
+  /// Generates content for a class' file.
+  String generate() {
+    final members = [
+      "static const iconFontFamily = '$_familyName';",
+      if (_hasPackage) "static const iconFontPackage = '$_package';",
+      for (var i = 0; i < glyphList.length; i++) ..._iconConstant(i),
     ];
 
-    final posParamString = posParamList.join(', ');
+    final body = members.map((e) => e.isEmpty ? '' : '$_indent$e').join('\n');
+
+    return '${_header()}$_docComment'
+        'abstract final class $_className {\n'
+        '$body\n'
+        '}\n';
+  }
+
+  List<String> _iconConstant(int index) {
+    final metadata = glyphList[index].metadata;
+
+    final arguments = [
+      'fontFamily: iconFontFamily',
+      if (_hasPackage) 'fontPackage: iconFontPackage',
+    ].join(', ');
 
     return [
       '',
-      '/// $iconName',
-      'static const IconData $varName = IconData(0x$hexCode, $posParamString);',
+      '/// ${metadata.name!}',
+      'static const IconData ${_iconVarNames[index]} = '
+          'IconData(0x${metadata.charCode!.toRadixString(16)}, $arguments);',
     ];
   }
 
-  /// Generates content for a class' file.
-  String generate() {
-    final classContent = [
-      '$_className._();',
-      '',
-      _fontFamilyConst,
-      if (_hasPackage) _fontPackageConst,
-      for (var i = 0; i < glyphList.length; i++) ..._generateIconConst(i),
-    ];
-
-    final classContentString =
-        classContent.map((e) => e.isEmpty ? '' : '$_indent$e').join('\n');
-
-    return '''
+  String _header() =>
+      '''
 // Generated code: do not hand-edit.
 
 // Generated using $kVendorName.
@@ -138,6 +93,10 @@ class FlutterClassGenerator {
 
 import 'package:flutter/widgets.dart';
 
+''';
+
+  String get _docComment =>
+      '''
 /// Identifiers for the icons.
 ///
 /// Use with the [Icon] class to show specific icons.
@@ -146,9 +105,9 @@ import 'package:flutter/widgets.dart';
 ///
 /// To use this class, make sure you declare the font in your
 /// project's `pubspec.yaml` file in the `fonts` section. This ensures that
-/// the "$_familyName" font is included in your application. This font is used to
-/// display the icons. For example:
-/// 
+/// the "$_familyName" font is included in your application. This font is used
+/// to display the icons. For example:
+///
 /// ```yaml
 /// flutter:
 ///   fonts:
@@ -156,9 +115,5 @@ import 'package:flutter/widgets.dart';
 ///       fonts:
 ///         - asset: fonts/$_fontFileName
 /// ```
-class $_className {
-$classContentString
-}
 ''';
-  }
 }

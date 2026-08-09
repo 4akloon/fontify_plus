@@ -1,9 +1,9 @@
 import '../otf.dart';
-import '../svg.dart';
 import '../utils/flutter_class_gen.dart';
 import '../utils/logger.dart';
 import 'generic_glyph.dart';
 
+/// {@category api}
 /// Result of svg-to-otf conversion.
 ///
 /// Contains list of generated glyphs and created font.
@@ -14,58 +14,79 @@ class SvgToOtfResult {
   final OpenTypeFont font;
 }
 
+/// {@category api}
+/// {@category stroked-icons}
+/// {@category glyph-sizing}
 /// Converts SVG icons to OTF font.
 ///
 /// * [svgMap] contains name (key) to data (value) SVG mapping. Required.
-/// * If [ignoreShapes] is set to false, shapes (circle, rect, etc.) are converted into paths.
-/// Defaults to true.
-/// NOTE: Attributes like "fill" or "stroke" are ignored,
-/// which means only shape's outline will be used.
-/// * If [normalize] is set to true,
-/// glyphs are resized and centered to fit in coordinates grid (unitsPerEm).
-/// Defaults to true.
+/// * If [outlineStrokes] is set to true, stroked paths are replaced by the
+/// filled region their stroke covers. Defaults to true — font glyphs are
+/// fill-only, so a stroked icon is otherwise invisible.
+/// NOTE: Paint attributes other than stroke geometry (such as "fill" colour)
+/// are ignored — only the shape's outline is used.
+/// * If [normalize] is set to true, each glyph is scaled so that its own
+/// longest side fills the em square, then centred. Defaults to false.
+///
+/// Normalization discards how much of its artboard an icon was drawn to
+/// occupy, which is design information: a full-bleed circle and a small
+/// arrow both end up the same size, inverting the set's proportions. With it
+/// off, the artboard maps onto the em square directly and the relative sizes
+/// the icons were drawn at survive — what an icon set almost always wants.
+///
+/// Turn it on only for icons collected from mismatched sources, where the
+/// viewBoxes disagree and forcing a uniform size is the lesser evil.
+/// * If [useOpenType] is set to true, the font carries OpenType (CFF)
+/// outlines. Otherwise TrueType outlines are generated, which requires
+/// approximating each cubic curve with quadratics. Defaults to true: CFF
+/// stores cubics directly, so it is both smaller and exact.
 /// * [fontName] is a name for a generated font.
 ///
 /// Returns an instance of [SvgToOtfResult] class containing glyphs and a font.
 SvgToOtfResult svgToOtf({
   required Map<String, String> svgMap,
-  bool? ignoreShapes,
+  bool? outlineStrokes,
   bool? normalize,
+  bool? useOpenType,
   String? fontName,
 }) {
-  normalize ??= true;
+  normalize ??= false;
 
-  final svgList = [
+  final glyphList = [
     for (final e in svgMap.entries)
-      Svg.parse(e.key, e.value, ignoreShapes: ignoreShapes),
+      GenericGlyph.fromSvg(
+        e.key,
+        e.value,
+        outlineStrokes: outlineStrokes ?? true,
+      ),
   ];
 
   if (!normalize) {
-    for (var i = 1; i < svgList.length; i++) {
-      if (svgList[i - 1].viewBox.height != svgList[i].viewBox.height) {
+    for (var i = 1; i < glyphList.length; i++) {
+      if (glyphList[i - 1].bounds.height != glyphList[i].bounds.height) {
         logger.logOnce(
-            Level.warning,
-            'Some SVG files contain different view box height, '
-            'while normalization option is disabled. '
-            'This is not recommended.');
+          Level.warning,
+          'Some SVG files contain different view box height, '
+          'while normalization option is disabled. '
+          'This is not recommended.',
+        );
         break;
       }
     }
   }
 
-  final glyphList = svgList.map((e) => GenericGlyph.fromSvg(e)).toList();
-
   final font = OpenTypeFont.createFromGlyphs(
     glyphList: glyphList,
     fontName: fontName,
     normalize: normalize,
-    useOpenType: true,
+    useOpenType: useOpenType,
     usePostV2: false,
   );
 
   return SvgToOtfResult._(glyphList, font);
 }
 
+/// {@category api}
 /// Generates a Flutter-compatible class for a list of glyphs.
 ///
 /// * [glyphList] is a list of non-default glyphs.

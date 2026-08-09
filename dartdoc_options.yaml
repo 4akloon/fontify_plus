@@ -1,0 +1,24 @@
+dartdoc:
+  categories:
+    getting-started:
+      markdown: doc/getting_started.md
+      displayName: Getting Started
+    api:
+      markdown: doc/api.md
+      displayName: API Usage
+    stroked-icons:
+      markdown: doc/stroked_icons.md
+      displayName: Stroked Icons
+    glyph-sizing:
+      markdown: doc/glyph_sizing.md
+      displayName: Glyph Sizing
+    cli:
+      markdown: doc/cli.md
+      displayName: CLI & Config
+  categoryOrder:
+    - getting-started
+    - api
+    - stroked-icons
+    - glyph-sizing
+    - cli
+  showUndocumentedCategories: true

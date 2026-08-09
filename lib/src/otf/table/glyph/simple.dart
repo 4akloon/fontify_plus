@@ -5,7 +5,10 @@ import '../../../common/codable/binary.dart';
 import '../../../utils/otf.dart';
 import 'flag.dart';
 import 'header.dart';
+import 'simple_glyph_coordinates.dart';
 
+/// A TrueType glyph made of contours, as opposed to a composite of other
+/// glyphs.
 class SimpleGlyph implements BinaryCodable {
   SimpleGlyph(
     this.header,
@@ -15,9 +18,8 @@ class SimpleGlyph implements BinaryCodable {
     this.pointList,
   );
 
-  factory SimpleGlyph.empty() {
-    return SimpleGlyph(GlyphHeader(0, 0, 0, 0, 0), [], [], [], []);
-  }
+  factory SimpleGlyph.empty() =>
+      SimpleGlyph(GlyphHeader(0, 0, 0, 0, 0), [], [], [], []);
 
   factory SimpleGlyph.fromByteData(
     ByteData byteData,
@@ -55,56 +57,32 @@ class SimpleGlyph implements BinaryCodable {
       i += flag.repeatTimes;
     }
 
-    final xCoordinates = <int>[];
+    final (xCoordinates, afterX) = readCoordinates(
+      byteData,
+      offset,
+      flags,
+      numberOfPoints,
+      GlyphAxis.x,
+    );
+    final (yCoordinates, _) = readCoordinates(
+      byteData,
+      afterX,
+      flags,
+      numberOfPoints,
+      GlyphAxis.y,
+    );
 
-    for (var i = 0; i < numberOfPoints; i++) {
-      final short = flags[i].xShortVector;
-      final same = flags[i].xIsSameOrPositive;
-
-      if (short) {
-        xCoordinates.add((same ? 1 : -1) * byteData.getUint8(offset++));
-      } else {
-        if (same) {
-          xCoordinates.add(0);
-        } else {
-          xCoordinates.add(byteData.getInt16(offset));
-          offset += 2;
-        }
-      }
-    }
-
-    final yCoordinates = <int>[];
-
-    for (var i = 0; i < numberOfPoints; i++) {
-      final short = flags[i].yShortVector;
-      final same = flags[i].yIsSameOrPositive;
-
-      if (short) {
-        yCoordinates.add((same ? 1 : -1) * byteData.getUint8(offset++));
-      } else {
-        if (same) {
-          yCoordinates.add(0);
-        } else {
-          yCoordinates.add(byteData.getInt16(offset));
-          offset += 2;
-        }
-      }
-    }
-
-    final xAbsCoordinates = relToAbsCoordinates(xCoordinates);
-    final yAbsCoordinates = relToAbsCoordinates(yCoordinates);
-
-    final points = [
-      for (var i = 0; i < xAbsCoordinates.length; i++)
-        math.Point<num>(xAbsCoordinates[i], yAbsCoordinates[i]),
-    ];
+    final xAbs = relToAbsCoordinates(xCoordinates);
+    final yAbs = relToAbsCoordinates(yCoordinates);
 
     return SimpleGlyph(
       header,
       endPtsOfContours,
       instructions,
       flags,
-      points,
+      [
+        for (var i = 0; i < xAbs.length; i++) math.Point<num>(xAbs[i], yAbs[i]),
+      ],
     );
   }
 
@@ -117,17 +95,24 @@ class SimpleGlyph implements BinaryCodable {
 
   bool get isEmpty => header.numberOfContours == 0;
 
+  @override
+  int get size => isEmpty ? 0 : header.size + _descriptionSize;
+
+  int get _descriptionSize =>
+      endPtsOfContours.length * 2 +
+      (2 + instructions.length) +
+      _flagsSize +
+      _coordinatesSize;
+
   int get _coordinatesSize {
     var coordinatesSize = 0;
 
-    for (var i = 0; i < flags.length; i++) {
-      final xShort = flags[i].xShortVector;
-      final yShort = flags[i].yShortVector;
-      final xSame = flags[i].xIsSameOrPositive;
-      final ySame = flags[i].yIsSameOrPositive;
-
-      coordinatesSize += xShort ? 1 : (xSame ? 0 : 2);
-      coordinatesSize += yShort ? 1 : (ySame ? 0 : 2);
+    for (final flag in flags) {
+      for (final axis in GlyphAxis.values) {
+        coordinatesSize += axis.isShort(flag)
+            ? 1
+            : (axis.isSameOrPositive(flag) ? 0 : 2);
+      }
     }
 
     return coordinatesSize;
@@ -140,24 +125,14 @@ class SimpleGlyph implements BinaryCodable {
       final flag = flags[i];
 
       flagsSize += flag.size;
-
-      if (flag.repeatTimes > 0) {
-        i += flag.repeatTimes;
-      }
+      i += flag.repeatTimes;
     }
 
     return flagsSize;
   }
 
-  int get _descriptionSize {
-    final endPointsSize = endPtsOfContours.length * 2;
-    final instructionsSize = 2 + instructions.length;
-
-    return endPointsSize + instructionsSize + _flagsSize + _coordinatesSize;
-  }
-
-  @override
-  int get size => isEmpty ? 0 : header.size + _descriptionSize;
+  static int _getNumberOfPoints(List<int> endPtsOfContours) =>
+      endPtsOfContours.isNotEmpty ? endPtsOfContours.last + 1 : 0;
 
   @override
   void encodeToBinary(ByteData byteData) {
@@ -187,41 +162,25 @@ class SimpleGlyph implements BinaryCodable {
       i += flag.repeatTimes;
     }
 
-    final xAbsCoordinates = pointList.map((e) => e.x.toInt()).toList();
-    final yAbsCoordinates = pointList.map((e) => e.y.toInt()).toList();
+    final xRel = absToRelCoordinates([for (final p in pointList) p.x.toInt()]);
+    final yRel = absToRelCoordinates([for (final p in pointList) p.y.toInt()]);
 
-    final xRelCoordinates = absToRelCoordinates(xAbsCoordinates);
-    final yRelCoordinates = absToRelCoordinates(yAbsCoordinates);
+    offset = writeCoordinates(
+      byteData,
+      offset,
+      flags,
+      xRel,
+      numberOfPoints,
+      GlyphAxis.x,
+    );
 
-    for (var i = 0; i < numberOfPoints; i++) {
-      final short = flags[i].xShortVector;
-      final same = flags[i].xIsSameOrPositive;
-
-      if (short) {
-        byteData.setUint8(offset++, xRelCoordinates[i].abs());
-      } else {
-        if (!same) {
-          byteData.setInt16(offset, xRelCoordinates[i]);
-          offset += 2;
-        }
-      }
-    }
-
-    for (var i = 0; i < numberOfPoints; i++) {
-      final short = flags[i].yShortVector;
-      final same = flags[i].yIsSameOrPositive;
-
-      if (short) {
-        byteData.setUint8(offset++, yRelCoordinates[i].abs());
-      } else {
-        if (!same) {
-          byteData.setInt16(offset, yRelCoordinates[i]);
-          offset += 2;
-        }
-      }
-    }
+    writeCoordinates(
+      byteData,
+      offset,
+      flags,
+      yRel,
+      numberOfPoints,
+      GlyphAxis.y,
+    );
   }
-
-  static int _getNumberOfPoints(List<int> endPtsOfContours) =>
-      endPtsOfContours.isNotEmpty ? endPtsOfContours.last + 1 : 0;
 }

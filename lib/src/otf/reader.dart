@@ -128,12 +128,13 @@ class OTFReader {
   ///
   /// Throws [ChecksumException] if calculated checksum is different than expected
   void _validateChecksums() {
-    final byteDataCopy = ByteData.sublistView(
-      Uint8List.fromList([..._byteData.buffer.asUint8List()]),
-    )..setUint32(
-        _font.head.entry!.offset + 8,
-        0,
-      ); // Setting head table's checkSumAdjustment to 0
+    final byteDataCopy =
+        ByteData.sublistView(
+          Uint8List.fromList([..._byteData.buffer.asUint8List()]),
+        )..setUint32(
+          _font.head.entry!.offset + 8,
+          0,
+        ); // Setting head table's checkSumAdjustment to 0
 
     for (final table in _font.tableMap.values) {
       final entry = table.entry!;
