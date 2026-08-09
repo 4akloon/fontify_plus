@@ -27,6 +27,7 @@ fontify_plus assets/svg/ fonts/my_icons_font.otf \
 | `-v`, `--verbose` | Print every log message. |
 | `-z`, `--config-file=<path>` | Path to a yaml config file (`pubspec.yaml` and `fontify_plus.yaml` are checked by default). |
 | `--font=<name>` | Run one named font set from the config (omit to run all sets). |
+| `--watch` | After the first generate, watch SVG input dirs and the config file (if any). SVG changes regenerate matching font set(s) after a 250ms debounce; config changes re-parse and regenerate all selected sets immediately. Errors while watching are logged; the process keeps listening until Ctrl+C. |
 | `-h`, `--help` | Show usage information. |
 
 Ad-hoc positionals and a config file with `fontify_plus.fonts` cannot be used
@@ -67,4 +68,11 @@ fontify_plus --no-normalize  # keep artboard-relative sizes for every set
 ```sh
 fontify_plus assets/svg/ fonts/my_icons_font.otf \
   --output-class-file=lib/my_icons.dart --indent=4 -r
+```
+
+## Watch mode
+
+```sh
+fontify_plus --font=icons --watch
+fontify_plus assets/svg/ fonts/my_icons_font.otf -o lib/my_icons.dart --watch
 ```

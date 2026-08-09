@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* CLI: `--watch` regenerates on SVG (debounced) and config changes.
 * Empty SVG input directories now fail the job. Recursive scans key icons by
   relative path so duplicate basenames in different folders stay distinct.
 * Generated `IconData` dartdoc can embed SVG hover previews (IDE-visible).

@@ -33,6 +33,7 @@ Flags and YAML config are covered in [doc/cli.md](doc/cli.md). Flutter
 ```sh
 dart pub global activate fontify_plus
 fontify_plus assets/svg/ fonts/my_icons_font.otf --output-class-file=lib/my_icons.dart --indent=4 -r
+fontify_plus --font=icons --watch
 ```
 
 ## Using API
