@@ -25,6 +25,7 @@ const _kTableTagsToEncode = {
   kGSUBTag,
 };
 
+/// {@category api}
 /// An OpenType font.
 /// Contains either TrueType (glyf table) or OpenType (CFF2 table) outlines
 class OpenTypeFont implements BinaryCodable {

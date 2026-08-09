@@ -8,11 +8,13 @@ import 'otf.dart';
 import 'reader.dart';
 import 'writer.dart';
 
+/// {@category api}
 /// Reads OpenType font from a file.
 OpenTypeFont readFromFile(String path) => OTFReader.fromByteData(
   ByteData.sublistView(File(path).readAsBytesSync()),
 ).read();
 
+/// {@category api}
 /// Writes OpenType font to a file.
 void writeToFile(String path, OpenTypeFont font) {
   final file = File(path);

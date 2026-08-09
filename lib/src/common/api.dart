@@ -3,6 +3,7 @@ import '../utils/flutter_class_gen.dart';
 import '../utils/logger.dart';
 import 'generic_glyph.dart';
 
+/// {@category api}
 /// Result of svg-to-otf conversion.
 ///
 /// Contains list of generated glyphs and created font.
@@ -13,6 +14,7 @@ class SvgToOtfResult {
   final OpenTypeFont font;
 }
 
+/// {@category api}
 /// Converts SVG icons to OTF font.
 ///
 /// * [svgMap] contains name (key) to data (value) SVG mapping. Required.
@@ -82,6 +84,7 @@ SvgToOtfResult svgToOtf({
   return SvgToOtfResult._(glyphList, font);
 }
 
+/// {@category api}
 /// Generates a Flutter-compatible class for a list of glyphs.
 ///
 /// * [glyphList] is a list of non-default glyphs.
