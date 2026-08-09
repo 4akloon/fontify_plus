@@ -79,6 +79,10 @@ class FlutterClassGenerator {
     return [
       '',
       '/// ${metadata.name!}',
+      if (metadata.preview != null) ...[
+        '///',
+        '/// <img src="data:image/svg+xml;base64,${metadata.preview}" width="32"/>',
+      ],
       'static const IconData ${_iconVarNames[index]} = '
           'IconData(0x${metadata.charCode!.toRadixString(16)}, $arguments);',
     ];

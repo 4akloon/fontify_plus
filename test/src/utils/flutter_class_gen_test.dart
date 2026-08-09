@@ -3,9 +3,11 @@ import 'package:fontify_plus/src/otf/defaults.dart';
 import 'package:fontify_plus/src/utils/flutter_class_gen.dart';
 import 'package:test/test.dart';
 
-GenericGlyph _glyph(String name, int charCode) => GenericGlyph.empty()
-  ..metadata.name = name
-  ..metadata.charCode = charCode;
+GenericGlyph _glyph(String name, int charCode, {String? preview}) =>
+    GenericGlyph.empty()
+      ..metadata.name = name
+      ..metadata.charCode = charCode
+      ..metadata.preview = preview;
 
 void main() {
   group('FlutterClassGenerator.generate defaults', () {
@@ -113,6 +115,27 @@ void main() {
       ]).generate();
 
       expect(source, contains('/// arrow_up'));
+    });
+
+    test('emits an img dartdoc line when preview is set', () {
+      final source = FlutterClassGenerator([
+        _glyph('arrow_up', 0xE001, preview: 'cHJldmlldw=='),
+      ]).generate();
+
+      expect(
+        source,
+        contains(
+          '/// <img src="data:image/svg+xml;base64,cHJldmlldw==" width="32"/>',
+        ),
+      );
+    });
+
+    test('omits img dartdoc when preview is null', () {
+      final source = FlutterClassGenerator([
+        _glyph('arrow_up', 0xE001),
+      ]).generate();
+
+      expect(source, isNot(contains('<img src=')));
     });
   });
 
