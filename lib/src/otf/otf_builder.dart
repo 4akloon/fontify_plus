@@ -21,6 +21,8 @@ class OpenTypeFontBuilder {
     bool? useOpenType,
     bool? usePostV2,
     bool? normalize,
+    this.created,
+    this.modified,
   }) : fontName = (fontName?.isEmpty ?? true) ? kDefaultFontFamily : fontName!,
        revision = revision ?? kDefaultFontRevision,
        achVendID = achVendID ?? kDefaultAchVendID,
@@ -36,6 +38,8 @@ class OpenTypeFontBuilder {
   final bool useOpenType;
   final bool usePostV2;
   final bool normalize;
+  final DateTime? created;
+  final DateTime? modified;
 
   /// A power of two is recommended only for TrueType outlines.
   int get _unitsPerEm =>
@@ -101,6 +105,8 @@ class OpenTypeFontBuilder {
       glyf,
       revision,
       unitsPerEm,
+      created: created,
+      modified: modified,
     );
     final hmtx = HorizontalMetricsTable.create(glyphMetricsList, unitsPerEm);
     final hhea = HorizontalHeaderTable.create(

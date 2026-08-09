@@ -8,6 +8,8 @@ import 'otf_builder.dart';
 import 'reader.dart';
 import 'table/all.dart';
 
+export 'defaults.dart' show kDefaultFontTimestamp;
+
 /// Ordered list of table tags for encoding (Optimized Table Ordering)
 const _kTableTagsToEncode = {
   kHeadTag,
@@ -55,6 +57,9 @@ class OpenTypeFont implements BinaryCodable {
   /// * If [normalize] is set to true, each glyph is scaled so that its own
   /// longest side fills the em square, then centred. Defaults to true —
   /// see `GlyphFitting`.
+  /// * [created] / [modified] are written to the `head` table. Omit both to
+  /// use [kDefaultFontTimestamp]; when regenerating over an existing file,
+  /// pass the previous font's dates to keep bytes stable.
   factory OpenTypeFont.createFromGlyphs({
     required List<GenericGlyph> glyphList,
     String? fontName,
@@ -64,6 +69,8 @@ class OpenTypeFont implements BinaryCodable {
     bool? useOpenType,
     bool? usePostV2,
     bool? normalize,
+    DateTime? created,
+    DateTime? modified,
   }) => OpenTypeFontBuilder(
     glyphList: glyphList,
     fontName: fontName,
@@ -73,6 +80,8 @@ class OpenTypeFont implements BinaryCodable {
     useOpenType: useOpenType,
     usePostV2: usePostV2,
     normalize: normalize,
+    created: created,
+    modified: modified,
   ).build();
 
   final OffsetTable offsetTable;

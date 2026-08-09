@@ -41,6 +41,8 @@ class SvgToOtfResult {
 /// approximating each cubic curve with quadratics. Defaults to true: CFF
 /// stores cubics directly, so it is both smaller and exact.
 /// * [fontName] is a name for a generated font.
+/// * [created] / [modified] are written into the font `head` table. When
+/// rewriting an existing `.otf`, pass the previous values to avoid churn.
 ///
 /// Returns an instance of [SvgToOtfResult] class containing glyphs and a font.
 SvgToOtfResult svgToOtf({
@@ -50,6 +52,8 @@ SvgToOtfResult svgToOtf({
   bool? normalize,
   bool? useOpenType,
   String? fontName,
+  DateTime? created,
+  DateTime? modified,
 }) {
   normalize ??= true;
 
@@ -83,6 +87,8 @@ SvgToOtfResult svgToOtf({
     normalize: normalize,
     useOpenType: useOpenType,
     usePostV2: false,
+    created: created,
+    modified: modified,
   );
 
   return SvgToOtfResult._(glyphList, font);

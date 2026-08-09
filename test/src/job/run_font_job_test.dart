@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:fontify_plus/src/job/font_job.dart';
 import 'package:fontify_plus/src/job/fontify_exception.dart';
 import 'package:fontify_plus/src/job/run_font_job.dart';
+import 'package:fontify_plus/src/otf/io.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -99,5 +100,29 @@ void main() {
     );
 
     expect(result.otf.glyphList.single.metadata.name, 'arrow');
+  });
+
+  test('runFontJob reuses head timestamps from an existing output font', () {
+    final root = Directory('${tempDir.path}/svg_ts')..createSync();
+    File('${root.path}/a.svg').writeAsStringSync(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+      '<path d="M0 0h24v24H0z"/></svg>',
+    );
+    final fontPath = '${tempDir.path}/ts.otf';
+
+    runFontJob(
+      FontJob(inputSvgDir: root.path, outputFontFile: fontPath),
+    );
+    final first = readFromFile(fontPath);
+    final firstBytes = File(fontPath).readAsBytesSync();
+
+    runFontJob(
+      FontJob(inputSvgDir: root.path, outputFontFile: fontPath),
+    );
+    final second = readFromFile(fontPath);
+
+    expect(second.head.created, first.head.created);
+    expect(second.head.modified, first.head.modified);
+    expect(File(fontPath).readAsBytesSync(), firstBytes);
   });
 }

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import '../../common/generic_glyph.dart';
 import '../../utils/misc.dart';
 import '../../utils/otf.dart';
+import '../defaults.dart';
 
 import 'all.dart';
 
@@ -90,9 +91,12 @@ class HeaderTable extends FontTable {
     List<GenericGlyphMetrics> glyphMetricsList,
     GlyphDataTable? glyf,
     Revision revision,
-    int unitsPerEm,
-  ) {
-    final now = MockableDateTime.now();
+    int unitsPerEm, {
+    DateTime? created,
+    DateTime? modified,
+  }) {
+    final createdAt = created ?? kDefaultFontTimestamp;
+    final modifiedAt = modified ?? createdAt;
 
     final xMin = glyphMetricsList.fold<int>(
       kInt32Max,
@@ -117,8 +121,8 @@ class HeaderTable extends FontTable {
       0, // Setting checkSum to zero first, calculating it at last for the entire font
       0x000B,
       unitsPerEm,
-      now,
-      now,
+      createdAt,
+      modifiedAt,
       xMin,
       yMin,
       xMax,

@@ -12,6 +12,9 @@ const kDefaultOpenTypeUnitsPerEm = 1000;
 const kDefaultBaselineExtension = 150;
 const kDefaultFontRevision = Revision(1, 0);
 
+/// Default `head.created` / `head.modified` when no existing font is reused.
+final kDefaultFontTimestamp = DateTime.utc(2020, 1, 1);
+
 // Default glyph indicies for post table.
 const kDefaultGlyphIndex = <int>[
   0, // .notdef

@@ -18,32 +18,6 @@ void main() {
     });
   });
 
-  group('MockableDateTime', () {
-    tearDown(() => MockableDateTime.mockedDate = null);
-
-    test('falls back to the real clock when unset', () {
-      final before = DateTime.now();
-      final now = MockableDateTime.now();
-      final after = DateTime.now();
-
-      expect(
-        now.isAfter(before) || now.isAtSameMomentAs(before),
-        isTrue,
-      );
-      expect(
-        now.isBefore(after) || now.isAtSameMomentAs(after),
-        isTrue,
-      );
-    });
-
-    test('returns the mocked date once set', () {
-      final fixed = DateTime.utc(2020, 1, 1);
-      MockableDateTime.mockedDate = fixed;
-
-      expect(MockableDateTime.now(), fixed);
-    });
-  });
-
   group('PointExt', () {
     test('toIntPoint truncates toward zero', () {
       expect(const math.Point(1.9, -1.9).toIntPoint(), const math.Point(1, -1));

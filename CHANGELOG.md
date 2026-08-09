@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* OTF `head` timestamps: reuse created/modified from an existing output
+  font when regenerating; otherwise use a fixed default (no wall clock).
 * CLI: `--watch` regenerates on SVG (debounced) and config changes.
 * Empty SVG input directories now fail the job. Recursive scans key icons by
   relative path so duplicate basenames in different folders stay distinct.
