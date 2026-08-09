@@ -1,11 +1,16 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fontify_plus_example/main.dart';
 import 'package:fontify_plus_example/my_icons.dart';
+
+/// Logical crop stays content-sized; PNG is rendered at this pixel ratio.
+const _kScreenshotPixelRatio = 3.0;
 
 /// Writes the example gallery into repo-root `screenshots/example_gallery.png`.
 void main() {
@@ -20,10 +25,6 @@ void main() {
 
   testWidgets('write example gallery screenshot', (tester) async {
     const galleryKey = Key('gallery-shot');
-
-    // Sharp PNG for pub.dev; logical crop stays content-sized.
-    tester.view.devicePixelRatio = 2.0;
-    addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -43,7 +44,7 @@ void main() {
           alignment: Alignment.topLeft,
           child: Material(
             color: Colors.white,
-            child: KeyedSubtree(
+            child: RepaintBoundary(
               key: galleryKey,
               child: const _GalleryShot(),
             ),
@@ -58,15 +59,26 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpAndSettle();
 
-    await expectLater(
-      find.byKey(galleryKey),
-      matchesGoldenFile('goldens/example_gallery.png'),
-    );
+    final boundary =
+        tester.renderObject(find.byKey(galleryKey)) as RenderRepaintBoundary;
+    // toImage must run outside the test zone's fake async.
+    final image = (await tester.runAsync(
+      () => boundary.toImage(pixelRatio: _kScreenshotPixelRatio),
+    ))!;
+    final byteData = (await tester.runAsync(
+      () => image.toByteData(format: ui.ImageByteFormat.png),
+    ))!;
+    final png = byteData.buffer.asUint8List();
 
-    final golden = File('test/goldens/example_gallery.png');
-    final dest = File('../screenshots/example_gallery.png');
-    dest.parent.createSync(recursive: true);
-    golden.copySync(dest.path);
+    expect(image.width, (contentSize.width * _kScreenshotPixelRatio).round());
+    expect(image.height, (contentSize.height * _kScreenshotPixelRatio).round());
+
+    File('test/goldens/example_gallery.png')
+      ..parent.createSync(recursive: true)
+      ..writeAsBytesSync(png);
+    File('../screenshots/example_gallery.png')
+      ..parent.createSync(recursive: true)
+      ..writeAsBytesSync(png);
   });
 }
 
