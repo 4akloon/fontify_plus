@@ -31,6 +31,9 @@
 /// `outlineStrokes: false` to treat path data as fill geometry instead.
 ///
 /// [IconData]: https://api.flutter.dev/flutter/widgets/IconData-class.html
+///
+/// {@category getting-started}
+/// {@category cli}
 library;
 
 export 'src/common.dart';

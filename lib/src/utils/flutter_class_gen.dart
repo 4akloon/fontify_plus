@@ -9,6 +9,8 @@ const _kDefaultClassName = 'fontify_plusIcons';
 const _kDefaultFontFileName = 'fontify_plus_icons.otf';
 
 /// Generates a Flutter-compatible class holding an [IconData] per glyph.
+///
+/// [IconData]: https://api.flutter.dev/flutter/widgets/IconData-class.html
 class FlutterClassGenerator {
   /// * [glyphList] is a list of non-default glyphs.
   /// * [className] is generated class' name (preferably, in PascalCase).

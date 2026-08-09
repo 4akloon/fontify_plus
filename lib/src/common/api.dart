@@ -15,6 +15,8 @@ class SvgToOtfResult {
 }
 
 /// {@category api}
+/// {@category stroked-icons}
+/// {@category glyph-sizing}
 /// Converts SVG icons to OTF font.
 ///
 /// * [svgMap] contains name (key) to data (value) SVG mapping. Required.
