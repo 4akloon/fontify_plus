@@ -6,6 +6,7 @@
   Controlled via `--[no-]preview` / YAML `preview:` (default on).
 * `normalize` defaults to **true** again (uniform em fill). Pass
   `--no-normalize` / `normalize: false` to keep artboard-relative sizes.
+* Docs: fix README claims; add example gallery screenshot.
 
 ## 0.5.0
 
