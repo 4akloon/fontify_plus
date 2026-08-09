@@ -6,7 +6,7 @@ The fontify_plus package provides an easy way to convert SVG icons to OpenType f
 and generate Flutter-compatible class that contains identifiers for the icons
 (just like [CupertinoIcons][] or [Icons][] classes).
 
-![Example icon gallery](screenshots/example_gallery.png)
+![Example icon gallery](screenshots/example_gallery.webp)
 
 Pure Dart CLI/API (pub dependencies only; no native toolchains).
 Compatible with dart2js and dart2native.

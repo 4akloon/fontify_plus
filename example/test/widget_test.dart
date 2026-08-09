@@ -12,7 +12,7 @@ import 'package:fontify_plus_example/my_icons.dart';
 /// Logical crop stays content-sized; PNG is rendered at this pixel ratio.
 const _kScreenshotPixelRatio = 3.0;
 
-/// Writes the example gallery into repo-root `screenshots/example_gallery.png`.
+/// Writes the example gallery into repo-root `screenshots/example_gallery.webp`.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -76,12 +76,26 @@ void main() {
     expect(image.width, (contentSize.width * _kScreenshotPixelRatio).round());
     expect(image.height, (contentSize.height * _kScreenshotPixelRatio).round());
 
+    // Keep a PNG golden for deterministic CI; publish WebP (smaller) for pub.dev.
     File('test/goldens/example_gallery.png')
       ..parent.createSync(recursive: true)
       ..writeAsBytesSync(png);
-    File('../screenshots/example_gallery.png')
-      ..parent.createSync(recursive: true)
+
+    final webp = File('../screenshots/example_gallery.webp')
+      ..parent.createSync(recursive: true);
+    final pngTemp = File('../screenshots/.example_gallery.png')
       ..writeAsBytesSync(png);
+    final cwebp = Process.runSync('cwebp', [
+      '-q',
+      '85',
+      pngTemp.path,
+      '-o',
+      webp.path,
+    ]);
+    pngTemp.deleteSync();
+    if (cwebp.exitCode != 0) {
+      throw StateError('cwebp failed: ${cwebp.stderr}');
+    }
   });
 }
 
