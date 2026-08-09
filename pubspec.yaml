@@ -1,5 +1,5 @@
 name: fontify_plus
-version: 0.6.0
+version: 0.5.0
 description: >-
   Converts SVG icons to an OTF font and generates a Flutter-compatible class.
   Outlines stroked icons so outline-style sets render correctly. CLI and API.
