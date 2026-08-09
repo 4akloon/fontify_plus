@@ -30,7 +30,7 @@ class FontifyPlusExampleApp extends StatelessWidget {
 class IconGalleryPage extends StatelessWidget {
   const IconGalleryPage({super.key});
 
-  static const _icons = <(String, IconData)>[
+  static const icons = <(String, IconData)>[
     ('arrowRight', MyIcons.arrowRight),
     ('plus', MyIcons.plus),
     ('check', MyIcons.check),
@@ -59,7 +59,7 @@ class IconGalleryPage extends StatelessWidget {
                 spacing: 24,
                 runSpacing: 24,
                 children: [
-                  for (final (name, icon) in _icons)
+                  for (final (name, icon) in icons)
                     SizedBox(
                       width: 96,
                       child: Column(

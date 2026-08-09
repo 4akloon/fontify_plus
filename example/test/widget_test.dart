@@ -19,9 +19,11 @@ void main() {
   });
 
   testWidgets('write example gallery screenshot', (tester) async {
-    // Tight frame: header + one icon row, no empty lower third.
-    await tester.binding.setSurfaceSize(const Size(720, 280));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    const galleryKey = Key('gallery-shot');
+
+    // Sharp PNG for pub.dev; logical crop stays content-sized.
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -37,13 +39,27 @@ void main() {
           fontFamily: 'Roboto',
           useMaterial3: true,
         ),
-        home: const IconGalleryPage(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: Material(
+            color: Colors.white,
+            child: KeyedSubtree(
+              key: galleryKey,
+              child: const _GalleryShot(),
+            ),
+          ),
+        ),
       ),
     );
     await tester.pumpAndSettle();
 
+    final contentSize = tester.getSize(find.byKey(galleryKey));
+    await tester.binding.setSurfaceSize(contentSize);
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpAndSettle();
+
     await expectLater(
-      find.byType(MaterialApp),
+      find.byKey(galleryKey),
       matchesGoldenFile('goldens/example_gallery.png'),
     );
 
@@ -52,6 +68,55 @@ void main() {
     dest.parent.createSync(recursive: true);
     golden.copySync(dest.path);
   });
+}
+
+/// Same content as [IconGalleryPage], but shrink-wrapped for a tight crop.
+class _GalleryShot extends StatelessWidget {
+  const _GalleryShot();
+
+  static const _icons = IconGalleryPage.icons;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: IntrinsicWidth(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('fontify_plus', style: textTheme.headlineMedium),
+            const SizedBox(height: 8),
+            Text(
+              'Icons generated from example/svg via dart run tool/generate.dart',
+              style: textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < _icons.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 24),
+                  SizedBox(
+                    width: 96,
+                    child: Column(
+                      children: [
+                        Icon(_icons[i].$2, size: 40),
+                        const SizedBox(height: 8),
+                        Text(_icons[i].$1, textAlign: TextAlign.center),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 String _robotoPath() {
