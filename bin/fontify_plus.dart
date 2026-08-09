@@ -2,11 +2,8 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:fontify_plus/src/cli/arguments.dart';
-import 'package:fontify_plus/src/cli/options.dart';
-import 'package:fontify_plus/src/common/api.dart';
-import 'package:fontify_plus/src/otf/io.dart';
+import 'package:fontify_plus/src/job/run_font_job.dart';
 import 'package:fontify_plus/src/utils/logger.dart';
-import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
 final _argParser = ArgParser(allowTrailingOptions: true);
@@ -14,10 +11,10 @@ final _argParser = ArgParser(allowTrailingOptions: true);
 void main(List<String> args) {
   defineOptions(_argParser);
 
-  late final CliArguments parsedArgs;
+  late final CliRunRequest request;
 
   try {
-    parsedArgs = parseArgsAndConfig(_argParser, args);
+    request = parseArgsAndConfig(_argParser, args);
   } on CliArgumentException catch (e) {
     _usageError(e.message);
   } on CliHelpException {
@@ -28,84 +25,25 @@ void main(List<String> args) {
   }
 
   try {
-    _run(parsedArgs);
+    _run(request);
   } on Object catch (e) {
     logger.e(e.toString());
     exit(65);
   }
 }
 
-void _run(CliArguments parsedArgs) {
+void _run(CliRunRequest request) {
   final stopwatch = Stopwatch()..start();
 
-  final isRecursive = parsedArgs.recursive ?? kDefaultRecursive;
-  final isVerbose = parsedArgs.verbose ?? kDefaultVerbose;
-
-  if (isVerbose) {
+  if (request.verbose) {
     logger.level = Level.trace;
   }
 
-  if (parsedArgs.classFile?.existsSync() ?? false) {
-    logger.t(
-      'Output file for a Flutter class already exists (${parsedArgs.classFile!.path}) - '
-      'overwriting it',
-    );
-  }
+  runFontJobs(request.jobs);
 
-  if (!parsedArgs.fontFile.existsSync()) {
-    logger.t(
-      'Output file for a font file already exists (${parsedArgs.fontFile.path}) - '
-      'overwriting it',
-    );
-  }
-
-  final svgFileList = parsedArgs.svgDir
-      .listSync(recursive: isRecursive)
-      .where((e) => p.extension(e.path).toLowerCase() == '.svg')
-      .toList();
-
-  if (svgFileList.isEmpty) {
-    logger.w(
-      "The input directory doesn't contain any SVG file (${parsedArgs.svgDir.path}).",
-    );
-  }
-
-  final svgMap = {
-    for (final f in svgFileList)
-      p.basenameWithoutExtension(f.path): File(f.path).readAsStringSync(),
-  };
-
-  final otfResult = svgToOtf(
-    svgMap: svgMap,
-    outlineStrokes: parsedArgs.outlineStrokes,
-    normalize: parsedArgs.normalize,
-    useOpenType: parsedArgs.useOpenType,
-    fontName: parsedArgs.fontName,
+  logger.i(
+    'Finished ${request.jobs.length} job(s) in ${stopwatch.elapsedMilliseconds}ms',
   );
-
-  writeToFile(parsedArgs.fontFile.path, otfResult.font);
-
-  if (parsedArgs.classFile == null) {
-    logger.t(
-      'No output path for Flutter class was specified - '
-      'skipping class generation.',
-    );
-  } else {
-    final fontFileName = p.basename(parsedArgs.fontFile.path);
-
-    final classString = generateFlutterClass(
-      glyphList: otfResult.glyphList,
-      className: parsedArgs.className,
-      indent: parsedArgs.indent,
-      fontFileName: fontFileName,
-      familyName: otfResult.font.familyName,
-      package: parsedArgs.fontPackage,
-    );
-
-    parsedArgs.classFile!.writeAsStringSync(classString);
-  }
-
-  logger.i('Generated in ${stopwatch.elapsedMilliseconds}ms');
 }
 
 void _printHelp() {
@@ -133,10 +71,12 @@ const _kAbout =
     'Converts .svg icons to an OpenType font and generates Flutter-compatible class.';
 
 const _kUsage = '''
-Usage:   fontify_plus <input-svg-dir> <output-font-file> [options]
+Usage:   fontify_plus [<input-svg-dir> <output-font-file>] [options]
 
-Example: fontify_plus assets/svg/ fonts/my_icons_font.otf --output-class-file=lib/my_icons.dart
+Examples:
+  fontify_plus assets/svg/ fonts/my_icons_font.otf --output-class-file=lib/my_icons.dart
+  fontify_plus --font=icons
 
-Converts every .svg file from <input-svg-dir> directory to an OpenType font and writes it to <output-font-file> file.
-If "--output-class-file" option is specified, Flutter-compatible class that contains identifiers for the icons is generated.
+Converts every .svg file from <input-svg-dir> to an OpenType font, or runs named
+font sets from a fontify_plus.fonts config in pubspec.yaml / fontify_plus.yaml.
 ''';

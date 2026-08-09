@@ -1,32 +1,37 @@
 import 'package:args/args.dart';
 
-import 'cli_argument.dart';
+import '../job/job_field.dart';
+
+const kCliFontOption = 'font';
+const kCliConfigFileOption = 'config-file';
+const kCliHelpOption = 'help';
+
+const kPositionalJobFields = [JobField.inputSvgDir, JobField.outputFontFile];
 
 void defineOptions(ArgParser argParser) {
   argParser
     ..addSeparator('Flutter class options:')
     ..addOption(
-      kOptionNames[CliArgument.classFile]!,
+      kJobCliOptions[JobField.outputClassFile]!,
       abbr: 'o',
       help:
           'Output path for Flutter-compatible class that contains identifiers for the icons.',
       valueHelp: 'path',
     )
     ..addOption(
-      kOptionNames[CliArgument.indent]!,
+      kJobCliOptions[JobField.indent]!,
       abbr: 'i',
       help: 'Number of spaces in leading indentation for Flutter class file.',
       valueHelp: 'indent',
-      defaultsTo: '2',
     )
     ..addOption(
-      kOptionNames[CliArgument.className]!,
+      kJobCliOptions[JobField.className]!,
       abbr: 'c',
       help: 'Name for a generated class.',
       valueHelp: 'name',
     )
     ..addOption(
-      kOptionNames[CliArgument.fontPackage]!,
+      kJobCliOptions[JobField.package]!,
       abbr: 'p',
       help:
           'Name of a package that provides a font. Used to provide a font through package dependency.',
@@ -34,59 +39,60 @@ void defineOptions(ArgParser argParser) {
     )
     ..addSeparator('Font options:')
     ..addOption(
-      kOptionNames[CliArgument.fontName]!,
+      kJobCliOptions[JobField.fontName]!,
       abbr: 'f',
       help: 'Name for a generated font.',
       valueHelp: 'name',
     )
     ..addFlag(
-      kOptionNames[CliArgument.normalize]!,
+      kJobCliOptions[JobField.normalize]!,
       help:
           'Scales each glyph so its own longest side fills the em square. '
           'Only for icons from mismatched sources: it discards how much of '
           'its artboard each icon was drawn to occupy, so a full-bleed icon '
           'and a small one come out the same size.',
-      defaultsTo: false,
     )
     ..addFlag(
-      kOptionNames[CliArgument.outlineStrokes]!,
+      kJobCliOptions[JobField.outlineStrokes]!,
       help:
           'Converts stroked paths into the filled region the stroke covers. '
           'Font glyphs are fill-only, so outline-style icons need this.',
-      defaultsTo: true,
     )
     ..addFlag(
-      kOptionNames[CliArgument.useOpenType]!,
+      kJobCliOptions[JobField.useOpenType]!,
       help:
           'Stores outlines as CFF rather than TrueType. CFF holds the cubic '
           'curves an SVG is drawn with directly; TrueType has to approximate '
           'them with quadratics, which costs points.',
-      defaultsTo: true,
     )
     ..addSeparator('Other options:')
     ..addOption(
-      kOptionNames[CliArgument.configFile]!,
+      kCliConfigFileOption,
       abbr: 'z',
       help:
           'Path to fontify_plus yaml configuration file. pubspec.yaml and fontify_plus.yaml files are used by default.',
       valueHelp: 'path',
     )
+    ..addOption(
+      kCliFontOption,
+      help:
+          'Run a single named font set from the config file. Omit to run all sets.',
+      valueHelp: 'name',
+    )
     ..addFlag(
-      kOptionNames[CliArgument.recursive]!,
+      kJobCliOptions[JobField.recursive]!,
       abbr: 'r',
       help: 'Recursively look for .svg files.',
-      defaultsTo: kDefaultRecursive,
       negatable: false,
     )
     ..addFlag(
-      kOptionNames[CliArgument.verbose]!,
+      kJobCliOptions[JobField.verbose]!,
       abbr: 'v',
       help: 'Display every logging message.',
-      defaultsTo: kDefaultVerbose,
       negatable: false,
     )
     ..addFlag(
-      kOptionNames[CliArgument.help]!,
+      kCliHelpOption,
       abbr: 'h',
       help: 'Shows this usage information.',
       negatable: false,

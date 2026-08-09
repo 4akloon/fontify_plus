@@ -7,8 +7,8 @@
 .packages
 build/
 
-# A library package's lockfile is not checked in — consumers resolve their own.
-pubspec.lock
+# Root lockfile only — the Flutter example may keep its own.
+/pubspec.lock
 
 # Directory created by dartdoc
 doc/api/

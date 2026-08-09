@@ -36,11 +36,13 @@ fontify_plus assets/svg/ fonts/my_icons_font.otf --output-class-file=lib/my_icon
 ## Using API
 
 [svgToOtf][] and [generateFlutterClass][] build the font and Flutter class from
-Dart. See [doc/api.md](doc/api.md) and the [example folder][].
+Dart. [runFontJob][] runs the same directory-based pipeline as the CLI. See
+[doc/api.md](doc/api.md) and the [example folder][].
 
-[example folder]: https://github.com/4akloon/fontify_plus/tree/master/example/example.dart
+[example folder]: https://github.com/4akloon/fontify_plus/tree/master/example
 [svgToOtf]: https://pub.dev/documentation/fontify_plus/latest/fontify_plus/svgToOtf.html
 [generateFlutterClass]: https://pub.dev/documentation/fontify_plus/latest/fontify_plus/generateFlutterClass.html
+[runFontJob]: https://pub.dev/documentation/fontify_plus/latest/fontify_plus/runFontJob.html
 
 ## Stroked icons
 
@@ -81,13 +83,6 @@ Name is set to 'unnamed', if it's empty.
 Suffix '_{i+1}' is added, if name already exists.
 
 [Non-zero fill rule]: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/fill-rule
-
-## Planned
-
-- Support svg-to-ttf conversion (cubic-to-quad curves approximation needs to be
-done). The CFF/OTF output path is the supported one today.
-- Support ligatures.
-- Support font variations.
 
 ## Contributing
 

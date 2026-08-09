@@ -1,0 +1,23 @@
+name: fontify_plus_example
+description: Flutter web demo for fontify_plus-generated icon fonts.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  fontify_plus:
+    path: ../
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: My Icons
+      fonts:
+        - asset: fonts/my_icons.otf

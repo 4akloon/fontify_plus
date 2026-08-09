@@ -2,20 +2,20 @@ name: test
 version: 1.0
 
 fontify_plus:
-  input_svg_dir: ./
-  output_font_file: generated_font.otf
-  
-  output_class_file: lib/test_font.dart
-  class_name: MyIcons
-  indent: 4
-  package: test_package
+  defaults:
+    normalize: false
+    recursive: false
+    verbose: false
+  fonts:
+    main:
+      input_svg_dir: ./
+      output_font_file: generated_font.otf
+      output_class_file: lib/test_font.dart
+      class_name: MyIcons
+      indent: 4
+      package: test_package
+      font_name: My Icons
 
-  font_name: My Icons
-  normalize: false
-
-  recursive: false
-  verbose: false
-
-  # Unknown config parameters
-  testing: true
-  1: 1
+      # Unknown config parameters
+      testing: true
+      1: 1

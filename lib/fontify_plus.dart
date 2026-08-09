@@ -1,7 +1,8 @@
 /// Converts SVG icons into an OpenType font and generates a Flutter-compatible
 /// class of [IconData] identifiers for them.
 ///
-/// Start with [svgToOtf] to build the font, [writeToFile] to write it, and
+/// Start with [runFontJob] for directory-based generation, or [svgToOtf] to
+/// build the font from an in-memory SVG map, [writeToFile] to write it, and
 /// [generateFlutterClass] to emit the Dart class:
 ///
 /// ```dart
@@ -37,5 +38,6 @@
 library;
 
 export 'src/common.dart';
+export 'src/job.dart';
 export 'src/otf.dart';
 export 'src/utils.dart';
