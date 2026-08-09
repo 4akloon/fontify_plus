@@ -46,7 +46,10 @@ void main() {
             color: Colors.white,
             child: RepaintBoundary(
               key: galleryKey,
-              child: const _GalleryShot(),
+              child: const ColoredBox(
+                color: Colors.white,
+                child: _GalleryShot(),
+              ),
             ),
           ),
         ),
