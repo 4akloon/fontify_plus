@@ -57,7 +57,7 @@ FontJobResult runFontJob(FontJob job) {
 
   final svgMap = {
     for (final f in svgFileList)
-      p.basenameWithoutExtension(f.path): File(f.path).readAsStringSync(),
+      _svgKey(svgDir.path, f.path): File(f.path).readAsStringSync(),
   };
 
   final otfResult = svgToOtf(
@@ -99,6 +99,12 @@ FontJobResult runFontJob(FontJob job) {
     otf: otfResult,
     classSource: classSource,
   );
+}
+
+String _svgKey(String inputSvgDir, String filePath) {
+  final relative = p.relative(filePath, from: inputSvgDir);
+  final withoutExt = p.withoutExtension(relative);
+  return withoutExt.replaceAll(r'\', '/');
 }
 
 /// {@category api}

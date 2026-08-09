@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Empty SVG input directories now fail the job. Recursive scans key icons by
+  relative path so duplicate basenames in different folders stay distinct.
 * Generated `IconData` dartdoc can embed SVG hover previews (IDE-visible).
   Controlled via `--[no-]preview` / YAML `preview:` (default on).
 * `normalize` defaults to **true** again (uniform em fill). Pass

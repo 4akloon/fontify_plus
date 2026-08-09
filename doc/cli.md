@@ -23,7 +23,7 @@ fontify_plus assets/svg/ fonts/my_icons_font.otf \
 | `--[no-]outline-strokes` | Convert stroked paths to filled regions (default on). |
 | `--[no-]preview` | Embed SVG previews in generated IconData dartdoc (default on). |
 | `--[no-]opentype` | Emit CFF outlines (default on). |
-| `-r`, `--recursive` | Recursively search for `.svg` files. |
+| `-r`, `--recursive` | Recursively search for `.svg` files. Icon names are derived from each file's path relative to the input directory (e.g. `icons/nav/arrow.svg` → `iconsNavArrow`). An empty SVG directory fails the job. |
 | `-v`, `--verbose` | Print every log message. |
 | `-z`, `--config-file=<path>` | Path to a yaml config file (`pubspec.yaml` and `fontify_plus.yaml` are checked by default). |
 | `--font=<name>` | Run one named font set from the config (omit to run all sets). |
