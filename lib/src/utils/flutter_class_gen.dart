@@ -80,7 +80,7 @@ class FlutterClassGenerator {
         '/// <img src="data:image/svg+xml;base64,${metadata.preview}" width="32"/>',
       ],
       'static const IconData ${_iconVarNames[index]} = IconData(',
-      '${_indent}$hex,',
+      '$_indent$hex,',
       '${_indent}fontFamily: iconFontFamily,',
       if (_hasPackage) '${_indent}fontPackage: iconFontPackage,',
       ');',
