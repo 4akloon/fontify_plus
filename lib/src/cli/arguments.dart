@@ -18,7 +18,7 @@ export 'options.dart';
 
 const _kDefaultConfigPathList = ['pubspec.yaml', 'fontify_plus.yaml'];
 
-/// Parsed CLI invocation: jobs to run and global verbose flag.
+/// Parsed CLI invocation: jobs, verbose, optional [watch] and [configFilePath].
 class CliRunRequest {
   CliRunRequest({
     required this.jobs,

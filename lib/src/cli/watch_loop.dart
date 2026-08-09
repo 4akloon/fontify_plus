@@ -24,10 +24,7 @@ Future<void> runWatchLoop({
   final debounce = debouncer ?? Debouncer();
 
   var current = initial;
-  var busy = false;
-  var pendingSvg = false;
-  var pendingConfig = false;
-  String? pendingSvgPath;
+  final pendingSvgPaths = <String>{};
   var generation = 0;
   final subs = <StreamSubscription<FileSystemEvent>>[];
   final shutdown = Completer<void>();
@@ -43,55 +40,28 @@ Future<void> runWatchLoop({
 
   late void Function() rebuild;
   late void Function() handleConfig;
-  late void Function(String path) runSvg;
 
-  void drainPending() {
-    if (pendingConfig) {
-      pendingConfig = false;
-      pendingSvg = false;
-      pendingSvgPath = null;
-      handleConfig();
-      return;
-    }
-    if (pendingSvg) {
-      pendingSvg = false;
-      final path = pendingSvgPath;
-      pendingSvgPath = null;
-      if (path != null) {
-        runSvg(path);
+  void flushSvg() {
+    final paths = pendingSvgPaths.toList();
+    pendingSvgPaths.clear();
+    final seen = <FontJob>{};
+    final jobs = <FontJob>[];
+    for (final path in paths) {
+      for (final job in jobsForSvgPath(current.jobs, path)) {
+        if (seen.add(job)) {
+          jobs.add(job);
+        }
       }
     }
-  }
-
-  void startRun(List<FontJob> jobs) {
-    busy = true;
-    runSafe(jobs);
-    busy = false;
-    drainPending();
-  }
-
-  runSvg = (String path) {
-    final jobs = jobsForSvgPath(current.jobs, path);
     if (jobs.isEmpty) {
       return;
     }
-    if (busy) {
-      pendingSvg = true;
-      pendingSvgPath = path;
-      return;
-    }
-    startRun(jobs);
-  };
+    runSafe(jobs);
+  }
 
   handleConfig = () {
     debounce.cancel();
-    pendingSvg = false;
-    pendingSvgPath = null;
-
-    if (busy) {
-      pendingConfig = true;
-      return;
-    }
+    pendingSvgPaths.clear();
 
     late final CliRunRequest next;
     try {
@@ -102,7 +72,7 @@ Future<void> runWatchLoop({
     }
 
     current = next;
-    startRun(current.jobs);
+    runSafe(current.jobs);
     rebuild();
   };
 
@@ -115,8 +85,8 @@ Future<void> runWatchLoop({
     if (!isSvgPath(event.path)) {
       return;
     }
-    final path = event.path;
-    debounce(() => runSvg(path));
+    pendingSvgPaths.add(event.path);
+    debounce(flushSvg);
   }
 
   rebuild = () {
@@ -149,12 +119,18 @@ Future<void> runWatchLoop({
     }
 
     final dirs = dirRecursive.keys.toList()..sort();
-    final configPart =
-        configPath == null ? '' : ' and config $configPath';
-    logger.i('Watching ${dirs.join(', ')}$configPart');
+    if (dirs.isEmpty) {
+      logger.i(
+        configPath == null ? 'Watching' : 'Watching config $configPath',
+      );
+    } else {
+      final configPart =
+          configPath == null ? '' : ' and config $configPath';
+      logger.i('Watching ${dirs.join(', ')}$configPart');
+    }
 
-    activeStreams = targets.length;
-    if (activeStreams == 0) {
+    activeStreams = 0;
+    if (targets.isEmpty) {
       if (!shutdown.isCompleted) {
         shutdown.complete();
       }
@@ -162,32 +138,42 @@ Future<void> runWatchLoop({
     }
 
     for (final target in targets) {
-      final stream = watch(target.path, recursive: target.recursive);
-      final sub = stream.listen(
-        (event) {
-          if (gen != generation) {
-            return;
-          }
-          onEvent(event);
-        },
-        onDone: () {
-          if (gen != generation) {
-            return;
-          }
-          activeStreams--;
-          if (activeStreams == 0 && !shutdown.isCompleted) {
-            shutdown.complete();
-          }
-        },
-        onError: (Object e) {
-          if (gen != generation) {
-            return;
-          }
-          logger.e(e.toString());
-        },
-        cancelOnError: false,
-      );
-      subs.add(sub);
+      try {
+        final stream = watch(target.path, recursive: target.recursive);
+        final sub = stream.listen(
+          (event) {
+            if (gen != generation) {
+              return;
+            }
+            onEvent(event);
+          },
+          onDone: () {
+            if (gen != generation) {
+              return;
+            }
+            activeStreams--;
+            if (activeStreams == 0 && !shutdown.isCompleted) {
+              shutdown.complete();
+            }
+          },
+          onError: (Object e) {
+            if (gen != generation) {
+              return;
+            }
+            logger.e(e.toString());
+          },
+          cancelOnError: false,
+        );
+        subs.add(sub);
+        activeStreams++;
+      } on Object catch (e) {
+        // Re-entrant rebuild from handleConfig must not kill the process.
+        logger.e(e.toString());
+      }
+    }
+
+    if (activeStreams == 0 && !shutdown.isCompleted) {
+      shutdown.complete();
     }
   };
 
