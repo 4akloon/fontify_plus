@@ -115,12 +115,21 @@ void main() {
       expect(sides.last, closeTo(unitsPerEm / 4, unitsPerEm * 0.02));
     });
 
-    test('svgToOtf does not normalize by default', () {
+    test('svgToOtf normalizes by default', () {
       final result = svgToOtf(
         svgMap: {'full': _fullBleed, 'quarter': _quarter},
       );
 
-      // Distinct sizes survive only when normalization stays off.
+      // Normalized fonts reserve baseline extension below the em band.
+      expect(result.font.hhea.descender, isNegative);
+    });
+
+    test('svgToOtf can keep artboard sizes with normalize: false', () {
+      final result = svgToOtf(
+        svgMap: {'full': _fullBleed, 'quarter': _quarter},
+        normalize: false,
+      );
+
       expect(result.font.hhea.descender, 0);
     });
   });

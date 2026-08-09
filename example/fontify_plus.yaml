@@ -1,7 +1,7 @@
 fontify_plus:
   defaults:
     recursive: false
-    normalize: false
+    normalize: true
   fonts:
     icons:
       input_svg_dir: svg/

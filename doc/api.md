@@ -57,7 +57,7 @@ Converts a map of SVG strings into an OpenType font.
 | `svgMap` | `Map<String, String>` | *(required)* | Glyph name to SVG source. Keys become glyph identifiers. |
 | `outlineStrokes` | `bool?` | `true` | Convert stroked paths into the filled region the stroke covers. |
 | `preview` | `bool?` | `true` | Store base64-encoded SVG on each glyph for dartdoc previews in the generated `IconData` class. |
-| `normalize` | `bool?` | `false` | Scale each glyph so its longest side fills the em square, then centre it. |
+| `normalize` | `bool?` | `true` | Scale each glyph so its longest side fills the em square, then centre it. |
 | `useOpenType` | `bool?` | `true` | Emit CFF (OpenType) outlines. When `false`, TrueType outlines are generated with cubic-to-quadratic approximation. |
 | `fontName` | `String?` | `null` | PostScript / family name for the generated font. |
 

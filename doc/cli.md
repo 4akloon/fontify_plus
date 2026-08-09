@@ -19,7 +19,7 @@ fontify_plus assets/svg/ fonts/my_icons_font.otf \
 | `-c`, `--class-name=<name>` | Name of the generated class. |
 | `-p`, `--package=<name>` | Package that provides the font (for `IconData` package parameter). |
 | `-f`, `--font-name=<name>` | PostScript / family name for the generated font. |
-| `--[no-]normalize` | Scale each glyph so its longest side fills the em square (default off). |
+| `--[no-]normalize` | Scale each glyph so its longest side fills the em square (default on). |
 | `--[no-]outline-strokes` | Convert stroked paths to filled regions (default on). |
 | `--[no-]preview` | Embed SVG previews in generated IconData dartdoc (default on). |
 | `--[no-]opentype` | Emit CFF outlines (default on). |
@@ -41,7 +41,7 @@ Add a `fontify_plus:` section with shared `defaults` and named `fonts` to
 fontify_plus:
   defaults:
     recursive: true
-    normalize: false
+    normalize: true
   fonts:
     icons:
       input_svg_dir: assets/icons/
@@ -59,7 +59,7 @@ merge on top of `defaults` and per-font values (only flags you pass override).
 ```sh
 fontify_plus                  # all sets
 fontify_plus --font=icons     # one set
-fontify_plus --normalize      # override defaults for every set in this run
+fontify_plus --no-normalize  # keep artboard-relative sizes for every set
 ```
 
 ## Example

@@ -2,28 +2,26 @@
 
 How icons occupy the em square affects how they look at a given `Icon` size.
 
-## Default: artboard mapping
+## Default: normalize each glyph
 
-By default, each icon's SVG viewBox maps straight onto the em square. An icon
-drawn to fill its 16×16 viewBox fills the em; one drawn at half that size
-fills half of it. `Icon(MyIcons.thing, size: n)` then covers the same area the
-SVG does at *n* logical pixels — the font is a drop-in replacement for the
-original SVG assets.
+By default each glyph is scaled so its own longest side fills the em square,
+then centred. Icons from different viewBoxes (12 / 24 / 32, mixed sources)
+then look the same size at a given `Icon` size.
 
-Leave normalization off for icons exported from a single design file where
-relative sizes are intentional.
+That discards how much of its artboard an icon was drawn to occupy. A
+full-bleed circle and a small arrow both end up filling the em, so the arrow
+can look larger than design intended.
 
-## `--normalize` / `normalize: true`
+- CLI: `--normalize` (default)
+- API: `normalize: true` (default)
 
-When enabled, each glyph is scaled individually until its own longest side
-fills the em square, then centred. That discards how much of its artboard the
-icon was drawn to occupy — which is design information. A full-bleed circle gets
-shrunk and a small arrow gets blown up until they match, so the arrow can end up
-larger than the circle even though the artwork says otherwise.
+## `--no-normalize` / `normalize: false`
 
-- CLI: `--normalize`
-- API: `normalize: true`
+When disabled, each icon's SVG viewBox maps straight onto the em square. An
+icon drawn to fill its 16×16 viewBox fills the em; one drawn at half that
+size fills half of it. `Icon(MyIcons.thing, size: n)` then covers the same
+area the SVG does at *n* logical pixels.
 
-Use it only when icons come from mismatched sources whose viewBoxes disagree and
-forcing a uniform size is the lesser evil. For a cohesive icon set from one
-design file, keep it off.
+Use this for a cohesive set from one design file where relative sizes are
+intentional and every icon shares a viewBox. Mismatched viewBox heights log
+a warning.

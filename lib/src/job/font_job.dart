@@ -12,7 +12,7 @@ class FontJob {
     this.package,
     this.indent = 2,
     this.recursive = false,
-    this.normalize = false,
+    this.normalize = true,
     this.outlineStrokes = true,
     this.preview = true,
     this.useOpenType = true,
