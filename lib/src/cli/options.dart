@@ -5,6 +5,7 @@ import '../job/job_field.dart';
 const kCliFontOption = 'font';
 const kCliConfigFileOption = 'config-file';
 const kCliHelpOption = 'help';
+const kCliWatchOption = 'watch';
 
 const kPositionalJobFields = [JobField.inputSvgDir, JobField.outputFontFile];
 
@@ -92,6 +93,12 @@ void defineOptions(ArgParser argParser) {
       kJobCliOptions[JobField.verbose]!,
       abbr: 'v',
       help: 'Display every logging message.',
+      negatable: false,
+    )
+    ..addFlag(
+      kCliWatchOption,
+      help:
+          'Watch SVG inputs (and config file, if any) and regenerate on change.',
       negatable: false,
     )
     ..addFlag(

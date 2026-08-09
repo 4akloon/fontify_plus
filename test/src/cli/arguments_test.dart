@@ -17,6 +17,24 @@ void main() {
       );
     }
 
+    test('--watch sets request.watch', () {
+      final request = parseArgsAndConfig(argParser, [
+        './',
+        'test/fonts/my_font.otf',
+        '--watch',
+      ]);
+      expect(request.watch, isTrue);
+      expect(request.configFilePath, isNull);
+    });
+
+    test('watch defaults to false', () {
+      final request = parseArgsAndConfig(argParser, [
+        './',
+        'test/fonts/my_font.otf',
+      ]);
+      expect(request.watch, isFalse);
+    });
+
     test('ad-hoc run with flags', () {
       const args = [
         './',
@@ -113,6 +131,7 @@ void main() {
       expect(job.recursive, isFalse);
       expect(request.verbose, isFalse);
       expect(job.package, 'test_package');
+      expect(request.configFilePath, endsWith('test_config.yaml'));
     });
 
     test('ad-hoc and config conflict', () {
