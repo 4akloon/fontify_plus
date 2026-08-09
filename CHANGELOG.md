@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1
+
+* `normalize` defaults to **true** again (uniform em fill). Pass
+  `--no-normalize` / `normalize: false` to keep artboard-relative sizes.
+
 ## 0.5.0
 
 * Fix font generation (0.4.x could not produce a font). SVG parsing now uses

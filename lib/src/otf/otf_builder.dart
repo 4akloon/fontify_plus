@@ -26,7 +26,7 @@ class OpenTypeFontBuilder {
        achVendID = achVendID ?? kDefaultAchVendID,
        useOpenType = useOpenType ?? true,
        usePostV2 = usePostV2 ?? false,
-       normalize = normalize ?? false;
+       normalize = normalize ?? true;
 
   final List<GenericGlyph> glyphList;
   final String fontName;

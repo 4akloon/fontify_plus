@@ -48,7 +48,7 @@ const kJobCliOptions = <JobField, String>{
 const kJobBuiltInDefaults = <JobField, Object>{
   JobField.indent: 2,
   JobField.recursive: false,
-  JobField.normalize: false,
+  JobField.normalize: true,
   JobField.outlineStrokes: true,
   JobField.useOpenType: true,
   JobField.verbose: false,

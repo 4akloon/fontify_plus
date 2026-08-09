@@ -53,8 +53,8 @@ class OpenTypeFont implements BinaryCodable {
   /// Otherwise, version 3 table (without glyph names) is generated.
   /// Defaults to false.
   /// * If [normalize] is set to true, each glyph is scaled so that its own
-  /// longest side fills the em square, then centred. Defaults to false —
-  /// see `ArtboardFitting`.
+  /// longest side fills the em square, then centred. Defaults to true —
+  /// see `GlyphFitting`.
   factory OpenTypeFont.createFromGlyphs({
     required List<GenericGlyph> glyphList,
     String? fontName,
