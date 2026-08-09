@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* CLI: `--recursive` and `--verbose` are negatable (`--no-recursive` /
+  `--no-verbose`) so they can override YAML defaults.
 * OTF `head` timestamps: reuse created/modified from an existing output
   font when regenerating; otherwise use a fixed default (no wall clock).
 * CLI: `--watch` regenerates on SVG (debounced) and config changes.

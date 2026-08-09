@@ -180,5 +180,29 @@ fontify_plus:
         '--font=missing',
       ]);
     });
+
+    test('--no-recursive / --no-verbose override YAML defaults', () {
+      final configFile = File('fontify_plus.yaml');
+      configFile.writeAsStringSync('''
+fontify_plus:
+  defaults:
+    recursive: true
+    verbose: true
+  fonts:
+    main:
+      input_svg_dir: ./
+      output_font_file: out.otf
+''');
+      addTearDown(configFile.deleteSync);
+
+      final request = parseArgsAndConfig(argParser, [
+        '--config-file=fontify_plus.yaml',
+        '--no-recursive',
+        '--no-verbose',
+      ]);
+
+      expect(request.jobs.single.recursive, isFalse);
+      expect(request.verbose, isFalse);
+    });
   });
 }

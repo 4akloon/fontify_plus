@@ -87,13 +87,11 @@ void defineOptions(ArgParser argParser) {
       kJobCliOptions[JobField.recursive]!,
       abbr: 'r',
       help: 'Recursively look for .svg files.',
-      negatable: false,
     )
     ..addFlag(
       kJobCliOptions[JobField.verbose]!,
       abbr: 'v',
       help: 'Display every logging message.',
-      negatable: false,
     )
     ..addFlag(
       kCliWatchOption,
