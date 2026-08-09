@@ -11,6 +11,13 @@ void main() {
       expect(IconNameAllocator().allocate('arrow-up.svg'), 'arrowUp');
     });
 
+    test('camelCases path segments separated by slashes', () {
+      final allocator = IconNameAllocator();
+
+      expect(allocator.allocate('a/x'), 'aX');
+      expect(allocator.allocate('b/x'), 'bX');
+    });
+
     test('falls back to "unnamed" when nothing legal survives', () {
       expect(IconNameAllocator().allocate('123'), 'unnamed');
     });

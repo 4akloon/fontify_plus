@@ -79,8 +79,8 @@ void main() {
     final source = File(classPath).readAsStringSync();
     expect(source, contains('/// a/x'));
     expect(source, contains('/// b/x'));
-    expect(source, contains('static const IconData x ='));
-    expect(source, contains('static const IconData x2 ='));
+    expect(source, contains('static const IconData aX ='));
+    expect(source, contains('static const IconData bX ='));
   });
 
   test('runFontJob keeps basename keys for a flat directory', () {

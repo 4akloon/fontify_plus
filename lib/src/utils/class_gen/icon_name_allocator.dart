@@ -14,13 +14,14 @@ class IconNameAllocator {
 
   /// An identifier for [iconName], distinct from every one returned before.
   ///
-  /// [iconName] may be a file name; any extension is dropped.
+  /// [iconName] may be a file name or a path relative to the input directory;
+  /// any extension is dropped.
   String allocate(String iconName) {
     // Case conversion runs before sanitization: separators such as "-" and " "
     // are what mark word boundaries, and stripping them first would collapse
     // "arrow-up" to "arrowup" instead of "arrowUp".
     final stem = toDartIdentifier(
-      p.basenameWithoutExtension(iconName).camelCase,
+      p.withoutExtension(iconName.replaceAll(r'\', '/')).camelCase,
     );
 
     var name = stem.isEmpty ? _kUnnamedIconName : stem;
