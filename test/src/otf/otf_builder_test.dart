@@ -79,19 +79,6 @@ void main() {
 
   group('OpenTypeFontBuilder normalize', () {
     test(
-      'normalize: false sizes every custom glyph as a unitsPerEm square',
-      () {
-        final font = OpenTypeFontBuilder(
-          glyphList: [_triangleGlyph()],
-          normalize: false,
-        ).build();
-
-        // Index 0/1 are the default .notdef/space glyphs; index 2 is the icon.
-        expect(font.hmtx.hMetrics[2].advanceWidth, kDefaultOpenTypeUnitsPerEm);
-      },
-    );
-
-    test(
       'normalize: true (default) fits the ascender/descender band inside the baseline extension',
       () {
         final font = OpenTypeFontBuilder(glyphList: [_triangleGlyph()]).build();
@@ -101,6 +88,19 @@ void main() {
           kDefaultOpenTypeUnitsPerEm - kDefaultBaselineExtension,
         );
         expect(font.hhea.descender, -kDefaultBaselineExtension);
+      },
+    );
+
+    test(
+      'normalize: false sizes every custom glyph as a unitsPerEm square',
+      () {
+        final font = OpenTypeFontBuilder(
+          glyphList: [_triangleGlyph()],
+          normalize: false,
+        ).build();
+
+        // Index 0/1 are the default .notdef/space glyphs; index 2 is the icon.
+        expect(font.hmtx.hMetrics[2].advanceWidth, kDefaultOpenTypeUnitsPerEm);
       },
     );
 

@@ -58,8 +58,9 @@ data as fill geometry. Details, limitations, and troubleshooting:
 ## Glyph sizing
 
 By default each glyph is scaled so its longest side fills the em square
-(`--normalize`, on). Pass `--no-normalize` to map each viewBox onto the em
-and keep relative artboard sizes. See [doc/glyph_sizing.md](doc/glyph_sizing.md).
+(uniform size across mixed viewBoxes). Pass `--no-normalize` to map each
+viewBox onto the em and keep relative artboard sizes. See
+[doc/glyph_sizing.md](doc/glyph_sizing.md).
 
 ## Notes
 

@@ -60,7 +60,7 @@ merge on top of `defaults` and per-font values (only flags you pass override).
 ```sh
 fontify_plus                  # all sets
 fontify_plus --font=icons     # one set
-fontify_plus --no-normalize  # keep artboard-relative sizes for every set
+fontify_plus --no-normalize   # keep artboard-relative sizes for every set
 ```
 
 ## Example
