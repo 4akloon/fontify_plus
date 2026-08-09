@@ -41,7 +41,9 @@ void _run(CliRunRequest request) {
 
   runFontJobs(request.jobs);
 
-  logger.i('Finished ${request.jobs.length} job(s) in ${stopwatch.elapsedMilliseconds}ms');
+  logger.i(
+    'Finished ${request.jobs.length} job(s) in ${stopwatch.elapsedMilliseconds}ms',
+  );
 }
 
 void _printHelp() {

@@ -16,7 +16,8 @@ FontJobResult runFontJob(FontJob job) {
   logger.i('Generating font "$label"');
 
   final svgDir = Directory(job.inputSvgDir);
-  if (!svgDir.existsSync() || svgDir.statSync().type != FileSystemEntityType.directory) {
+  if (!svgDir.existsSync() ||
+      svgDir.statSync().type != FileSystemEntityType.directory) {
     throw FontifyException(
       "The input directory is not a directory or it doesn't exist "
       '(${job.inputSvgDir}).',

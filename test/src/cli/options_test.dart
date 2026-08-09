@@ -9,7 +9,10 @@ void main() {
       final argParser = ArgParser(allowTrailingOptions: true);
       defineOptions(argParser);
 
-      expect(argParser.options, contains(kJobCliOptions[JobField.outputClassFile]));
+      expect(
+        argParser.options,
+        contains(kJobCliOptions[JobField.outputClassFile]),
+      );
       expect(argParser.options, contains('font'));
       expect(argParser.options, contains('config-file'));
     });

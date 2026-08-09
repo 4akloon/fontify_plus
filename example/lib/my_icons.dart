@@ -27,7 +27,10 @@ abstract final class MyIcons {
   static const iconFontFamily = 'My Icons';
 
   /// arrow_right
-  static const IconData arrowRight = IconData(0xe000, fontFamily: iconFontFamily);
+  static const IconData arrowRight = IconData(
+    0xe000,
+    fontFamily: iconFontFamily,
+  );
 
   /// plus
   static const IconData plus = IconData(0xe001, fontFamily: iconFontFamily);

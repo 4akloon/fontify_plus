@@ -110,10 +110,13 @@ FontJob resolveFontJob({
     return v as String;
   }
 
-  final indent = merged[JobField.indent] as int? ??
+  final indent =
+      merged[JobField.indent] as int? ??
       kJobBuiltInDefaults[JobField.indent]! as int;
   if (indent < 0) {
-    throw FontifyException('indent must be a non-negative integer, was $indent.');
+    throw FontifyException(
+      'indent must be a non-negative integer, was $indent.',
+    );
   }
 
   return FontJob(

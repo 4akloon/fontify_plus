@@ -26,7 +26,7 @@ jobs:
           sdk: ${{ matrix.sdk }}
 
       - name: Install dependencies
-        run: dart pub get
+        run: dart pub get --no-example
 
       # The formatter's output changes between SDKs, so only pin it on stable.
       - name: Verify formatting
@@ -50,7 +50,7 @@ jobs:
           sdk: stable
 
       - name: Install dependencies
-        run: dart pub get
+        run: dart pub get --no-example
 
       - name: Dry-run publish
         run: dart pub publish --dry-run
