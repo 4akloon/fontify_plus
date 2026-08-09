@@ -62,6 +62,7 @@ FontJobResult runFontJob(FontJob job) {
   final otfResult = svgToOtf(
     svgMap: svgMap,
     outlineStrokes: job.outlineStrokes,
+    preview: job.preview,
     normalize: job.normalize,
     useOpenType: job.useOpenType,
     fontName: job.fontName,

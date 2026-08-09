@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:fontify_plus/src/common/api.dart';
 import 'package:test/test.dart';
 
@@ -84,6 +86,25 @@ void main() {
         ),
         returnsNormally,
       );
+    });
+
+    test('stores svg preview on glyphs by default', () {
+      final svg = svgWithViewBox('0 0 16 16');
+      final result = svgToOtf(svgMap: {'a': svg});
+
+      expect(
+        utf8.decode(base64Decode(result.glyphList.single.metadata.preview!)),
+        svg,
+      );
+    });
+
+    test('skips preview when preview is false', () {
+      final result = svgToOtf(
+        svgMap: {'a': svgWithViewBox('0 0 16 16')},
+        preview: false,
+      );
+
+      expect(result.glyphList.single.metadata.preview, isNull);
     });
   });
 

@@ -14,6 +14,7 @@ class FontJob {
     this.recursive = false,
     this.normalize = false,
     this.outlineStrokes = true,
+    this.preview = true,
     this.useOpenType = true,
   });
 
@@ -28,6 +29,7 @@ class FontJob {
   final bool recursive;
   final bool normalize;
   final bool outlineStrokes;
+  final bool preview;
   final bool useOpenType;
 }
 

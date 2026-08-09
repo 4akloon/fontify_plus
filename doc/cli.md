@@ -21,6 +21,7 @@ fontify_plus assets/svg/ fonts/my_icons_font.otf \
 | `-f`, `--font-name=<name>` | PostScript / family name for the generated font. |
 | `--[no-]normalize` | Scale each glyph so its longest side fills the em square (default off). |
 | `--[no-]outline-strokes` | Convert stroked paths to filled regions (default on). |
+| `--[no-]preview` | Embed SVG previews in generated IconData dartdoc (default on). |
 | `--[no-]opentype` | Emit CFF outlines (default on). |
 | `-r`, `--recursive` | Recursively search for `.svg` files. |
 | `-v`, `--verbose` | Print every log message. |

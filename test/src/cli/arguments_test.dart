@@ -57,6 +57,15 @@ void main() {
       expect(job.normalize, isFalse);
       expect(job.recursive, isFalse);
       expect(job.outlineStrokes, isTrue);
+      expect(job.preview, isTrue);
+    });
+
+    test('--no-preview disables dartdoc previews', () {
+      const args = ['./', 'test/fonts/my_font.otf', '--no-preview'];
+
+      final job = parseArgsAndConfig(argParser, args).jobs.single;
+
+      expect(job.preview, isFalse);
     });
 
     test('missing positionals without config errors', () {

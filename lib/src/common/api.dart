@@ -46,6 +46,7 @@ class SvgToOtfResult {
 SvgToOtfResult svgToOtf({
   required Map<String, String> svgMap,
   bool? outlineStrokes,
+  bool? preview,
   bool? normalize,
   bool? useOpenType,
   String? fontName,
@@ -58,6 +59,7 @@ SvgToOtfResult svgToOtf({
         e.key,
         e.value,
         outlineStrokes: outlineStrokes ?? true,
+        preview: preview ?? true,
       ),
   ];
 

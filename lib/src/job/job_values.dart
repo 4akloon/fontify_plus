@@ -83,6 +83,7 @@ Object? _coerceField(JobField field, Object? value) {
       );
     case JobField.normalize:
     case JobField.outlineStrokes:
+    case JobField.preview:
     case JobField.useOpenType:
     case JobField.recursive:
     case JobField.verbose:
@@ -137,6 +138,9 @@ FontJob resolveFontJob({
     outlineStrokes:
         merged[JobField.outlineStrokes] as bool? ??
         kJobBuiltInDefaults[JobField.outlineStrokes]! as bool,
+    preview:
+        merged[JobField.preview] as bool? ??
+        kJobBuiltInDefaults[JobField.preview]! as bool,
     useOpenType:
         merged[JobField.useOpenType] as bool? ??
         kJobBuiltInDefaults[JobField.useOpenType]! as bool,

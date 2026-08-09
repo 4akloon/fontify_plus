@@ -59,6 +59,10 @@ void defineOptions(ArgParser argParser) {
           'Font glyphs are fill-only, so outline-style icons need this.',
     )
     ..addFlag(
+      kJobCliOptions[JobField.preview]!,
+      help: 'Embed SVG previews in generated IconData dartdoc.',
+    )
+    ..addFlag(
       kJobCliOptions[JobField.useOpenType]!,
       help:
           'Stores outlines as CFF rather than TrueType. CFF holds the cubic '
