@@ -30,7 +30,10 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Verify the pubspec version matches the tag
-        run: grep -qx 'version: ${{ steps.meta.outputs.version }}' pubspec.yaml
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          grep -qx "version: $VERSION" pubspec.yaml
 
       # Mints the temporary pub.dev credential from the job's OIDC token.
       - uses: dart-lang/setup-dart@v1
