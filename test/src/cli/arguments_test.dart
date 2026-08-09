@@ -54,7 +54,7 @@ void main() {
 
       expect(job.outputClassFile, isNull);
       expect(job.indent, 2);
-      expect(job.normalize, isFalse);
+      expect(job.normalize, isTrue);
       expect(job.recursive, isFalse);
       expect(job.outlineStrokes, isTrue);
     });

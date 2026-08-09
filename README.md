@@ -54,9 +54,9 @@ data as fill geometry. Details, limitations, and troubleshooting:
 
 ## Glyph sizing
 
-By default each icon's viewBox maps onto the em square, so `Icon(size: 24)` matches
-the SVG at 24 logical pixels. `--normalize` scales every glyph to fill the em
-individually — useful only when icons come from mismatched sources. See
+By default each glyph is scaled so its longest side fills the em square
+(uniform size across mixed viewBoxes). Pass `--no-normalize` to map each
+viewBox onto the em and keep relative artboard sizes. See
 [doc/glyph_sizing.md](doc/glyph_sizing.md).
 
 ## Notes
@@ -74,8 +74,8 @@ same way.
 - Paint attributes other than stroke geometry — `fill` colour, gradients,
 opacity — are ignored. A glyph is a single-colour region; colour comes from the
 surrounding text style at render time.
-- `normalize` expects every icon to share a viewBox when it is off, which is the
-usual case for an icon set. See [doc/glyph_sizing.md](doc/glyph_sizing.md).
+- With `--no-normalize`, every icon should share a viewBox. See
+[doc/glyph_sizing.md](doc/glyph_sizing.md).
 - When Flutter class is generated, static variable names derive from the SVG
 file name converted to lowerCamelCase (Dart's convention for constants) with
 non-allowed characters removed.

@@ -86,8 +86,8 @@ void main() {
     });
 
     test('normalization makes differently sized icons the same size', () {
-      // This is what normalization is for, and also why it is off by default:
-      // it is only correct when the artboards genuinely disagree.
+      // This is what normalization is for by default: icons whose artboards
+      // disagree still share a visual size.
       final glyphs = [
         GenericGlyph.fromSvg('full', _fullBleed),
         GenericGlyph.fromSvg('quarter', _quarter),
@@ -115,13 +115,12 @@ void main() {
       expect(sides.last, closeTo(unitsPerEm / 4, unitsPerEm * 0.02));
     });
 
-    test('svgToOtf does not normalize by default', () {
+    test('svgToOtf normalizes by default', () {
       final result = svgToOtf(
         svgMap: {'full': _fullBleed, 'quarter': _quarter},
       );
 
-      // Distinct sizes survive only when normalization stays off.
-      expect(result.font.hhea.descender, 0);
+      expect(result.font.hhea.descender, -kDefaultBaselineExtension);
     });
   });
 }
