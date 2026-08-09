@@ -13,7 +13,13 @@ class FontifyPlusExampleApp extends StatelessWidget {
     return MaterialApp(
       title: 'fontify_plus example',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B4D3E)),
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF1B4D3E),
+          onPrimary: Colors.white,
+          surface: Colors.white,
+          onSurface: Color(0xFF1A1A1A),
+        ),
+        scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
       ),
       home: const IconGalleryPage(),
