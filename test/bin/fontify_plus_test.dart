@@ -39,13 +39,13 @@ void main() {
       },
     );
 
-    test('a non-existent input directory exits with code 64', () async {
+    test('a non-existent input directory exits with code 65', () async {
       final result = await _runCli([
         '${tempDir.path}/does_not_exist',
         '${tempDir.path}/font.otf',
       ]);
 
-      expect(result.exitCode, 64);
+      expect(result.exitCode, 65);
     });
 
     test('converts a real SVG directory into an .otf file', () async {

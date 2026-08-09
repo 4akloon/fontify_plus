@@ -1,0 +1,11 @@
+fontify_plus:
+  defaults:
+    recursive: false
+    normalize: false
+  fonts:
+    icons:
+      input_svg_dir: svg/
+      output_font_file: fonts/my_icons.otf
+      output_class_file: lib/my_icons.dart
+      class_name: MyIcons
+      font_name: My Icons

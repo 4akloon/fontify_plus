@@ -23,6 +23,8 @@ flutter:
 
 ## API (same pipeline in Dart)
 
+Low-level (in-memory SVG map):
+
 ```dart
 final result = svgToOtf(
   svgMap: {'arrow_up': await File('arrow_up.svg').readAsString()},
@@ -39,9 +41,22 @@ final source = generateFlutterClass(
 );
 ```
 
+Job API (reads SVG directories from disk, same as CLI):
+
+```dart
+runFontJob(FontJob(
+  inputSvgDir: 'assets/svg',
+  outputFontFile: 'fonts/my_icons.otf',
+  outputClassFile: 'lib/my_icons.dart',
+  className: 'MyIcons',
+));
+```
+
 ## Where to go next
 
 - **API Usage** — parameters on `svgToOtf` and `generateFlutterClass`.
 - **Stroked Icons** — why outline-style SVGs need stroke conversion.
 - **Glyph Sizing** — artboard mapping vs `--normalize`.
 - **CLI & Config** — flags and the yaml config file.
+- **[example/](../example/)** — Flutter web app that regenerates icons with
+  `dart run tool/generate.dart` and shows them in Chrome.

@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.6.0
+
+### Breaking
+
+* YAML config now requires `fontify_plus.fonts` — a map of named font sets.
+  Shared options go under `fontify_plus.defaults`. The old flat
+  `fontify_plus: { input_svg_dir: … }` shape is rejected.
+* When a config file is used, CLI flags merge on top of defaults and per-font
+  values instead of replacing the entire argument set.
+
+### Added
+
+* `FontJob`, `parseFontifyConfig`, `runFontJob`, and `runFontJobs` — public
+  job API for directory-based generation and multi-font configs.
+* `--font=<name>` CLI flag to run a single named set from config.
+* Flutter web example under `example/` that depends on this package as a path
+  `dev_dependency` and shows generated icons in Chrome.
+
+### Changed
+
+* `vector_math` constraint widened to `>=2.1.4 <3.0.0` so the package can be
+  used as a path dependency of a Flutter app (Flutter pins `2.2.0`).
+
 ## 0.5.0
 
 **This release fixes a bug that made every 0.4.x version unable to produce a

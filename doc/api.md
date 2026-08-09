@@ -3,7 +3,32 @@
 The API mirrors the CLI pipeline: convert SVG strings to a font, write the font
 file, then generate a Flutter `IconData` class.
 
-## Pipeline
+## Job API
+
+For directory-based workflows (same I/O as the CLI), use `FontJob` and
+`runFontJob`:
+
+```dart
+runFontJob(FontJob(
+  inputSvgDir: 'assets/svg',
+  outputFontFile: 'fonts/my_icons.otf',
+  outputClassFile: 'lib/my_icons.dart',
+  className: 'MyIcons',
+));
+```
+
+Parse a multi-font yaml config:
+
+```dart
+final config = parseFontifyConfig(await File('fontify_plus.yaml').readAsString());
+final jobs = config.resolve(fontFilter: 'icons');
+runFontJobs(jobs);
+```
+
+`runFontJob` / `runFontJobs` require `dart:io`. On web, use the low-level
+pipeline below with in-memory SVG strings.
+
+## Low-level pipeline
 
 ```dart
 final result = svgToOtf(
