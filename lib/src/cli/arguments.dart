@@ -127,7 +127,7 @@ CliRunRequest parseArgsAndConfig(ArgParser argParser, List<String> args) {
       ),
       verbose: config.resolveVerbose(cliOverrides: cliOverrides),
       watch: argResults[kCliWatchOption] as bool,
-      configFilePath: configFile?.path,
+      configFilePath: configFile.path,
     );
   } on FontifyException catch (e) {
     throw CliArgumentException(e.message);

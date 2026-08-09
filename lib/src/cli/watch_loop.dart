@@ -14,7 +14,7 @@ Future<void> runWatchLoop({
   required CliRunRequest Function() reparse,
   required void Function(List<FontJob> jobs) runJobs,
   Stream<FileSystemEvent> Function(String path, {bool recursive})?
-      watchDirectory,
+  watchDirectory,
   Debouncer? debouncer,
 }) async {
   final watch =
@@ -106,8 +106,7 @@ Future<void> runWatchLoop({
     }
 
     final targets = <({String path, bool recursive})>[
-      for (final e in dirRecursive.entries)
-        (path: e.key, recursive: e.value),
+      for (final e in dirRecursive.entries) (path: e.key, recursive: e.value),
     ];
 
     final configPath = current.configFilePath;
@@ -124,8 +123,7 @@ Future<void> runWatchLoop({
         configPath == null ? 'Watching' : 'Watching config $configPath',
       );
     } else {
-      final configPart =
-          configPath == null ? '' : ' and config $configPath';
+      final configPart = configPath == null ? '' : ' and config $configPath';
       logger.i('Watching ${dirs.join(', ')}$configPart');
     }
 
