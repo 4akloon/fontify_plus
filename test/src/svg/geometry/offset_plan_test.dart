@@ -57,12 +57,15 @@ void main() {
 
         // Unlike the other assertions here, low/mid/high are three genuinely
         // separate evaluations rather than shared sub-expressions, so
-        // Vector2's float32 storage rounds each independently. The residual
-        // is noise at that precision (~1e-6 at this coordinate scale); a
+        // Vector2's float32 storage rounds each independently. For this
+        // fixture that residual is deterministic and measured at
+        // ~1.9e-6; 1e-5 clears it with headroom while still catching a
         // real break in affine-ness — e.g. a piece flipping between its
-        // curve and chord branch across distances — would be orders of
-        // magnitude larger.
-        expect(mid[i].p1.distanceTo(expected), lessThan(1e-4));
+        // curve and chord branch across distances — which would be orders
+        // of magnitude larger. This bound is specific to this fixture, not
+        // a general float32 noise floor: other curve/distance combinations
+        // have been observed to residual as high as ~6e-4.
+        expect(mid[i].p1.distanceTo(expected), lessThan(1e-5));
       }
     });
   });

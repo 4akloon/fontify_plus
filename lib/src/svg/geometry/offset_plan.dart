@@ -13,6 +13,7 @@ class OffsetPiece {
   /// points.
   final bool chord;
 
+  /// The offset of [curve] at [distance].
   Cubic evaluate(double distance) {
     if (chord) {
       return offsetChord(curve, distance);
@@ -35,8 +36,11 @@ class OffsetPiece {
 class OffsetPlan {
   const OffsetPlan(this.pieces);
 
+  /// The pieces the source curve was cut into, in order along the curve.
   final List<OffsetPiece> pieces;
 
+  /// The offset at [distance], replaying the recorded subdivision rather
+  /// than re-deriving it.
   List<Cubic> evaluate(double distance) => [
     for (final piece in pieces) piece.evaluate(distance),
   ];
