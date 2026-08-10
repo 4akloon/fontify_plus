@@ -6,15 +6,26 @@ VIEWBOX = 24
 K = 4 / 3 * math.tan(math.pi / 8)
 
 
-def _circle_path(cx, cy, r):
-    """A circle as four cubic arcs, always four segments regardless of r."""
+def _circle_path(cx, cy, r, clockwise=True):
+    """A circle as four cubic arcs, always four segments regardless of r.
+
+    [clockwise] flips the traversal. A glyph is filled by the nonzero rule, so
+    an annulus needs its two contours wound against each other; wound the same
+    way they enclose the middle twice and the hole fills in. The SVG's own
+    fill-rule cannot save it — the font format has no even-odd.
+    """
     h = r * K
+    s = 1 if clockwise else -1
     return (
         f"M{cx} {cy - r:.4f}"
-        f"C{cx + h:.4f} {cy - r:.4f} {cx + r:.4f} {cy - h:.4f} {cx + r:.4f} {cy}"
-        f"C{cx + r:.4f} {cy + h:.4f} {cx + h:.4f} {cy + r:.4f} {cx} {cy + r:.4f}"
-        f"C{cx - h:.4f} {cy + r:.4f} {cx - r:.4f} {cy + h:.4f} {cx - r:.4f} {cy}"
-        f"C{cx - r:.4f} {cy - h:.4f} {cx - h:.4f} {cy - r:.4f} {cx} {cy - r:.4f}Z"
+        f"C{cx + s * h:.4f} {cy - r:.4f} {cx + s * r:.4f} {cy - h:.4f} "
+        f"{cx + s * r:.4f} {cy}"
+        f"C{cx + s * r:.4f} {cy + h:.4f} {cx + s * h:.4f} {cy + r:.4f} "
+        f"{cx} {cy + r:.4f}"
+        f"C{cx - s * h:.4f} {cy + r:.4f} {cx - s * r:.4f} {cy + h:.4f} "
+        f"{cx - s * r:.4f} {cy}"
+        f"C{cx - s * r:.4f} {cy - h:.4f} {cx - s * h:.4f} {cy - r:.4f} "
+        f"{cx} {cy - r:.4f}Z"
     )
 
 
@@ -40,8 +51,8 @@ def ring(width):
     four arcs per contour whatever the width.
     """
     outer = _circle_path(12, 12, 8 + width / 2)
-    inner = _circle_path(12, 12, 8 - width / 2)
-    return _svg(f'<path d="{outer}{inner}" fill="#000" fill-rule="evenodd"/>')
+    inner = _circle_path(12, 12, 8 - width / 2, clockwise=False)
+    return _svg(f'<path d="{outer}{inner}" fill="#000"/>')
 
 
 def dot(width):
