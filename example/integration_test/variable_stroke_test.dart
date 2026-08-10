@@ -5,8 +5,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fontify_plus_example/variable_stroke_probe.dart';
 import 'package:integration_test/integration_test.dart';
 
-/// Both candidate formats, tested side by side on one engine in one run.
-const _variableFamilies = {'gvar': 'ProtoGvar', 'CFF2': 'ProtoCff2'};
+/// One candidate format and the static masters it is judged against.
+class _Candidate {
+  const _Candidate(this.format, this.variable, this.staticPrefix);
+
+  final String format;
+  final String variable;
+
+  /// Static families of the SAME outline format, suffixed 133/150/200.
+  ///
+  /// Judging a glyf-based variable font against a CFF reference measures the
+  /// gap between two writers rather than the quality of the interpolation.
+  final String staticPrefix;
+
+  String get thin => '${staticPrefix}133';
+  String get mid => '${staticPrefix}150';
+  String get thick => '${staticPrefix}200';
+}
+
+const _candidates = [
+  _Candidate('gvar', 'ProtoGvar', 'ProtoGlyf'),
+  _Candidate('CFF2', 'ProtoCff2', 'ProtoCff'),
+];
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -42,23 +62,26 @@ void main() {
   /// constant, so the assertions survive a change of render size, window
   /// size, antialiasing or glyph geometry — none of which say anything about
   /// whether the axis works.
-  Future<double> staticSpan(WidgetTester tester, int glyph) async {
-    final thin = await render(tester, 'ProtoStatic133', codePoint: glyph);
-    final thick = await render(tester, 'ProtoStatic200', codePoint: glyph);
+  Future<double> staticSpan(
+    WidgetTester tester,
+    _Candidate candidate,
+    int glyph,
+  ) async {
+    final thin = await render(tester, candidate.thin, codePoint: glyph);
+    final thick = await render(tester, candidate.thick, codePoint: glyph);
 
     return difference(thin, thick);
   }
 
-  for (final entry in _variableFamilies.entries) {
-    final format = entry.key;
-    final family = entry.value;
+  for (final candidate in _candidates) {
+    final family = candidate.variable;
 
-    group(format, () {
+    group(candidate.format, () {
       testWidgets('at 1.5 matches the static font built at 1.5', (
         tester,
       ) async {
         for (final glyph in [kRing, kPlus]) {
-          final span = await staticSpan(tester, glyph);
+          final span = await staticSpan(tester, candidate, glyph);
           final variable = await render(
             tester,
             family,
@@ -67,7 +90,7 @@ void main() {
           );
           final reference = await render(
             tester,
-            'ProtoStatic150',
+            candidate.mid,
             codePoint: glyph,
           );
 
@@ -81,7 +104,7 @@ void main() {
 
       testWidgets('the axis is not silently ignored', (tester) async {
         for (final glyph in [kRing, kPlus]) {
-          final span = await staticSpan(tester, glyph);
+          final span = await staticSpan(tester, candidate, glyph);
 
           // Without this floor, a font that failed to load zeroes both sides
           // of the comparison below and the test passes on nothing.
@@ -135,7 +158,7 @@ void main() {
       testWidgets('a weight outside the axis clamps instead of failing', (
         tester,
       ) async {
-        final span = await staticSpan(tester, kRing);
+        final span = await staticSpan(tester, candidate, kRing);
         final beyond = await render(tester, family, weight: 8);
         final atMax = await render(tester, family, weight: 2);
 

@@ -31,12 +31,21 @@ flutter:
     - family: ProtoCff2
       fonts:
         - asset: fonts/proto/variable_cff2.otf
-    - family: ProtoStatic133
+    - family: ProtoCff133
       fonts:
         - asset: fonts/proto/static_1.33_cff.otf
-    - family: ProtoStatic150
+    - family: ProtoCff150
       fonts:
         - asset: fonts/proto/static_1.5_cff.otf
-    - family: ProtoStatic200
+    - family: ProtoCff200
       fonts:
         - asset: fonts/proto/static_2.0_cff.otf
+    - family: ProtoGlyf133
+      fonts:
+        - asset: fonts/proto/static_1.33_glyf.otf
+    - family: ProtoGlyf150
+      fonts:
+        - asset: fonts/proto/static_1.5_glyf.otf
+    - family: ProtoGlyf200
+      fonts:
+        - asset: fonts/proto/static_2.0_glyf.otf
