@@ -3,8 +3,7 @@ import 'package:vector_graphics_compiler/vector_graphics_compiler.dart' as vg;
 import '../geometry/cubic.dart';
 import '../geometry/cubic_offset.dart';
 import '../geometry/tolerances.dart';
-import 'stroke_capper.dart';
-import 'stroke_joiner.dart';
+import 'stroke_plan.dart';
 import 'stroke_properties.dart';
 import 'sub_path.dart';
 
@@ -24,97 +23,32 @@ class StrokeOutliner {
     : _offsetter = CubicOffsetter(
         distance: stroke.radius,
         tolerance: kCurveTolerance,
-      ),
-      _joiner = StrokeJoiner(stroke),
-      _capper = StrokeCapper(stroke);
+      );
 
   final StrokeProperties stroke;
 
   final CubicOffsetter _offsetter;
-  final StrokeJoiner _joiner;
-  final StrokeCapper _capper;
 
   /// The closed contours covering the stroke of [commands].
-  ///
-  /// Empty when [commands] holds nothing strokeable.
-  List<List<Cubic>> outline(Iterable<vg.PathCommand> commands) => [
-    for (final subPath in SubPathBuilder().build(commands))
-      ..._outlineSubPath(subPath),
-  ];
+  List<List<Cubic>> outline(Iterable<vg.PathCommand> commands) =>
+      plan(commands).evaluate(stroke.width);
 
-  /// The filled contours covering one stroked subpath.
-  List<List<Cubic>> _outlineSubPath(SubPath subPath) {
-    if (subPath.segments.isEmpty) {
-      return const [];
-    }
-
-    if (subPath.closed) {
-      // A closed stroke is an annulus: the outer wall and the inner wall,
-      // wound opposite so the nonzero rule leaves the middle hollow.
-      return [
-        _offsetSide(subPath.segments, closed: true),
-        _offsetSide(subPath.reversedSegments, closed: true),
-      ];
-    }
-
-    // An open stroke is a single loop: up one side, around the end cap, back
-    // down the other side, around the start cap.
-    final forward = subPath.segments;
-    final backward = subPath.reversedSegments;
-
-    return [
-      <Cubic>[
-        ..._offsetSide(forward, closed: false),
-        ..._capAfter(forward),
-        ..._offsetSide(backward, closed: false),
-        ..._capAfter(backward),
-      ],
-    ];
-  }
-
-  List<Cubic> _capAfter(List<Cubic> segments) =>
-      _capper.cap(segments.last.p3, segments.last.tangentAt(1));
-
-  /// Offsets a chain of segments to its left, inserting join geometry.
-  List<Cubic> _offsetSide(List<Cubic> segments, {required bool closed}) {
-    final result = <Cubic>[];
-
-    for (var i = 0; i < segments.length; i++) {
-      final segment = segments[i];
-      final offset = _offsetter.offset(segment);
-
-      if (offset.isEmpty) {
-        continue;
-      }
-
-      if (result.isNotEmpty) {
-        result.addAll(
-          _joiner.join(
-            vertex: segment.p0,
-            from: result.last.p3,
-            to: offset.first.p0,
-            incoming: segments[i - 1].tangentAt(1),
-            outgoing: segment.tangentAt(0),
-          ),
-        );
-      }
-
-      result.addAll(offset);
-    }
-
-    if (closed && result.isNotEmpty) {
-      // Close the ring by joining the last segment back to the first.
-      result.addAll(
-        _joiner.join(
-          vertex: segments.first.p0,
-          from: result.last.p3,
-          to: result.first.p0,
-          incoming: segments.last.tangentAt(1),
-          outgoing: segments.first.tangentAt(0),
+  /// The topology of [commands] stroked at this outliner's width, for
+  /// redrawing at any other width.
+  StrokePlan plan(Iterable<vg.PathCommand> commands) => StrokePlan(
+    stroke: stroke,
+    subPaths: [
+      for (final subPath in SubPathBuilder().build(commands))
+        SubPathPlan(
+          subPath: subPath,
+          forward: [
+            for (final segment in subPath.segments) _offsetter.plan(segment),
+          ],
+          backward: [
+            for (final segment in subPath.reversedSegments)
+              _offsetter.plan(segment),
+          ],
         ),
-      );
-    }
-
-    return result;
-  }
+    ],
+  );
 }
