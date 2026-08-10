@@ -24,10 +24,15 @@ class SubPathPlan {
 
 /// A stroked path's topology, fixed once so it can be drawn at any width.
 ///
-/// Joins and caps are not recorded: every branch they take is a ratio against
-/// the stroke radius or a test on the source curve's tangents, so re-running
-/// them at another width takes the same branch. Only the offsetter's
-/// subdivision depends on the width, and that is what [SubPathPlan] holds.
+/// Joins and caps are not recorded: every branch they take was made a ratio
+/// against the stroke radius or a test on the source curve's tangents, so
+/// re-running them at another width takes the same branch. That took two
+/// fixes in [StrokeJoiner] to actually hold — a coincidence test compared a
+/// squared distance to a fixed threshold, and a round join's sweep was
+/// recovered from offset points whose float32 rounding scales with the
+/// radius — because neither is width-invariant by nature, only by
+/// construction, and it is easy to write one that quietly is not. Only the
+/// offsetter's subdivision is recorded, in [SubPathPlan].
 class StrokePlan {
   const StrokePlan({required this.stroke, required this.subPaths});
 
@@ -50,10 +55,11 @@ class StrokePlan {
       miterLimit: stroke.miterLimit,
     );
 
-    // Every branch a joiner or capper takes is width-invariant (a tangent
-    // test, or a ratio against the radius), so building fresh ones for
-    // [target] reproduces the same structure the plan was made with, just
-    // scaled to the new radius.
+    // Every branch a joiner or capper takes was made width-invariant (a
+    // tangent test, or a ratio against the radius — see StrokeJoiner's own
+    // comments for the two places that took a real fix to get there), so
+    // building fresh ones for [target] reproduces the same structure the
+    // plan was made with, just scaled to the new radius.
     final joiner = StrokeJoiner(target);
     final capper = StrokeCapper(target);
 

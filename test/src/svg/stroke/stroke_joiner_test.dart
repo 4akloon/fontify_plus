@@ -29,6 +29,14 @@ List<Cubic> joinInner({
     );
 
 /// The same corner taken the other way, so the offset edges pull apart.
+///
+/// from is vertex + radius * leftNormal(incoming) = (0, 1), not (0, -1) —
+/// confirmed against a real offset chain (CubicOffsetter on an actual right
+/// turn), the same relationship joinInner's from/incoming already satisfy.
+/// A round join computed from from/to alone, as this codebase's did before
+/// deriving its sweep from incoming/outgoing, cannot tell such an
+/// inconsistency from real geometry; deriving the sweep from the tangents
+/// can, which is how this got caught.
 List<Cubic> joinOuter({
   LineJoin join = LineJoin.miter,
   double miterLimit = 4,
@@ -37,7 +45,7 @@ List<Cubic> joinOuter({
       StrokeProperties(width: 2, join: join, miterLimit: miterLimit),
     ).join(
       vertex: Vector2.zero(),
-      from: Vector2(0, -1),
+      from: Vector2(0, 1),
       to: Vector2(1, 0),
       incoming: Vector2(1, 0),
       outgoing: Vector2(0, -1),
@@ -91,7 +99,7 @@ void main() {
         }
 
         final outer = joinOuter(join: join);
-        expect(outer.first.p0.distanceTo(Vector2(0, -1)), lessThan(_kEpsilon));
+        expect(outer.first.p0.distanceTo(Vector2(0, 1)), lessThan(_kEpsilon));
         expect(outer.last.p3.distanceTo(Vector2(1, 0)), lessThan(_kEpsilon));
       }
     });
@@ -121,7 +129,7 @@ void main() {
 
       expect(geometry, hasLength(2));
       expect(
-        geometry.first.p3.distanceTo(Vector2(1, -1)),
+        geometry.first.p3.distanceTo(Vector2(1, 1)),
         lessThan(_kEpsilon),
         reason: 'the tangents of a right angle cross at the corner offset',
       );

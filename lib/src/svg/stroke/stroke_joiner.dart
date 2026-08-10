@@ -40,7 +40,15 @@ class StrokeJoiner {
     required Vector2 incoming,
     required Vector2 outgoing,
   }) {
-    if (from.distanceToSquared(to) <= kPointEpsilon) {
+    // The true gap between from and to scales linearly with the radius — it
+    // is radius * (leftNormal(incoming) - leftNormal(outgoing)) — so a fixed
+    // absolute threshold here is really a width-dependent angle threshold: at
+    // a large enough radius it stops catching corners it caught at a small
+    // one. Scaling the bound by radius squared, to match the squared
+    // distance on the left, keeps the equivalent angle threshold the same at
+    // every width.
+    if (from.distanceToSquared(to) <=
+        kPointEpsilon * stroke.radius * stroke.radius) {
       return const [];
     }
 
@@ -89,15 +97,27 @@ class StrokeJoiner {
         return [Cubic.line(from, to)];
 
       case LineJoin.round:
+        // The arc still starts exactly at from — join()'s contract is that
+        // the returned geometry connects to the surrounding offset chain, and
+        // from's own angle is what guarantees that. Only the sweep is taken
+        // from incoming/outgoing instead of from end's angle minus start's:
+        // to (like from) is an offset point whose float32 rounding scales
+        // with the radius, so a sweep recovered from atan2(to) - atan2(from)
+        // sat on the knife edge of arcToCubics' ceil at an exact quarter
+        // turn — an ordinary 90° corner could take a different number of arc
+        // segments at different widths. incoming and outgoing are exact unit
+        // tangents off the source curve, independent of radius, so the sweep
+        // — and the segment count arcToCubics derives from it — comes out
+        // identical at every width.
         final start = math.atan2(from.y - vertex.y, from.x - vertex.x);
-        final end = math.atan2(to.y - vertex.y, to.x - vertex.x);
-
-        return arcToCubics(
-          vertex,
-          stroke.radius,
-          start,
-          shortSweep(end - start),
+        final startNormal = leftNormal(incoming);
+        final endNormal = leftNormal(outgoing);
+        final sweep = shortSweep(
+          math.atan2(endNormal.y, endNormal.x) -
+              math.atan2(startNormal.y, startNormal.x),
         );
+
+        return arcToCubics(vertex, stroke.radius, start, sweep);
 
       case LineJoin.miter:
         final tip = lineIntersection(from, incoming, to, outgoing);
