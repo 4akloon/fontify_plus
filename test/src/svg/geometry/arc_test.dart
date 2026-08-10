@@ -84,6 +84,32 @@ void main() {
     test('returns nothing for a zero radius', () {
       expect(arcToCubics(Vector2.zero(), 0, 0, math.pi), isEmpty);
     });
+
+    test('treats a sweep landing a hair above a quarter turn as one', () {
+      // A quarter turn recovered from atan2 of two independently-rounded
+      // float32 tangents lands a hair above pi/2 close to as often as below
+      // it (measured: ~2.15e-7 worst case, radius-independent). Both of this
+      // package's own round-joined right angles hit exactly this — see
+      // stroke_joiner_test.dart's equivalent regression at the join level.
+      const sweep = math.pi / 2 + 5e-8;
+
+      expect(arcToCubics(Vector2.zero(), 1, 0, sweep), hasLength(1));
+    });
+
+    test('still spans two for a sweep genuinely past a quarter turn', () {
+      // 91 degrees: the epsilon that absorbs float32 rounding noise must not
+      // be wide enough to also absorb a real extra degree of turn.
+      const sweep = 91 * math.pi / 180;
+
+      expect(arcToCubics(Vector2.zero(), 1, 0, sweep), hasLength(2));
+    });
+
+    test('still spans two for an exact half turn (a round cap)', () {
+      // A round cap's sweep is the literal -pi, ratio exactly 2.0. An
+      // epsilon wide enough to eat into that would flatten every round cap
+      // in the package.
+      expect(arcToCubics(Vector2.zero(), 1, 0, -math.pi), hasLength(2));
+    });
   });
 
   group('shortSweep', () {

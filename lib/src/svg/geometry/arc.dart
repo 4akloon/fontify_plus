@@ -5,6 +5,30 @@ import 'package:vector_math/vector_math.dart';
 import 'cubic.dart';
 import 'tolerances.dart';
 
+/// How far the sweep/quarter-turn ratio may sit above an integer and still
+/// be treated as exactly that integer, when deciding how many cubics to
+/// split an arc into.
+///
+/// [sweep] typically reaches this function as the difference of two
+/// `atan2` calls on unit tangents that were each rounded to float32
+/// ([Vector2] is float32-backed) after a chain of subtraction and
+/// normalization — an exact quarter turn can land a hair above or below
+/// `pi/2` depending on how that rounding fell, and `ceil` turns "a hair
+/// above" into a full extra cubic.
+///
+/// Sized from measurement, not a round guess: building right-angle corners
+/// through the real tangent-derivation chain (`Cubic.line(...).tangentAt`),
+/// at every orientation and at radii from 1 to 1000, the ratio's error from
+/// 1.0 topped out at 2.15e-7 — consistent with a couple of float32 unit
+/// roundoffs (~1.19e-7 each) surviving the `atan2` difference, and matching
+/// the two real corners this was measured against directly
+/// (`example/svg/arrow_right.svg` and `example/svg/check.svg`, which land
+/// at 2.68e-7 and 8.05e-8 respectively). This constant is a decade above
+/// that observed ceiling — comfortable headroom above the noise, while
+/// still four orders of magnitude below the smallest genuine excess this
+/// rule has to keep catching (a 91° corner sits at ratio 1.011).
+const _kSweepRatioEpsilon = 1e-6;
+
 /// Approximates a circular arc as a chain of cubics.
 ///
 /// Round joins and caps are exact circular arcs. Sampling them into a polyline
@@ -20,8 +44,15 @@ List<Cubic> arcToCubics(
     return const [];
   }
 
-  // Error grows sharply past a quarter turn, so never span more than one.
-  final count = (sweep.abs() / (math.pi / 2)).ceil();
+  // Error grows sharply past a quarter turn, so never span more than one —
+  // but subtract _kSweepRatioEpsilon before rounding up, so a ratio that
+  // only clears an integer boundary by float32 rounding noise is treated as
+  // that integer rather than the next one up. A sweep genuinely past the
+  // boundary (see _kSweepRatioEpsilon's doc) still rounds up normally. The
+  // floor guards a tiny-but-nonzero sweep that subtracting the epsilon would
+  // otherwise round down to zero segments.
+  final ratio = sweep.abs() / (math.pi / 2);
+  final count = math.max(1, (ratio - _kSweepRatioEpsilon).ceil());
   final step = sweep / count;
 
   // Control point distance that makes a cubic match a circular arc: the

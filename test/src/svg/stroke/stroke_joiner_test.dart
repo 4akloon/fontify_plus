@@ -149,6 +149,38 @@ void main() {
       }
     });
 
+    test('round treats an exact 90° turn as one segment, not two', () {
+      // incoming/outgoing run through the same tangentAt(t).normalized()
+      // chain a real offset chain uses (Cubic.line, not a hand-picked exact
+      // vector), at an orientation empirically confirmed to push the
+      // recovered sweep a hair above pi/2 — the same float32-rounding
+      // mechanism that costs both example/svg/arrow_right.svg's and
+      // example/svg/check.svg's exact-90° round joins a doubled segment
+      // count (see arc_test.dart's equivalent regression on arcToCubics
+      // directly).
+      const theta = 0.0173;
+      const outAngle = theta - math.pi / 2;
+      final vertex = Vector2(math.cos(theta), math.sin(theta));
+      final next = vertex + Vector2(math.cos(outAngle), math.sin(outAngle));
+
+      final incoming = Cubic.line(Vector2.zero(), vertex).tangentAt(1);
+      final outgoing = Cubic.line(vertex, next).tangentAt(0);
+
+      const stroke = StrokeProperties(width: 2, join: LineJoin.round);
+      final from = vertex + leftNormal(incoming) * stroke.radius;
+      final to = vertex + leftNormal(outgoing) * stroke.radius;
+
+      final geometry = const StrokeJoiner(stroke).join(
+        vertex: vertex,
+        from: from,
+        to: to,
+        incoming: incoming,
+        outgoing: outgoing,
+      );
+
+      expect(geometry, hasLength(1));
+    });
+
     test('round takes the short way round', () {
       final geometry = joinOuter(join: LineJoin.round);
       final sweep = samples(geometry)

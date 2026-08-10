@@ -11,6 +11,14 @@
   shape is unaffected — it is the same arc, only ever differently
   segmented — the point of the change is that the segmentation no longer
   depends on the stroke width.
+* An exact quarter-turn arc (a round join or, at a smaller scale, part of a
+  round cap) now always costs one cubic instead of sometimes costing two.
+  The segment count is `ceil(sweep / 90°)`, and floating-point noise in the
+  tangent-derived sweep could push an exact 90° corner a hair above the
+  90° boundary about as often as below it — this package's own
+  `arrow_right` and `check` icons both landed on the expensive side. An
+  arc that is genuinely more than a quarter turn is unaffected. The
+  rendered shape is unchanged; only the point count drops.
 
 ## 0.5.2
 
