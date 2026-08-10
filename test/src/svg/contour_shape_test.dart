@@ -26,6 +26,20 @@ final _bowed = [
   ],
 ];
 
+/// A triangle whose closing segment lands exactly back on the start.
+final _closedTriangle = [
+  [_line(0, 0, 10, 0), _line(10, 0, 10, 10), _line(10, 10, 0, 0)],
+];
+
+/// The same triangle, but its closing segment stops short of the start by
+/// 1e-6 — far past kPointEpsilon (1e-9), and comfortably inside the float32
+/// rounding band Task 6 measured stroke offsetting can introduce (up to
+/// 6.3e-4). Every segment classifies the same as [_closedTriangle]'s, so a
+/// shape planned from one is a legal replay target for the other.
+final _openTriangle = [
+  [_line(0, 0, 10, 0), _line(10, 0, 10, 10), _line(10, 10, 1e-6, 1e-6)],
+];
+
 void main() {
   group('planContourShape', () {
     test('marks straight segments straight and curved ones curved', () {
@@ -56,6 +70,28 @@ void main() {
         own.single.pointList.length,
         greaterThan(forced.single.pointList.length),
       );
+    });
+
+    test('forces a recorded drop rather than re-deciding it from geometry', () {
+      // Whether a closing point repeats its start is exactly the kind of
+      // live-coordinate check ContourShape exists to freeze. A shape that
+      // recorded the drop must force it on replay even when the replayed
+      // contour's own closing point no longer coincides with its start —
+      // otherwise two masters built from the same recorded shape could
+      // still disagree on point count.
+      final reference = outlinesFromContours(
+        _closedTriangle,
+        height: 10,
+        shape: planContourShape(_closedTriangle, height: 10),
+      ).single;
+
+      final replayed = outlinesFromContours(
+        _openTriangle,
+        height: 10,
+        shape: planContourShape(_closedTriangle, height: 10),
+      ).single;
+
+      expect(replayed.pointList.length, reference.pointList.length);
     });
   });
 }

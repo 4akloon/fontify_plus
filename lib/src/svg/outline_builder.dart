@@ -87,16 +87,22 @@ ContourShape planContourShape(
   ];
 
   // Probe with every drop permitted, then record which ones took effect.
-  // `dropRepeatedStart` already refuses drops that would corrupt the
-  // contour (too few points, a curved closing segment), so permitting every
-  // drop here and reading back what happened is how the real answer is
-  // discovered — asking upfront would mean re-deriving those same rules.
+  // `decideDropRepeatedStart` already refuses drops that would corrupt the
+  // contour (too few points, a curved closing segment) or that do not
+  // actually land back on the start, so permitting every drop here and
+  // reading back what happened is how the real answer is discovered —
+  // asking upfront would mean re-deriving those same rules. `deciding: true`
+  // is what allows this probe to ask the question at all; every other build
+  // only ever replays the answer recorded here.
   final permissive = ContourShape(
     straight,
     List<bool>.filled(contours.length, true),
   );
 
-  return ContourShape(straight, _build(contours, height, permissive).drops);
+  return ContourShape(
+    straight,
+    _build(contours, height, permissive, deciding: true).drops,
+  );
 }
 
 /// Builds [Outline]s from the closed cubic contours the stroke outliner emits.
@@ -108,22 +114,34 @@ ContourShape planContourShape(
 ///
 /// [shape] pins the structural decisions — which segments are straight and
 /// which contours drop their closing repeat — so that offsetting the same
-/// contours at a different stroke width reuses [planContourShape]'s answer
-/// instead of re-classifying against geometry that has since moved.
+/// contours at a different stroke width replays [planContourShape]'s
+/// recorded answer verbatim rather than re-deriving either decision from
+/// this build's own coordinates. In particular a recorded drop is forced,
+/// never re-checked against where the closing point actually landed here —
+/// that live coincidence check is the width-dependent tolerance [shape]
+/// exists to freeze.
 List<Outline> outlinesFromContours(
   List<List<Cubic>> contours, {
   required double height,
   required ContourShape shape,
-}) => _build(contours, height, shape).outlines;
+}) => _build(contours, height, shape, deciding: false).outlines;
 
 /// The one pass shared by [outlinesFromContours] and [planContourShape]'s
-/// probe: walks [contours], replaying [shape]'s classification rather than
-/// deriving it, and reports which drops actually removed a point.
+/// probe: walks [contours], replaying [shape]'s straight/curved
+/// classification rather than deriving it.
+///
+/// [deciding] governs the one decision [shape] cannot make ahead of a build:
+/// whether a contour's closing point repeats its start. Only
+/// [planContourShape]'s probe passes `true`, which asks
+/// [_ContourAccumulator.decideDropRepeatedStart] and records what it finds.
+/// Every other caller passes `false`, which replays that recorded answer via
+/// [_ContourAccumulator.forceDropRepeatedStart] instead of asking again.
 ({List<Outline> outlines, List<bool> drops}) _build(
   List<List<Cubic>> contours,
   double height,
-  ContourShape shape,
-) {
+  ContourShape shape, {
+  required bool deciding,
+}) {
   final accumulator = _ContourAccumulator(height, FillRule.nonzero);
 
   // Indexed by contour, not appended: an empty contour is skipped below
@@ -156,12 +174,19 @@ List<Outline> outlinesFromContours(
         ..addOnCurve(segment.p3.x, segment.p3.y);
     }
 
+    if (!shape.dropsRepeatedStart[c]) {
+      continue;
+    }
+
     // The outliner closes a ring by joining its last segment back to the
     // first, so the final point repeats the start. A contour's closing
     // segment is implicit: keeping the repeat costs a point in every stroked
     // contour and would not match what `outlinesFromCommands` emits for `Z`.
-    if (shape.dropsRepeatedStart[c]) {
-      drops[c] = accumulator.dropRepeatedStart();
+    if (deciding) {
+      drops[c] = accumulator.decideDropRepeatedStart();
+    } else {
+      accumulator.forceDropRepeatedStart();
+      drops[c] = true;
     }
   }
 
@@ -231,14 +256,22 @@ class _ContourAccumulator {
     _isOnCurve.clear();
   }
 
-  /// Drops the open contour's last point when it repeats the first.
+  /// Decides whether the open contour's last point repeats the first, and
+  /// drops it if so.
   ///
   /// Only an on-curve point is a candidate: an off-curve control that happens
-  /// to land on the start is a real control point, not a closing repeat.
+  /// to land on the start is a real control point, not a closing repeat. The
+  /// coordinate check below is an absolute tolerance over live coordinates —
+  /// exactly the kind of width-dependent decision [ContourShape] exists to
+  /// freeze — so this must be called only while planning a shape, from
+  /// [planContourShape]'s probe. Every other build already knows the answer
+  /// and must call [forceDropRepeatedStart] to replay it instead of asking
+  /// this question again against coordinates a different stroke width may
+  /// have moved.
   ///
-  /// Returns whether a point was actually removed, so a caller planning a
-  /// [ContourShape] can record what happened rather than assume it.
-  bool dropRepeatedStart() {
+  /// Returns whether a point was actually removed, so the probe can record
+  /// what happened rather than assume it.
+  bool decideDropRepeatedStart() {
     // Below three points there is no contour left to shorten: dropping from
     // two to one would hand the encoders a single-point outline.
     if (_points.length < 3 || !_isOnCurve.last) {
@@ -267,6 +300,25 @@ class _ContourAccumulator {
     }
 
     return false;
+  }
+
+  /// Drops the open contour's last point unconditionally.
+  ///
+  /// Used to replay a [ContourShape] whose `dropsRepeatedStart` already
+  /// recorded, via [decideDropRepeatedStart], that this contour's closing
+  /// point repeats its start. That recorded answer is honoured as given: the
+  /// point is removed without re-checking whether it still coincides with
+  /// the start, because re-checking against this build's own coordinates is
+  /// the live, width-dependent test the recorded shape exists to avoid.
+  ///
+  /// Replaying the same [ContourShape.straight] classification the point
+  /// count was planned against guarantees the guards
+  /// [decideDropRepeatedStart] checks — at least three points, both of the
+  /// last two on-curve — already hold here, so this trusts them rather than
+  /// re-deriving them.
+  void forceDropRepeatedStart() {
+    _points.removeLast();
+    _isOnCurve.removeLast();
   }
 
   /// Flushes whatever is open and returns every contour collected.
