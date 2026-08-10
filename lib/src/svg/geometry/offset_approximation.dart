@@ -9,57 +9,59 @@ const _errorSamples = [0.25, 0.5, 0.75];
 /// How close the cross product of the two *unit* end tangents may come to
 /// zero and still be treated as exactly parallel.
 ///
+/// This is not just a noise filter — it decides which branch below is used,
+/// and the two branches differ in kind, not just in accuracy. In the
+/// fallback, `alpha`/`beta` are functions of the source curve's own control
+/// points alone, with no dependence on `distance`, so every emitted control
+/// point is *exactly* affine in the stroke width — which is what lets one
+/// low-width and one high-width master interpolate to every width in
+/// between, the premise the variable-width axis is built on. In the solve
+/// branch, `alpha`/`beta` are a quotient by `determinant`, which is
+/// `distance`-independent but multiplies `target` — and `target` *does*
+/// depend on `distance` — through a division that, near a singular
+/// determinant, amplifies both float32 rounding and any residual
+/// non-affine term in that dependence. Routing near-parallel geometry to the
+/// fallback therefore does not just reduce noise; it moves that geometry
+/// onto the branch that is structurally affine.
+///
 /// Thresholding the normalised cross product rather than the raw
 /// `determinant` below (which carries an incidental factor of -9 from the
-/// Bézier algebra) keeps this constant meaning "sine of the angle between
-/// the tangents" on its own — legible without the -9 in your head, and
-/// unaffected if that algebra ever changes or the tangents stop being unit
-/// vectors.
+/// Bézier algebra) keeps this constant legible as "sine of the angle between
+/// the tangents" on its own, and unaffected if that algebra changes or the
+/// tangents stop being unit vectors.
 ///
-/// [Cubic.tangentAt] normalizes a *difference of control points* — for a
-/// straight source segment, `p1 - p0` and `p3 - p2` are mathematically the
-/// same vector, but [Vector2] is float32-backed, so the two differences are
-/// computed from independently-rounded sums and only agree to within a few
-/// ULPs of the *coordinates*, not of the tiny vector itself. A corner far
-/// from the origin makes that ULP large while the tangent it's measured
-/// against can still be short, which is the worst case for the resulting
-/// angular noise.
+/// Sized from two measurements, one per side, and both land on a plateau
+/// rather than a knife edge — every fixture this package ships gives
+/// identical piece counts at 1e-4, 3.66e-4, 2e-3 and 1e-2:
 ///
-/// Sized from two independent measurements, one per side:
-///
-/// Lower bound — how big the noise actually gets. Reproducing
-/// `SubPathBuilder`'s own construction (`Cubic.line` from an SVG "L"
-/// segment, then `tangentAt(0)`/`tangentAt(1)`, exactly as this function
-/// calls them) with the segment's direction, length (0.5-50, the same
-/// plausible-corner-geometry range `arc.dart`'s epsilon was sized from) and
-/// the corner's distance from the origin (up to 2000, that same viewBox-scale
-/// envelope) all varied, a multi-start bounded search over that space — not
-/// a single example — converged on a worst-case cross product of
-/// **2.8e-4** (determinant 2.5e-3). This package's own triangle fixture
-/// (`M12 2L22 20H2Z`) hits a smaller 1.07e-7 on its one affected edge, which
-/// is why one adversarial example is not enough evidence: the noise is
-/// direction- and scale-dependent and this triangle happened to land in a
-/// mild spot.
+/// Lower bound — how big the float32 noise actually gets. [Cubic.tangentAt]
+/// normalizes a *difference of control points*; for a straight source
+/// segment, `p1 - p0` and `p3 - p2` are mathematically identical but computed
+/// from independently-rounded sums, so they only agree to within the ULP of
+/// the *coordinates*, not of the (possibly much shorter) tangent itself — a
+/// corner far from the origin is the worst case. A multi-start search over
+/// segment direction, length (0.5-50, the plausible-corner range `arc.dart`'s
+/// own epsilon was sized from) and distance from the origin (up to 2000, that
+/// same viewBox-scale envelope) converged on a worst-case cross product of
+/// **3.66e-4** — matching the closed form (half the float32 ULP at that
+/// coordinate scale, over a third of the segment length). This package's own
+/// triangle fixture (`M12 2L22 20H2Z`) only hits 1.07e-7 on its one affected
+/// edge, which is why a single example is not enough evidence.
 ///
 /// Upper bound — how far this can reach before treating two tangents as
-/// parallel is actually wrong. This isn't a fixed geometric tolerance:
-/// rebuilding [approximateOffset]'s own 2x2 solve on a family of shallow
-/// circular arcs (genuine, non-zero tangent divergence, not noise) shows the
-/// solve is itself built on the same near-singular determinant, so it
-/// degrades exactly where the noise problem lives. Comparing the solve
-/// against the parallel fallback's deviation from the true offset as the
-/// arcs' sweep shrinks: below cross ~1e-3 the "solve" is already
-/// unreliable — sometimes a little better, sometimes producing no valid
-/// candidate at all (alpha/beta run negative or non-finite) — while the
-/// fallback stays well-behaved throughout. Above cross ~7e-3 the solve pulls
-/// decisively and consistently ahead (10-20x lower deviation). In between,
-/// which one wins swings unpredictably by less than 1e-3 absolute deviation
-/// either way — a rounding error next to [kCurveTolerance]'s 0.02 budget,
-/// which the recursive subdivision in `cubic_offset.dart` backstops anyway
-/// if a candidate does come out worse than expected.
+/// parallel is actually wrong. Rebuilding the 2x2 solve on shallow circular
+/// arcs (genuine, non-zero tangent divergence, not noise) and comparing each
+/// branch's deviation from the true offset as the arcs' sweep shrinks: the
+/// solve is built on the same near-singular determinant as the noise
+/// problem, so it degrades right where that problem lives — below cross
+/// ~1e-3 it is no longer reliably better than the fallback, and above ~7e-3
+/// it pulls decisively ahead (10-20x lower deviation). Between those, either
+/// branch is within 1e-3 absolute deviation of the other — a rounding error
+/// against [kCurveTolerance]'s 0.02 budget, further backstopped by the
+/// recursive subdivision in `cubic_offset.dart`.
 ///
-/// `2e-3` sits about 7x above the measured noise floor and inside the lower
-/// half of that ambiguous middle band — comfortably clear of both edges.
+/// `2e-3` sits about 5.5x above the measured floor and in the lower half of
+/// that ambiguous band — comfortably clear of both edges.
 const _kParallelTangentEpsilon = 2e-3;
 
 /// The point on the true offset of [curve] at [t].
