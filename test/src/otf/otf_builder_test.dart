@@ -44,9 +44,11 @@ GenericGlyph _offCenterSquareGlyph() {
 /// box happens to bottom out exactly at an anchor — a circle split into
 /// quarters at its own leftmost/rightmost/top/bottom points, for instance —
 /// cannot tell the pre- and post-conversion outlines apart. This one can:
-/// its single cubic segment bulges left from two anchors at x=10 down to
-/// x=4 at its midpoint, so the curve's true leftmost point is interior and
-/// moves by a fraction of a font unit once approximated as quadratics.
+/// its single cubic segment bulges left from two anchors at x=10 towards
+/// control points at x=4, reaching x=5.5 at its midpoint — a curve stays
+/// inside the hull of its controls and never touches them. What matters is
+/// that the leftmost point is interior rather than an anchor, so it moves
+/// once the segment is approximated as quadratics.
 GenericGlyph _offCenterCurvedGlyph() {
   return GenericGlyph.fromSvg(
     'icon',

@@ -10,9 +10,9 @@
   TrueType (`useOpenType: false`) requires `hmtx.lsb == glyf.xMin`; a
   mismatch shifts a glyph sideways when rendered. This affects TrueType
   output in **both** `normalize` modes: with `normalize: true`, centring
-  zeroes a glyph's *pre-conversion* `xMin`, but curved outlines can still
-  land a fraction of a font unit off zero once quadratic-approximated, so
-  the two need not coincide. `normalize: false` output changes for CFF
+  zeroes a glyph's *pre-conversion* `xMin`, but a curved outline can still
+  land several font units off zero once quadratic-approximated, so the two
+  need not coincide. `normalize: false` output changes for CFF
   (OpenType) fonts too — `hmtx.lsb`, the `head` bounding box, and `hhea`'s
   right-side-bearing/extent now reflect each glyph's real ink bounds
   instead of a placeholder that assumed every custom glyph filled its whole
