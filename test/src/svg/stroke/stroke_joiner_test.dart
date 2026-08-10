@@ -51,6 +51,53 @@ List<Cubic> joinOuter({
       outgoing: Vector2(0, -1),
     );
 
+/// Builds an exact-mathematical right-angle corner — vertex at ([vertexX],
+/// [vertexY]), arriving at orientation [theta] over a leg of length [leg1],
+/// leaving turned exactly -90° over a leg of length [leg2] — through the
+/// same real chain a stroked offset uses (`Cubic.line(...).tangentAt`,
+/// `leftNormal`), and returns [StrokeJoiner.join]'s round-join result for
+/// it.
+///
+/// Unlike [joinOuter], the corner's own position is a parameter: a corner
+/// pinned at the origin never exercises the catastrophic cancellation
+/// `tangentAt`'s `p1 - p0` suffers when both points are large, closely
+/// spaced float32 coordinates, which is what makes far-from-origin corners
+/// noisier than near-origin ones at the same orientation (see arc.dart's
+/// `_kSweepRatioEpsilon` doc).
+List<Cubic> roundJoinAt({
+  required double vertexX,
+  required double vertexY,
+  required double theta,
+  required double leg1,
+  required double leg2,
+}) {
+  final p0 = Vector2(
+    vertexX - leg1 * math.cos(theta),
+    vertexY - leg1 * math.sin(theta),
+  );
+  final vertex = Vector2(vertexX, vertexY);
+  final outAngle = theta - math.pi / 2;
+  final p2 = Vector2(
+    vertexX + leg2 * math.cos(outAngle),
+    vertexY + leg2 * math.sin(outAngle),
+  );
+
+  final incoming = Cubic.line(p0, vertex).tangentAt(1);
+  final outgoing = Cubic.line(vertex, p2).tangentAt(0);
+
+  const stroke = StrokeProperties(width: 2, join: LineJoin.round);
+  final from = vertex + leftNormal(incoming) * stroke.radius;
+  final to = vertex + leftNormal(outgoing) * stroke.radius;
+
+  return const StrokeJoiner(stroke).join(
+    vertex: vertex,
+    from: from,
+    to: to,
+    incoming: incoming,
+    outgoing: outgoing,
+  );
+}
+
 Iterable<Vector2> samples(List<Cubic> chain) sync* {
   for (final segment in chain) {
     for (var i = 0; i <= 8; i++) {
@@ -150,36 +197,47 @@ void main() {
     });
 
     test('round treats an exact 90° turn as one segment, not two', () {
-      // incoming/outgoing run through the same tangentAt(t).normalized()
-      // chain a real offset chain uses (Cubic.line, not a hand-picked exact
-      // vector), at an orientation empirically confirmed to push the
-      // recovered sweep a hair above pi/2 — the same float32-rounding
-      // mechanism that costs both example/svg/arrow_right.svg's and
-      // example/svg/check.svg's exact-90° round joins a doubled segment
-      // count (see arc_test.dart's equivalent regression on arcToCubics
-      // directly).
-      const theta = 0.0173;
-      const outAngle = theta - math.pi / 2;
-      final vertex = Vector2(math.cos(theta), math.sin(theta));
-      final next = vertex + Vector2(math.cos(outAngle), math.sin(outAngle));
-
-      final incoming = Cubic.line(Vector2.zero(), vertex).tangentAt(1);
-      final outgoing = Cubic.line(vertex, next).tangentAt(0);
-
-      const stroke = StrokeProperties(width: 2, join: LineJoin.round);
-      final from = vertex + leftNormal(incoming) * stroke.radius;
-      final to = vertex + leftNormal(outgoing) * stroke.radius;
-
-      final geometry = const StrokeJoiner(stroke).join(
-        vertex: vertex,
-        from: from,
-        to: to,
-        incoming: incoming,
-        outgoing: outgoing,
+      // At an orientation empirically confirmed to push the recovered sweep
+      // a hair above pi/2 — the same float32-rounding mechanism that costs
+      // both example/svg/arrow_right.svg's and example/svg/check.svg's
+      // exact-90° round joins a doubled segment count (see arc_test.dart's
+      // equivalent regression on arcToCubics directly).
+      final geometry = roundJoinAt(
+        vertexX: 0,
+        vertexY: 0,
+        theta: 0.0173,
+        leg1: 1,
+        leg2: 1,
       );
 
       expect(geometry, hasLength(1));
     });
+
+    test(
+      'round still treats an exact 90° turn as one segment far from the '
+      'origin',
+      () {
+        // A corner pinned at the origin (the test above) never exercises
+        // catastrophic cancellation in tangentAt's p1 - p0 — both points are
+        // small, so subtracting them loses little precision. A corner out
+        // at icon-canvas scale (offsets up to 2000, short legs) is where
+        // that cancellation actually bites: this is the worst sample found
+        // sweeping vertex offsets 0-2000 and leg lengths 0.5-50 through this
+        // exact chain (500,000 samples; excess 3.39e-4 — see arc.dart's
+        // `_kSweepRatioEpsilon` doc), reproduced directly rather than as a
+        // raw sweep so a regression in the tangent chain itself, not just in
+        // arcToCubics, would be caught here too.
+        final geometry = roundJoinAt(
+          vertexX: 1624.8622377670079,
+          vertexY: 1373.683690419132,
+          theta: 0.8337265167484509,
+          leg1: 0.5778957200097815,
+          leg2: 22.576726269762425,
+        );
+
+        expect(geometry, hasLength(1));
+      },
+    );
 
     test('round takes the short way round', () {
       final geometry = joinOuter(join: LineJoin.round);

@@ -88,10 +88,22 @@ void main() {
     test('treats a sweep landing a hair above a quarter turn as one', () {
       // A quarter turn recovered from atan2 of two independently-rounded
       // float32 tangents lands a hair above pi/2 close to as often as below
-      // it (measured: ~2.15e-7 worst case, radius-independent). Both of this
-      // package's own round-joined right angles hit exactly this — see
-      // stroke_joiner_test.dart's equivalent regression at the join level.
+      // it. Both of this package's own round-joined right angles hit
+      // exactly this — see stroke_joiner_test.dart's equivalent regression
+      // at the join level.
       const sweep = math.pi / 2 + 5e-8;
+
+      expect(arcToCubics(Vector2.zero(), 1, 0, sweep), hasLength(1));
+    });
+
+    test('absorbs the worst catastrophic-cancellation noise measured', () {
+      // A corner far from the origin makes tangentAt's p1 - p0 catastrophic
+      // cancellation, not just orientation/leg-length rounding — see
+      // arc.dart's _kSweepRatioEpsilon doc. Sweeping vertex offsets 0-2000
+      // and leg lengths 0.5-50 through the real tangent chain found a worst
+      // positive excess of 3.39e-4; this is that worst case, expressed
+      // directly as a sweep, with no margin left to the epsilon.
+      const sweep = math.pi / 2 * (1 + 3.39e-4);
 
       expect(arcToCubics(Vector2.zero(), 1, 0, sweep), hasLength(1));
     });
@@ -109,6 +121,18 @@ void main() {
       // epsilon wide enough to eat into that would flatten every round cap
       // in the package.
       expect(arcToCubics(Vector2.zero(), 1, 0, -math.pi), hasLength(2));
+    });
+
+    test('never rounds a tiny-but-nonzero sweep down to zero segments', () {
+      // Subtracting the epsilon from the ratio before ceil-ing can itself
+      // produce a negative number for a sweep this small (ratio is far
+      // below even the epsilon), which without the floor would raw-ceil to
+      // 0 and divide by it. Confirmed these three sweeps all raw-ceil to 0
+      // without the floor: 2e-12 (just above the zero-sweep guard above),
+      // 1e-9, and 1e-7.
+      for (final sweep in [1e-9, 1e-7]) {
+        expect(arcToCubics(Vector2.zero(), 1, 0, sweep), hasLength(1));
+      }
     });
   });
 

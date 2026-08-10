@@ -16,18 +16,41 @@ import 'tolerances.dart';
 /// `pi/2` depending on how that rounding fell, and `ceil` turns "a hair
 /// above" into a full extra cubic.
 ///
-/// Sized from measurement, not a round guess: building right-angle corners
-/// through the real tangent-derivation chain (`Cubic.line(...).tangentAt`),
-/// at every orientation and at radii from 1 to 1000, the ratio's error from
-/// 1.0 topped out at 2.15e-7 — consistent with a couple of float32 unit
-/// roundoffs (~1.19e-7 each) surviving the `atan2` difference, and matching
-/// the two real corners this was measured against directly
-/// (`example/svg/arrow_right.svg` and `example/svg/check.svg`, which land
-/// at 2.68e-7 and 8.05e-8 respectively). This constant is a decade above
-/// that observed ceiling — comfortable headroom above the noise, while
-/// still four orders of magnitude below the smallest genuine excess this
-/// rule has to keep catching (a 91° corner sits at ratio 1.011).
-const _kSweepRatioEpsilon = 1e-6;
+/// Sized from two independent measurements, one per side, not a round
+/// guess:
+///
+/// Lower bound — how big the noise actually gets. `tangentAt` normalizes
+/// `p1 - p0`; when the corner sits far from the origin, `p0` and `p1` are
+/// two large, closely-spaced float32 coordinates, and subtracting them to
+/// recover a short leg is catastrophic cancellation. An orientation- and
+/// leg-length-only sweep (corner pinned near the origin) misses this
+/// entirely and understates the noise by three orders of magnitude — it
+/// reports ~2e-7, but this package's own `arrow_right.svg` (a real corner,
+/// vertex around (19, 12)) already measures 2.68e-7, past that supposed
+/// ceiling. Rerunning the same real tangent-derivation chain
+/// (`Cubic.line(...).tangentAt` → `leftNormal` → `atan2` → `shortSweep`,
+/// exactly as `stroke_joiner.dart` computes a round join's sweep) with the
+/// corner's vertex swept across offsets 0–2000 and leg lengths 0.5–50 —
+/// coordinate scales a 512–1024 viewBox plausibly produces — the worst
+/// positive excess over 500,000 samples was **3.39e-4**.
+///
+/// Upper bound — how big it's geometrically free to get. Letting a "quarter
+/// turn" actually span `(1 + delta) * 90°` grows the single-cubic
+/// approximation's radial error away from its baseline ~0.0273%-of-radius
+/// (the error inherent to *any* single-cubic quarter arc — the standard
+/// four-arc circle approximation this rule is built on). Measured
+/// directly: at `delta = 0.002` the error is only 1.21% larger than that
+/// baseline (0.0273% → 0.0276% of radius) — nowhere near "meaningful" next
+/// to the curve-fitting tolerance ([kCurveTolerance]) the rest of this
+/// package already accepts. `delta` has to reach 0.0111
+/// (91°) before this rule must instead treat the corner as a genuinely
+/// different angle (see the "still spans two" tests below), so that,
+/// not the geometric error, is what actually bounds this from above.
+///
+/// This constant, `2e-3`, sits inside both margins: about 5.9x above the
+/// worst noise measured above, and about 5.6x below the 91° boundary this
+/// rule must not blur.
+const _kSweepRatioEpsilon = 2e-3;
 
 /// Approximates a circular arc as a chain of cubics.
 ///
