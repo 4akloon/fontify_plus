@@ -25,6 +25,27 @@
   turn, or a corner at a coordinate/leg-length ratio far past that range,
   is unaffected. The rendered shape is unchanged; only the point count
   drops.
+* A straight edge could still cost dozens to hundreds of extra cubics, and,
+  for a variable stroke-width axis, quietly break the promise that every
+  control point moves affinely between two width masters. The offset
+  approximation's parallel-tangent test compared the *unnormalised*
+  determinant against a fixed length-scale constant with no relation to
+  that quantity; float32 rounding in the tangent computation routinely put
+  a mathematically dead-straight edge's determinant six orders of magnitude
+  above that threshold, so the near-singular two-tangent solve ran instead
+  of the straight-line fallback, amplifying rounding noise into distorted
+  control points and, at worst, a subdivision run that never converged.
+  The test now thresholds the *normalised* cross product of the two
+  tangents against an epsilon measured from both sides: up to 2.8e-4 of
+  genuine float32 noise across a wide sweep of edge directions and
+  coordinate scales, comfortably below where a genuinely curved segment
+  needs the full solve. This package's own `arrow_right` and `check` icons
+  drop from 376 and 97 points to 37 and 22; an ordinary triangle's two
+  affected edges collapse from 193 and 66 pieces to one each. The rendered
+  shape at any single width is unaffected — the fallback already
+  reproduces the source curve's own control spacing, which is exact for a
+  straight edge — only the point count drops, and interpolation between
+  widths now holds exactly rather than approximately.
 
 ## 0.5.2
 

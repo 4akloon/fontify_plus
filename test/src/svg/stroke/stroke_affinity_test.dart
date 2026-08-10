@@ -62,8 +62,7 @@ void main() {
               ];
 
               for (final get in controls) {
-                final expected =
-                    get(low[c][s]) * (1 - t) + get(high[c][s]) * t;
+                final expected = get(low[c][s]) * (1 - t) + get(high[c][s]) * t;
 
                 // Not 1e-9: `Vector2` here is Float32List-backed and every
                 // operator rounds per call, so three independently evaluated
