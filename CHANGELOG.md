@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.2
+
+* Fix TrueType (`useOpenType: false`) output storing SVG cubic control points
+  verbatim as consecutive quadratic off-curve points instead of converting
+  them, which bulged curved outlines outward (a full circle overshot its
+  radius by close to 10% at the diagonals).
+* Fix `hmtx.lsb` being hardcoded to zero instead of the glyph's real `xMin`.
+  TrueType requires `hmtx.lsb == glyf.xMin`; a mismatch shifts a glyph
+  sideways when rendered. Only visible with `normalize: false`, where the
+  artboard is mapped onto the em square without centring.
+
 ## 0.5.1
 
 * `normalize` defaults to **true** again (uniform em fill). Pass
