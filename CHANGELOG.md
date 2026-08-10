@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+* Fonts generated from icons with an exact-90° round join
+  (`stroke-linejoin="round"`) may differ slightly from those produced by
+  0.5.2. The join's arc is now segmented using the source path's tangents
+  instead of the offset coordinates, whose floating-point error scaled with
+  the stroke width and could push an exact quarter turn onto either side of
+  a segment-count rounding boundary depending on the width. The rendered
+  shape is unaffected — it is the same arc, only ever differently
+  segmented — the point of the change is that the segmentation no longer
+  depends on the stroke width.
+
 ## 0.5.2
 
 * Fix TrueType (`useOpenType: false`) output storing SVG cubic control points
