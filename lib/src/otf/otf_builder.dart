@@ -60,22 +60,29 @@ class OpenTypeFontBuilder {
     final defaultGlyphList = generateDefaultGlyphList(ascender);
     final fullGlyphList = [...defaultGlyphList, ...resizedGlyphList];
 
+    // Every glyph's own bounding box — never overridden. hmtx.lsb, the head
+    // bbox and hhea's rsb/extent all need the real xMin/xMax to stay
+    // internally consistent (in particular, TrueType requires
+    // hmtx.lsb == glyf.xMin); only the advance width has a legitimate reason
+    // to differ from it, handled below via [advanceWidthOverrides].
     final glyphMetricsList = [
       for (final glyph in defaultGlyphList) glyph.metrics,
-      // If normalization is off every custom glyph's size equals unitsPerEm
-      if (normalize)
-        for (final glyph in resizedGlyphList) glyph.metrics
-      else
-        ...List.filled(
-          resizedGlyphList.length,
-          GenericGlyphMetrics.square(unitsPerEm),
-        ),
+      for (final glyph in resizedGlyphList) glyph.metrics,
+    ];
+
+    // Without normalization every custom glyph advances by the full em
+    // regardless of how much of it its own ink fills — the artboard fitting
+    // keeps a uniform grid instead of tightening around each icon.
+    final advanceWidthOverrides = <int?>[
+      ...List.filled(defaultGlyphList.length, null),
+      ...List.filled(resizedGlyphList.length, normalize ? null : unitsPerEm),
     ];
 
     final tables = _buildTables(
       fullGlyphList: fullGlyphList,
       resizedGlyphList: resizedGlyphList,
       glyphMetricsList: glyphMetricsList,
+      advanceWidthOverrides: advanceWidthOverrides,
       unitsPerEm: unitsPerEm,
       ascender: ascender,
       descender: descender,
@@ -91,6 +98,7 @@ class OpenTypeFontBuilder {
     required List<GenericGlyph> fullGlyphList,
     required List<GenericGlyph> resizedGlyphList,
     required List<GenericGlyphMetrics> glyphMetricsList,
+    required List<int?> advanceWidthOverrides,
     required int unitsPerEm,
     required int ascender,
     required int descender,
@@ -102,7 +110,28 @@ class OpenTypeFontBuilder {
       revision,
       unitsPerEm,
     );
-    final hmtx = HorizontalMetricsTable.create(glyphMetricsList, unitsPerEm);
+
+    // TrueType requires hmtx.lsb == glyf.xMin. glyphMetricsList's xMin comes
+    // from each glyph's pre-cubicToQuad outline (see build()), but glyf's
+    // own xMin — read here from the SimpleGlyph the encoder already built —
+    // is computed from the post-conversion quadratic points, a different
+    // point set whose bounding box need not coincide with the cubic one's.
+    // Source lsb from glyf directly rather than reconciling the two metrics.
+    //
+    // CFF's charstrings are encoded straight from the same unconverted
+    // cubic outlines glyphMetricsList reflects, so its lsb is left deriving
+    // from glyphMetricsList unchanged — there is no second, divergent point
+    // set to reconcile there.
+    final lsbOverrides = glyf == null
+        ? null
+        : [for (final g in glyf.glyphList) g.isEmpty ? null : g.header.xMin];
+
+    final hmtx = HorizontalMetricsTable.create(
+      glyphMetricsList,
+      unitsPerEm,
+      advanceWidthOverrides: advanceWidthOverrides,
+      lsbOverrides: lsbOverrides,
+    );
     final hhea = HorizontalHeaderTable.create(
       glyphMetricsList,
       hmtx,
