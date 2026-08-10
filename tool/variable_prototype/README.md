@@ -68,9 +68,19 @@ From this directory, in order:
    As of `fontify_plus` 0.5.2 this check **does not** pass for the `glyf`
    masters, and the reason is not the glyph choice. See Results.
 
-3. Later Phase 0 scripts (not yet written) merge the masters with
-   `fontTools.varLib` and inspect the resulting variable font to decide
-   between CFF and `glyf`.
+3. `python3 build_variable.py`
+
+   Merges the masters with `fontTools.varLib` into `out/variable_cff2.otf`,
+   `out/variable_gvar.ttf` and `out/variable_gvar_noiup.ttf`. Watch stdout for
+   `has incompatible masters; skipping` — `varLib` warns rather than failing,
+   and a skipped glyph silently stops responding to the axis.
+
+4. `python3 gates.py`
+
+   The four gates, one block per candidate. Exits non-zero if any fails.
+
+5. `python3 plan_once_probe.py` — optional, and the one script here that
+   measures a technique the package does not implement. See Results.
 
 `out/` is generated and gitignored; nothing under it is committed.
 
@@ -158,27 +168,48 @@ This was invisible in every earlier round because no conversion was happening.
 ### `glyf`+`gvar` is priced by this, not disqualified
 
 The spec (section 3) already predicted this as a *third* site needing the
-plan-once/evaluate-per-width discipline Phase 1 applies to the offsetter.
-Verified off-pipeline that the discipline does fix it: converting the three CFF
-masters to quadratics with one shared subdivision plan
-(`fontTools.pens.cu2quPen.Cu2QuMultiPen`, the technique `fontmake` uses for
-every TrueType variable font) gives
+plan-once/evaluate-per-width discipline Phase 1 applies to the offsetter. That
+discipline does fix it. Run `python3 plan_once_probe.py` to reproduce
+everything in this section; it converts the three CFF masters to quadratics
+under one shared subdivision plan (`fontTools.pens.cu2quPen.Cu2QuMultiPen`, the
+technique `fontmake` uses for every TrueType variable font it ships), merges
+them, and runs the gate's own byte counting on the result. At `max_err` 1.0
+font unit:
 
-- point-compatible masters at every width (16 / 28 / 40 for dot / plus / ring),
-- a `varLib` build with **no warnings** and real deltas on all three glyphs,
-- correctness **1.00 unit** worst deviation — better than CFF2's 2.00,
+- point-compatible masters at every width — 16 / 28 / 40 for dot / plus / ring,
+- a `varLib` build with **no warnings**, and `gvar` deltas on both glyphs that
+  should have them (`dot` correctly still has none — it is the fill control),
+- correctness **1.00 unit** worst deviation, against CFF2's 2.00,
 - OTS clean,
-- and a size ratio of **1.50×** against its own static 2.0 master (460 scaling
-  bytes vs 306), where CFF2 is 1.16×.
+- and **1.50×** against its own plan-once static 2.0 (460 scaling bytes vs
+  306), where CFF2 is 1.16×.
 
-The ratio stayed between 1.50× and 1.57× at `max_err` of 0.5, 1.0, 2.0 and 4.0
-font units — the extra points cost bytes in the numerator and the denominator
-alike, so it is structural rather than a tolerance artifact.
-This is an off-pipeline probe, not a measurement of what this package would
-emit, but it is the right order of magnitude: a `gvar` font that actually
-varies every glyph sits at the ≤ 1.5× gate with no headroom, and the 1.21×
-recorded in the gate table above is the size of a font that dropped a glyph's
-variation rather than a size `gvar` can actually achieve.
+**Read the ratio against the right baseline.** The probe prints two, and they
+diverge by enough to change the conclusion:
+
+| `max_err` | ring points | vs own plan-once static 2.0 | vs the package's per-width static 2.0 |
+|---:|---:|---:|---:|
+| 0.5 | 48 | 1.55× | 1.62× |
+| 1.0 | 40 | **1.50×** | 1.46× |
+| 2.0 | 32 | 1.51× | 1.33× |
+| 4.0 | 24 | 1.57× | 1.14× |
+
+The first column is the meaningful one: both sides move together with the
+tolerance, so it isolates what variation costs on top of an outline, and it
+stays flat at 1.50–1.57× — structural, not a tolerance artifact. The second
+column holds the denominator fixed at today's per-width output while the
+numerator moves, so it slides across the whole 1.14–1.62× range and says more
+about the tolerance than about `gvar`. It is reported only because it is the
+comparison someone will reach for by mistake, and because it is the honest
+answer to a different question: what a plan-once *variable* font costs against
+the per-width *static* font that ships today.
+
+This is a probe of a technique the package does not implement, not a
+measurement of what `fontify_plus` would emit. But on the apples-to-apples
+baseline it is the right order of magnitude, and it says a `gvar` font that
+actually varies every glyph sits on the ≤ 1.5× gate with no headroom. It also
+says the 1.21× in the gate table above is not a size `gvar` can achieve — that
+is the size of a font that dropped a glyph's variation.
 
 ### Platform matrix
 
@@ -245,11 +276,22 @@ output. The subsetter does not drop the axis.
 CFF2 passes all six gates and every assertion on every platform that was
 measured. `glyf`+`gvar` fails the correctness gate today, and the work that
 would fix it is a third plan-once site in the package's geometry pipeline,
-after which its size lands at the ≤ 1.5× gate with roughly no headroom while
-CFF2 sits at 1.16× unsubsetted and 1.22–1.24× subsetted. `gvar` is more code to
-write, for a font that is measurably larger and no more correct. The two
-formats were indistinguishable on the pre-0.5.2 evidence; fixing the writer is
-what separated them.
+after which its size lands on the ≤ 1.5× gate with roughly no headroom while
+CFF2 sits at 1.16× unsubsetted and 1.22–1.24× subsetted.
+
+So `gvar` is more code to write, for a font that is measurably larger — and,
+to be exact about it, one that is slightly *more* accurate: on the one gate
+where the two are cleanly comparable, plan-once `gvar` interpolates to 1.00
+unit against CFF2's 2.00. **The decision rests on size headroom and build
+cost, not on correctness, and the rejected format is the one ahead on
+correctness.** Two units at upem 1000 is invisible and both clear the
+tolerance, so this does not come close to outweighing a whole extra planning
+site plus a `gvar` writer plus the entire size budget — but it is a point
+against the choice, not for it, and the summary paragraph is the wrong place
+to round it away.
+
+The two formats were indistinguishable on the pre-0.5.2 evidence. Fixing the
+writer is what separated them, and it separated them on cost.
 
 What follows, against the kill criteria the spec registered in advance:
 
