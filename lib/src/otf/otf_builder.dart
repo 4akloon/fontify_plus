@@ -110,10 +110,27 @@ class OpenTypeFontBuilder {
       revision,
       unitsPerEm,
     );
+
+    // TrueType requires hmtx.lsb == glyf.xMin. glyphMetricsList's xMin comes
+    // from each glyph's pre-cubicToQuad outline (see build()), but glyf's
+    // own xMin — read here from the SimpleGlyph the encoder already built —
+    // is computed from the post-conversion quadratic points, a different
+    // point set whose bounding box need not coincide with the cubic one's.
+    // Source lsb from glyf directly rather than reconciling the two metrics.
+    //
+    // CFF's charstrings are encoded straight from the same unconverted
+    // cubic outlines glyphMetricsList reflects, so its lsb is left deriving
+    // from glyphMetricsList unchanged — there is no second, divergent point
+    // set to reconcile there.
+    final lsbOverrides = glyf == null
+        ? null
+        : [for (final g in glyf.glyphList) g.isEmpty ? null : g.header.xMin];
+
     final hmtx = HorizontalMetricsTable.create(
       glyphMetricsList,
       unitsPerEm,
       advanceWidthOverrides: advanceWidthOverrides,
+      lsbOverrides: lsbOverrides,
     );
     final hhea = HorizontalHeaderTable.create(
       glyphMetricsList,

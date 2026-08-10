@@ -25,22 +25,34 @@ class LongHorMetric implements BinaryCodable {
   /// [advanceWidthOverride], when given, replaces the width that would
   /// otherwise be derived from [metrics] — used when a glyph must advance by
   /// a fixed amount (e.g. a full em) regardless of how much of it its own
-  /// ink fills. [lsb] always tracks the glyph's real [GenericGlyphMetrics.xMin]
-  /// so it stays equal to `glyf.xMin`, which TrueType requires.
+  /// ink fills.
+  ///
+  /// [lsb] tracks [metrics]' `xMin` unless [lsbOverride] is given, in which
+  /// case that takes precedence. TrueType requires `hmtx.lsb == glyf.xMin`,
+  /// but [metrics] (see callers) is computed from a glyph's *pre-conversion*
+  /// cubic outline, while `glyf.xMin` comes from the outline TrueType
+  /// actually stores, quadratics approximated from that cubic one — two
+  /// different point sets whose bounding boxes need not agree even when the
+  /// curve they approximate is nominally the same. [lsbOverride] exists so a
+  /// caller who already has the post-conversion `glyf.xMin` in hand (i.e. a
+  /// TrueType build) can pass it straight through instead.
   factory LongHorMetric.createForGlyph(
     GenericGlyphMetrics metrics,
     int unitsPerEm, {
     int? advanceWidthOverride,
+    int? lsbOverride,
   }) {
+    final lsb = lsbOverride ?? metrics.xMin;
+
     if (advanceWidthOverride != null) {
-      return LongHorMetric(advanceWidthOverride, metrics.xMin);
+      return LongHorMetric(advanceWidthOverride, lsb);
     }
 
     if (metrics.width == 0) {
-      return LongHorMetric(unitsPerEm ~/ 3, metrics.xMin);
+      return LongHorMetric(unitsPerEm ~/ 3, lsb);
     }
 
-    return LongHorMetric(metrics.width, metrics.xMin);
+    return LongHorMetric(metrics.width, lsb);
   }
 
   final int advanceWidth;
@@ -88,13 +100,15 @@ class HorizontalMetricsTable extends FontTable {
     return HorizontalMetricsTable(entry, hMetrics, leftSideBearings);
   }
 
-  /// [advanceWidthOverrides], when given, must have one entry per glyph in
-  /// [glyphMetricsList]; a non-null entry fixes that glyph's advance width
-  /// (see [LongHorMetric.createForGlyph]).
+  /// [advanceWidthOverrides] and [lsbOverrides], when given, must each have
+  /// one entry per glyph in [glyphMetricsList]; a non-null entry overrides
+  /// that glyph's advance width or lsb respectively (see
+  /// [LongHorMetric.createForGlyph]).
   factory HorizontalMetricsTable.create(
     List<GenericGlyphMetrics> glyphMetricsList,
     int unitsPerEm, {
     List<int?>? advanceWidthOverrides,
+    List<int?>? lsbOverrides,
   }) {
     final hMetrics = List.generate(
       glyphMetricsList.length,
@@ -102,6 +116,7 @@ class HorizontalMetricsTable extends FontTable {
         glyphMetricsList[i],
         unitsPerEm,
         advanceWidthOverride: advanceWidthOverrides?[i],
+        lsbOverride: lsbOverrides?[i],
       ),
     );
 

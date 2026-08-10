@@ -22,11 +22,36 @@ GenericGlyph _triangleGlyph() {
 /// Drawn away from its artboard's left edge, so its ink's xMin is nonzero
 /// once [ArtboardFitting] maps the artboard straight onto the em square
 /// without centring — unlike [_triangleGlyph], whose ink touches every edge.
+///
+/// Purely straight-lined, so cubicToQuad is a no-op on it: it cannot tell
+/// [glyf.xMin][GlyphHeader.xMin] apart from the pre-conversion cubic
+/// metrics that hmtx used to derive lsb from. See [_offCenterCircleGlyph].
 GenericGlyph _offCenterSquareGlyph() {
   return GenericGlyph.fromSvg(
     'icon',
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">'
         '<path d="M6 6 H10 V10 H6 Z"/></svg>',
+  );
+}
+
+/// Off-centre like [_offCenterSquareGlyph], but curved, and — unlike a
+/// circle — its leftmost point sits in the *middle* of a curve segment
+/// rather than at an anchor shared with the next one.
+///
+/// That distinction matters: cubicToQuad leaves every anchor point exactly
+/// where it was and only moves the interior of a curve (by approximating
+/// it with a different set of control points), so a shape whose bounding
+/// box happens to bottom out exactly at an anchor — a circle split into
+/// quarters at its own leftmost/rightmost/top/bottom points, for instance —
+/// cannot tell the pre- and post-conversion outlines apart. This one can:
+/// its single cubic segment bulges left from two anchors at x=10 down to
+/// x=4 at its midpoint, so the curve's true leftmost point is interior and
+/// moves by a fraction of a font unit once approximated as quadratics.
+GenericGlyph _offCenterCurvedGlyph() {
+  return GenericGlyph.fromSvg(
+    'icon',
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">'
+        '<path d="M10 4 C4 4 4 12 10 12 L12 12 L12 4 Z"/></svg>',
   );
 }
 
@@ -137,8 +162,12 @@ void main() {
           // TrueType requires hmtx.lsb == glyf.xMin: a rasterizer derives a
           // glyph's horizontal origin (phantom point pp1) from lsb, and a
           // mismatch with the outline's own xMin shifts the glyph sideways.
+          // Both a rectilinear and a curved off-centre glyph are included:
+          // the curved one is the one that can actually catch lsb drifting
+          // away from the post-cubicToQuad glyf.xMin (see
+          // _offCenterCurvedGlyph).
           final font = OpenTypeFontBuilder(
-            glyphList: [_offCenterSquareGlyph()],
+            glyphList: [_offCenterSquareGlyph(), _offCenterCurvedGlyph()],
             useOpenType: false,
             normalize: normalize,
           ).build();
