@@ -5,8 +5,3 @@ docs/
 # Scratch and tooling that only matters in the repo.
 .github/
 CONTRIBUTING.md
-
-# Phase-0 variable-font prototype fonts (see Task 4 of the variable-stroke-width
-# plan). Throwaway decision-gate fixtures for example/integration_test/, not
-# demo content for pub.dev consumers of the package.
-example/fonts/proto/

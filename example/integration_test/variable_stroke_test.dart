@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:fontify_plus_example/variable_stroke_probe.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fontify_plus_example/variable_stroke_probe.dart';
 import 'package:integration_test/integration_test.dart';
 
 /// Both candidate formats, tested side by side on one engine in one run.
@@ -18,6 +18,7 @@ void main() {
     int codePoint = kRing,
   }) async {
     final key = GlobalKey();
+    const probeSize = 48.0;
 
     await tester.pumpWidget(
       MaterialApp(
@@ -26,12 +27,26 @@ void main() {
           family: family,
           weight: weight,
           codePoint: codePoint,
+          size: probeSize,
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    return capture(key);
+    return capture(key, expectedSide: probeSize * 2);
+  }
+
+  /// How much rebuilding the font at the two widths changes the raster.
+  ///
+  /// Every threshold below is a fraction of this rather than an absolute
+  /// constant, so the assertions survive a change of render size, window
+  /// size, antialiasing or glyph geometry — none of which say anything about
+  /// whether the axis works.
+  Future<double> staticSpan(WidgetTester tester, int glyph) async {
+    final thin = await render(tester, 'ProtoStatic133', codePoint: glyph);
+    final thick = await render(tester, 'ProtoStatic200', codePoint: glyph);
+
+    return difference(thin, thick);
   }
 
   for (final entry in _variableFamilies.entries) {
@@ -43,6 +58,7 @@ void main() {
         tester,
       ) async {
         for (final glyph in [kRing, kPlus]) {
+          final span = await staticSpan(tester, glyph);
           final variable = await render(
             tester,
             family,
@@ -57,7 +73,7 @@ void main() {
 
           expect(
             difference(variable, reference),
-            lessThan(0.02),
+            lessThan(0.2 * span),
             reason: 'glyph $glyph drifted from its static reference',
           );
         }
@@ -65,6 +81,18 @@ void main() {
 
       testWidgets('the axis is not silently ignored', (tester) async {
         for (final glyph in [kRing, kPlus]) {
+          final span = await staticSpan(tester, glyph);
+
+          // Without this floor, a font that failed to load zeroes both sides
+          // of the comparison below and the test passes on nothing.
+          expect(
+            span,
+            greaterThan(0.005),
+            reason:
+                'the static pair itself shows no width change — did the '
+                'fonts load?',
+          );
+
           final thin = await render(
             tester,
             family,
@@ -80,10 +108,11 @@ void main() {
 
           // An engine that drops the axis renders both widths identically and
           // passes every other check in this file. This is the one assertion
-          // that catches it.
+          // that catches it, and it asks the right question: does moving the
+          // axis move the raster as much as rebuilding the font does?
           expect(
             difference(thin, thick),
-            greaterThan(0.01),
+            greaterThan(0.6 * span),
             reason: 'glyph $glyph did not change with the axis',
           );
         }
@@ -100,16 +129,17 @@ void main() {
         );
         final thick = await render(tester, family, weight: 2, codePoint: kDot);
 
-        expect(difference(thin, thick), lessThan(0.005));
+        expect(difference(thin, thick), lessThan(0.001));
       });
 
       testWidgets('a weight outside the axis clamps instead of failing', (
         tester,
       ) async {
+        final span = await staticSpan(tester, kRing);
         final beyond = await render(tester, family, weight: 8);
         final atMax = await render(tester, family, weight: 2);
 
-        expect(difference(beyond, atMax), lessThan(0.02));
+        expect(difference(beyond, atMax), lessThan(0.2 * span));
       });
     });
   }
