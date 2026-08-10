@@ -37,6 +37,16 @@ def gate_correctness(variable_path, static_fmt):
     worst = 0.0
     for stop in STOPS:
         instance = instantiateVariableFont(TTFont(variable_path), {"wght": stop})
+
+        # Compile and reload before measuring. Drawn straight from memory a
+        # glyf instance still carries float coordinates while a CFF2 one is
+        # already integer, so comparing either against a compiled static font
+        # measures that asymmetry instead of the interpolation. Round-tripping
+        # puts both formats through the same quantization the shipped font has.
+        buffer = io.BytesIO()
+        instance.save(buffer)
+        instance = TTFont(io.BytesIO(buffer.getvalue()))
+
         static = TTFont(OUT / f"static_{stop}_{static_fmt}.otf")
         for name in static.getGlyphOrder():
             if name in (".notdef", "space"):
@@ -68,32 +78,49 @@ def gate_subset(path):
     return f"survives subsetting ({buffer.getbuffer().nbytes} B)"
 
 
-# The tables that actually carry outlines, per format. Everything else in
-# these fonts is fixed overhead that does not grow with the icon set.
-OUTLINE_TABLES = ("CFF ", "CFF2", "glyf", "gvar")
-
-
 def outline_bytes(path):
-    reader = TTFont(path).reader
-    return sum(
-        reader.tables[tag].length for tag in OUTLINE_TABLES if tag in reader
-    )
+    """Only the bytes that grow with the icon set.
+
+    Two coarser units both lie here. Whole files are ~1.5 KB of fixed tables
+    around three toy glyphs, so that ratio passes anything. Whole outline
+    tables are barely better for CFF: CFF1's top dict carries Notice,
+    FullName and a charset that CFF2 has no operators for at all, which
+    credits CFF2 with roughly a hundred bytes of dropped boilerplate that
+    would amortize to nothing on a real icon set.
+
+    Charstrings are the per-glyph unit for both CFF flavours, and a CFF2
+    charstring carries its own blend deltas, so the variation cost is inside
+    them. For TrueType, glyf is almost entirely per-glyph data and gvar is
+    the per-glyph delta payload.
+    """
+    font = TTFont(path)
+    reader = font.reader
+    total = 0
+
+    for tag in ("CFF ", "CFF2"):
+        if tag in reader:
+            cff = font[tag].cff
+            charstrings = cff[cff.fontNames[0]].CharStrings
+            for name in charstrings.keys():
+                charstring = charstrings[name]
+                if charstring.bytecode is None:
+                    charstring.compile()
+                total += len(charstring.bytecode or b"")
+
+    for tag in ("glyf", "gvar"):
+        if tag in reader:
+            total += reader.tables[tag].length
+
+    return total
 
 
 def gate_size(path, baseline):
-    """Ratio of outline data, not of whole files.
-
-    Three toy glyphs carry ~1.5 KB of fixed tables (name, cmap, OS/2) that
-    dwarf their outlines, so a whole-file ratio would pass any format and
-    measure nothing. The outline tables are the part that scales with the
-    icon set, and the part this gate is about.
-    """
     variable = outline_bytes(path)
     static = outline_bytes(baseline)
     ratio = variable / static
     verdict = "PASS" if ratio <= 1.5 else "FAIL"
     return (
-        f"outlines {variable} B vs {static} B static, {ratio:.2f}x [{verdict}]"
+        f"scaling bytes {variable} vs {static} static, {ratio:.2f}x [{verdict}]"
         f"; whole file {path.stat().st_size} B",
         ratio,
     )
