@@ -91,10 +91,13 @@ class GenericGlyph {
         continue;
       }
 
+      final contours = StrokeOutliner(stroke).outline(shape.path.commands);
+
       outlines.addAll(
         outlinesFromContours(
-          StrokeOutliner(stroke).outline(shape.path.commands),
+          contours,
           height: height,
+          shape: planContourShape(contours, height: height),
         ),
       );
     }

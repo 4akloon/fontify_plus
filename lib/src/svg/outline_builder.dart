@@ -54,19 +54,86 @@ List<Outline> outlinesFromCommands(
   return contours.finish();
 }
 
+/// Which emitted segments are straight, and which contours may leave their
+/// closing point implicit.
+///
+/// Both decisions are made against absolute tolerances, so the same geometry
+/// offset at two stroke widths can classify differently and produce different
+/// point counts. Recording them once keeps masters interpolatable.
+class ContourShape {
+  const ContourShape(this.straight, this.dropsRepeatedStart);
+
+  /// Per contour, per emitted segment: whether it carries no curvature.
+  final List<List<bool>> straight;
+
+  /// Per contour: whether its last point repeats its first and was dropped.
+  final List<bool> dropsRepeatedStart;
+}
+
+/// The classification [contours] make on their own at the width they were
+/// built at.
+///
+/// Whether a contour's closing point repeats its start can only be known from
+/// the emitted points, so this builds the outlines once and keeps only the
+/// decisions. The throwaway build is the price of recording what the reference
+/// width actually did, rather than what it was assumed to do.
+ContourShape planContourShape(
+  List<List<Cubic>> contours, {
+  required double height,
+}) {
+  final straight = [
+    for (final contour in contours)
+      [for (final segment in contour) _isStraight(segment)],
+  ];
+
+  // Probe with every drop permitted, then record which ones took effect.
+  // `dropRepeatedStart` already refuses drops that would corrupt the
+  // contour (too few points, a curved closing segment), so permitting every
+  // drop here and reading back what happened is how the real answer is
+  // discovered — asking upfront would mean re-deriving those same rules.
+  final permissive = ContourShape(
+    straight,
+    List<bool>.filled(contours.length, true),
+  );
+
+  return ContourShape(straight, _build(contours, height, permissive).drops);
+}
+
 /// Builds [Outline]s from the closed cubic contours the stroke outliner emits.
 ///
 /// The fill rule is always [FillRule.nonzero]. Overlapping walls are merged by
 /// the nonzero rule rather than by a boolean union, which is what lets crossing
 /// subpaths be emitted without a clipping pass; inheriting `evenodd` from the
 /// source path would punch those overlaps back out as holes.
+///
+/// [shape] pins the structural decisions — which segments are straight and
+/// which contours drop their closing repeat — so that offsetting the same
+/// contours at a different stroke width reuses [planContourShape]'s answer
+/// instead of re-classifying against geometry that has since moved.
 List<Outline> outlinesFromContours(
   List<List<Cubic>> contours, {
   required double height,
-}) {
+  required ContourShape shape,
+}) => _build(contours, height, shape).outlines;
+
+/// The one pass shared by [outlinesFromContours] and [planContourShape]'s
+/// probe: walks [contours], replaying [shape]'s classification rather than
+/// deriving it, and reports which drops actually removed a point.
+({List<Outline> outlines, List<bool> drops}) _build(
+  List<List<Cubic>> contours,
+  double height,
+  ContourShape shape,
+) {
   final accumulator = _ContourAccumulator(height, FillRule.nonzero);
 
-  for (final contour in contours) {
+  // Indexed by contour, not appended: an empty contour is skipped below
+  // without consulting `shape` at all, and an appended list would then drift
+  // out of alignment with every contour that follows it.
+  final drops = List<bool>.filled(contours.length, false);
+
+  for (var c = 0; c < contours.length; c++) {
+    final contour = contours[c];
+
     if (contour.isEmpty) {
       continue;
     }
@@ -75,8 +142,10 @@ List<Outline> outlinesFromContours(
       ..flush()
       ..addOnCurve(contour.first.p0.x, contour.first.p0.y);
 
-    for (final segment in contour) {
-      if (_isStraight(segment)) {
+    for (var s = 0; s < contour.length; s++) {
+      final segment = contour[s];
+
+      if (shape.straight[c][s]) {
         accumulator.addOnCurve(segment.p3.x, segment.p3.y);
         continue;
       }
@@ -91,10 +160,12 @@ List<Outline> outlinesFromContours(
     // first, so the final point repeats the start. A contour's closing
     // segment is implicit: keeping the repeat costs a point in every stroked
     // contour and would not match what `outlinesFromCommands` emits for `Z`.
-    accumulator.dropRepeatedStart();
+    if (shape.dropsRepeatedStart[c]) {
+      drops[c] = accumulator.dropRepeatedStart();
+    }
   }
 
-  return accumulator.finish();
+  return (outlines: accumulator.finish(), drops: drops);
 }
 
 /// Whether a cubic's controls lie on its chord, so it carries no curvature.
@@ -164,11 +235,14 @@ class _ContourAccumulator {
   ///
   /// Only an on-curve point is a candidate: an off-curve control that happens
   /// to land on the start is a real control point, not a closing repeat.
-  void dropRepeatedStart() {
+  ///
+  /// Returns whether a point was actually removed, so a caller planning a
+  /// [ContourShape] can record what happened rather than assume it.
+  bool dropRepeatedStart() {
     // Below three points there is no contour left to shorten: dropping from
     // two to one would hand the encoders a single-point outline.
     if (_points.length < 3 || !_isOnCurve.last) {
-      return;
+      return false;
     }
 
     // Only a contour closed by a straight line may leave its last point
@@ -179,7 +253,7 @@ class _ContourAccumulator {
     // start, so a contour ending off-curve either runs off the end or steals
     // the next contour's first point.
     if (!_isOnCurve[_points.length - 2]) {
-      return;
+      return false;
     }
 
     final first = _points.first;
@@ -189,7 +263,10 @@ class _ContourAccumulator {
         (first.y - last.y).abs() <= kPointEpsilon) {
       _points.removeLast();
       _isOnCurve.removeLast();
+      return true;
     }
+
+    return false;
   }
 
   /// Flushes whatever is open and returns every contour collected.
