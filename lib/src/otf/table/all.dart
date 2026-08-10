@@ -3,6 +3,7 @@ export 'cff.dart';
 export 'cmap.dart';
 export 'coverage.dart';
 export 'feature_list.dart';
+export 'fvar.dart';
 export 'glyf.dart';
 export 'gsub.dart';
 export 'head.dart';

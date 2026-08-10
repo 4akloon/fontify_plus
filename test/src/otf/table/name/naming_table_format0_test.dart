@@ -60,6 +60,13 @@ void main() {
       );
 
       for (final id in NameID.values) {
+        // strokeWidthAxis is a `fvar` axis name: it is written into the
+        // `name` table once `fvar` is wired into the font builder, not by
+        // this format's fixed set of default strings.
+        if (id == NameID.strokeWidthAxis) {
+          continue;
+        }
+
         expect(table.getStringByNameId(id), isNotNull, reason: '$id');
       }
     });
