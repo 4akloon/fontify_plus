@@ -36,6 +36,7 @@ class GlyphPlacement {
     required this.scale,
     required this.offsetX,
     required this.offsetY,
+    required this.translates,
   });
 
   /// Uniform scale factor, taken from the reference glyph.
@@ -47,14 +48,29 @@ class GlyphPlacement {
   /// Vertical translation applied after scaling.
   final double offsetY;
 
-  /// Scales, then translates, [glyph] — reproducing [GlyphFitting.fit]'s
-  /// `resize().center()` pipeline exactly when [glyph] is the reference this
+  /// Whether [apply] should translate at all.
+  ///
+  /// Deliberately not inferred from `offsetX == 0 && offsetY == 0`:
+  /// [NormalizedFitting] can legitimately compute a zero offset for a glyph
+  /// whose ink is already left-aligned and vertically centred, and treating
+  /// that as "skip the translate" would silently reintroduce, for
+  /// [NormalizedFitting], the exact bug this flag exists to avoid for
+  /// [ArtboardFitting]: [ArtboardFitting.fit] never calls `center`, so its
+  /// placement must skip [_translate] outright, not merely call it with
+  /// zero — [_translate]'s bounds formula is lifted verbatim from
+  /// `GlyphTransform.center` to stay byte-identical with it, including that
+  /// method's own quirk of rebuilding the rectangle from its *bottom* where
+  /// [math.Rectangle]'s constructor expects *top*, which corrupts the
+  /// rectangle even when the translation itself is a no-op.
+  final bool translates;
+
+  /// Scales, then translates if [translates], [glyph] — reproducing
+  /// [GlyphFitting.fit]'s pipeline exactly when [glyph] is the reference this
   /// placement was derived from.
-  GenericGlyph apply(GenericGlyph glyph) => _translate(
-    scale == 1 ? glyph : _scale(glyph, scale),
-    offsetX,
-    offsetY,
-  );
+  GenericGlyph apply(GenericGlyph glyph) {
+    final scaled = scale == 1 ? glyph : _scale(glyph, scale);
+    return translates ? _translate(scaled, offsetX, offsetY) : scaled;
+  }
 }
 
 /// The point-mapping [GlyphTransform.resize] applies when it does not take
@@ -148,6 +164,8 @@ class NormalizedFitting extends GlyphFitting {
           (ascender + descender) / 2 -
           scaledMetrics.height / 2 -
           scaledMetrics.yMin,
+      // fit() always calls center() after resize(), so apply() must too.
+      translates: true,
     );
   }
 }
@@ -174,8 +192,13 @@ class ArtboardFitting extends GlyphFitting {
     // Mirrors resize's early return, same as NormalizedFitting.placementFor.
     final scale = (sideRatio - 1).abs() < _kNegligibleScale ? 1.0 : sideRatio;
 
-    // fit() never calls center() for this strategy, so there is nothing to
-    // translate by.
-    return GlyphPlacement(scale: scale, offsetX: 0, offsetY: 0);
+    // fit() never calls center() for this strategy, so apply() must not
+    // translate either — not even by zero, see [GlyphPlacement.translates].
+    return GlyphPlacement(
+      scale: scale,
+      offsetX: 0,
+      offsetY: 0,
+      translates: false,
+    );
   }
 }

@@ -27,6 +27,30 @@ GenericGlyph _squareGlyph({required num side, Rectangle<num>? bounds}) =>
       bounds ?? Rectangle(0, 0, side, side),
     );
 
+/// Asserts that [fitting]'s placement, applied to [glyph], reproduces
+/// [GlyphFitting.fit] exactly — points and bounds both — not just points.
+///
+/// A placement that skipped bounds entirely, or rebuilt them incorrectly,
+/// would still pass a points-only check: `resize`/`center`'s point-mapping
+/// and their bounds-mapping are separate pieces of code, and only one of them
+/// being wrong is enough to corrupt the glyph without moving a single point.
+void _expectPlacementReproducesFit(GlyphFitting fitting, GenericGlyph glyph) {
+  final fitted = fitting.fit(glyph);
+  final placed = fitting.placementFor(glyph).apply(glyph);
+
+  expect(placed.pointList.length, fitted.pointList.length);
+
+  for (var i = 0; i < fitted.pointList.length; i++) {
+    expect(placed.pointList[i].x, closeTo(fitted.pointList[i].x, 1e-9));
+    expect(placed.pointList[i].y, closeTo(fitted.pointList[i].y, 1e-9));
+  }
+
+  expect(placed.bounds.left, closeTo(fitted.bounds.left, 1e-9));
+  expect(placed.bounds.top, closeTo(fitted.bounds.top, 1e-9));
+  expect(placed.bounds.width, closeTo(fitted.bounds.width, 1e-9));
+  expect(placed.bounds.height, closeTo(fitted.bounds.height, 1e-9));
+}
+
 void main() {
   group('NormalizedFitting.fit', () {
     test('resizes the ink to the ascender/descender band, then centers it', () {
@@ -112,6 +136,27 @@ void main() {
       // ink stays strictly inside the thick master's.
       expect(thin.metrics.width, lessThan(thick.metrics.width));
       expect(thin.metrics.xMin, greaterThan(thick.metrics.xMin));
+    });
+
+    test('reproduces fit() bounds, not just points, for NormalizedFitting', () {
+      _expectPlacementReproducesFit(
+        _fitting,
+        GenericGlyph.fromSvg('icon', _curved),
+      );
+    });
+
+    test('reproduces fit() points and bounds for ArtboardFitting', () {
+      const fitting = ArtboardFitting(fontHeight: 1000);
+      // fit() never calls center() for this strategy, so a placement that
+      // always translates — even by zero — would still corrupt bounds:
+      // _translate's formula rebuilds the rectangle from bounds.bottom where
+      // Rectangle's constructor expects top.
+      final glyph = _squareGlyph(
+        side: 10,
+        bounds: const Rectangle(0, 0, 20, 20),
+      );
+
+      _expectPlacementReproducesFit(fitting, glyph);
     });
   });
 }
