@@ -2,8 +2,16 @@ import 'dart:math';
 
 import 'package:fontify_plus/src/common/generic_glyph.dart';
 import 'package:fontify_plus/src/common/outline.dart';
+import 'package:fontify_plus/src/common/stroke_width_range.dart';
 import 'package:fontify_plus/src/otf/glyph_fitting.dart';
 import 'package:test/test.dart';
+
+const _curved =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">'
+    '<path d="M2 12C2 6 6 2 12 2C18 2 22 6 22 12" stroke="#000" '
+    'stroke-width="1.5" stroke-linecap="round"/></svg>';
+
+const _fitting = NormalizedFitting(ascender: 800, descender: -200);
 
 GenericGlyph _squareGlyph({required num side, Rectangle<num>? bounds}) =>
     GenericGlyph(
@@ -70,6 +78,40 @@ void main() {
       // Scaled by 100/20 = 5, so xMin moves from 5 to 25 — resize scales in
       // place, and ArtboardFitting never calls center to shift it back.
       expect(fitted.metrics.xMin, closeTo(25, 1e-9));
+    });
+  });
+
+  group('GlyphPlacement', () {
+    test('reproduces fit() when derived from the same glyph', () {
+      final glyph = GenericGlyph.fromSvg('icon', _curved);
+
+      final fitted = _fitting.fit(glyph);
+      final placed = _fitting.placementFor(glyph).apply(glyph);
+
+      expect(placed.pointList.length, fitted.pointList.length);
+
+      for (var i = 0; i < fitted.pointList.length; i++) {
+        expect(placed.pointList[i].x, closeTo(fitted.pointList[i].x, 1e-9));
+        expect(placed.pointList[i].y, closeTo(fitted.pointList[i].y, 1e-9));
+      }
+    });
+
+    test('one placement keeps two masters on the same centreline', () {
+      final masters = glyphMastersFromSvg(
+        'icon',
+        _curved,
+        StrokeWidthRange(1.33, 2),
+      );
+
+      final placement = _fitting.placementFor(masters.max);
+      final thin = placement.apply(masters.min);
+      final thick = placement.apply(masters.max);
+
+      // Fitted independently, the thin master would be scaled up to fill the
+      // same band and its centreline would move. Sharing the transform, its
+      // ink stays strictly inside the thick master's.
+      expect(thin.metrics.width, lessThan(thick.metrics.width));
+      expect(thin.metrics.xMin, greaterThan(thick.metrics.xMin));
     });
   });
 }
