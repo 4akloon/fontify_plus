@@ -217,7 +217,7 @@ List<_InkBox> _masterInkBoxes(Uint8List charString, int masterCount) {
       stack.add([
         base,
         // Deltas are grouped by operand, region-minor — the order
-        // `blendCommands` documents and writes.
+        // `CharStringBlender` documents and writes.
         for (var r = 0; r < regionCount; r++)
           base + operands[n + o * regionCount + r].first,
       ]);

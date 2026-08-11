@@ -262,7 +262,7 @@ void main() {
             isA<ArgumentError>().having(
               (e) => e.message,
               'message',
-              contains('singleRegionVariationStore'),
+              contains('SingleRegionVariationStore'),
             ),
           ),
         );

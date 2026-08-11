@@ -143,7 +143,7 @@ class OpenTypeFontBuilder {
     // The default glyphs (.notdef and space) are their own minimum master:
     // their deltas come out zero, which is what a glyph that does not vary
     // with stroke width should encode, and costs nothing because
-    // `blendCommands` emits no `blend` for an unvarying command.
+    // `CharStringBlender.merge` emits no `blend` for an unvarying command.
     final fullMinGlyphList = resizedMinGlyphList == null
         ? null
         : [...defaultGlyphList, ...resizedMinGlyphList];
