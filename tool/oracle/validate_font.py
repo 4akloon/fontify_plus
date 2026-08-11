@@ -1,4 +1,15 @@
-"""Validates a generated font against fonttools, an independent implementation."""
+"""Validates a generated font against fonttools, an independent implementation.
+
+CAVEAT: the variable-font branch below (the `if "fvar" not in font` check)
+is exercised in CI only by example/fonts/proto/variable_cff2.otf, which was
+built by fontTools' own varLib, not by this package -- fontify_plus does not
+emit fvar/STAT yet (see lib/src/otf/otf.dart's _kTableTagsToEncode and
+lib/src/otf/reader.dart's _createTableFromEntry, neither of which is wired
+for those tags). So today this branch is fontTools validating fontTools; it
+cannot go red for anything fontify_plus does. It becomes a real gate once
+Phase 4 wires fvar/STAT into the builder and this script runs against a
+variable font fontify_plus generated itself.
+"""
 import io
 import sys
 
