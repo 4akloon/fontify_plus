@@ -2,6 +2,39 @@
 
 ## Unreleased
 
+* **Breaking:** `OpenTypeFont.glyf`, `.loca`, `.cff` and `.cff2` are now
+  nullable (`GlyphDataTable?`, `IndexToLocationTable?`, `CFF1Table?`,
+  `CFF2Table?`). They previously returned a non-nullable type by casting the
+  table map, so asking a CFF font for `glyf` — a table that font format
+  genuinely does not have — threw a bare `TypeError` naming neither the tag
+  nor the type. Returning null is the point: "this font has no glyf" is a
+  legitimate answer, not a failure. Downstream code that writes
+  `font.glyf.glyphList` stops compiling on upgrade. A caller that is
+  branching on the outline format should treat the null as the branch
+  (`if (font.glyf case final glyf?)`, or `font.glyf?.glyphList`); a caller
+  that already knows the format — because it just built the font, or read a
+  file it controls — should say so with
+  `font.tables.require<GlyphDataTable>(kGlyfTag)`, which throws
+  `TableDataFormatException` naming the missing tag instead of returning
+  null. Every other table getter (`head`, `maxp`, `gsub`, `os2`, `post`,
+  `name`, `cmap`, `hhea`, `hmtx`) keeps its non-nullable type and is
+  unaffected at the call site, but now also throws that named
+  `TableDataFormatException` rather than a `TypeError` when the table really
+  is absent. Two new nullable getters, `fvar` and `stat`, join them for
+  variable-font metadata; both are null on the static fonts this version
+  writes.
+* **Breaking, with no compile-time warning:** `OpenTypeFont.tableMap` is now
+  a read-only view (`UnmodifiableMapView`) over the font's tables rather than
+  the underlying map. Reading, iterating, counting and `containsKey` are
+  unchanged, but **a write such as `font.tableMap[kFvarTag] = myTable` still
+  compiles and now throws `UnsupportedError` at runtime.** The tables belong
+  to the new `FontTables` object behind `OpenTypeFont.tables`, which hands
+  out typed, tag-named access (`tables.lookup<T>(tag)` for "null if this font
+  has none", `tables.require<T>(tag)` for "fail naming the tag") instead of
+  the `tableMap[tag] as T` casts that used to be the only way in. There is no
+  supported replacement for mutating a font's table set after construction:
+  build the map first and pass it to the `OpenTypeFont` constructor, whose
+  signature is unchanged.
 * Fonts generated from icons with an exact-90° round join
   (`stroke-linejoin="round"`) may differ slightly from those produced by
   0.5.2. The join's arc is now segmented using the source path's tangents

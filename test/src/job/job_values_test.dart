@@ -116,7 +116,14 @@ void main() {
   });
 
   group('resolveFontJob', () {
-    test('reports an uncoercible value as a config error, not a TypeError', () {
+    // This is coerceJobValues' guard, not the readers': `_coerceField`
+    // switches exhaustively over JobField and rejects a non-string
+    // class_name before any reader runs, so the readers' own re-check is
+    // unreachable from here and this test passes with or without it. The
+    // re-check is covered directly by the read*/require* groups above; this
+    // one only pins down that resolveFontJob surfaces the coercion failure
+    // rather than swallowing it.
+    test('surfaces a coercion failure naming the config key', () {
       expect(
         () => resolveFontJob(
           layers: [

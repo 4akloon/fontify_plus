@@ -45,7 +45,7 @@ void main() {
     });
 
     test('Maximum Profile table', () {
-      final table = font.tableMap[kMaxpTag] as MaximumProfileTable;
+      final table = font.maxp;
       expect(table, isNotNull);
 
       expect(table.version, 0x00010000);
@@ -66,7 +66,7 @@ void main() {
     });
 
     test('Header table', () {
-      final table = font.tableMap[kHeadTag] as HeaderTable;
+      final table = font.head;
       expect(table, isNotNull);
 
       expect(table.majorVersion, 1);
@@ -91,7 +91,7 @@ void main() {
     });
 
     test('Glyph Data table', () {
-      final table = font.tableMap[kGlyfTag] as GlyphDataTable;
+      final table = _glyf(font);
       expect(table, isNotNull);
       expect(table.glyphList.length, 166);
 
@@ -145,7 +145,7 @@ void main() {
     });
 
     test('OS/2 V1 table', () {
-      final table = font.tableMap[kOS2Tag] as OS2Table;
+      final table = font.os2;
       expect(table, isNotNull);
 
       expect(table.version, 1);
@@ -183,7 +183,7 @@ void main() {
     });
 
     test('PostScript table', () {
-      final table = font.tableMap[kPostTag] as PostScriptTable;
+      final table = font.post;
       expect(table, isNotNull);
 
       expect(table.header.version, const Revision(2, 0));
@@ -206,7 +206,10 @@ void main() {
     });
 
     test('Naming table', () {
-      final table = font.tableMap[kNameTag] as NamingTableFormat0;
+      // `require` on the concrete format rather than `font.name`: the
+      // assertions below read format-0 fields, so this test does mean to
+      // pin down which NamingTable subtype the fixture carries.
+      final table = font.tables.require<NamingTableFormat0>(kNameTag);
       expect(table, isNotNull);
 
       expect(table.header.format, 0);
@@ -217,7 +220,7 @@ void main() {
     });
 
     test('Character To Glyph Index Mapping table', () {
-      final table = font.tableMap[kCmapTag] as CharacterToGlyphTable;
+      final table = font.cmap;
       expect(table, isNotNull);
 
       expect(table.header.version, 0);
@@ -270,7 +273,7 @@ void main() {
     });
 
     test('Horizontal Header table', () {
-      final table = font.tableMap[kHheaTag] as HorizontalHeaderTable;
+      final table = font.hhea;
       expect(table, isNotNull);
 
       expect(table.majorVersion, 1);
@@ -290,7 +293,7 @@ void main() {
     });
 
     test('Horizontal Metrics table', () {
-      final table = font.tableMap[kHmtxTag] as HorizontalMetricsTable;
+      final table = font.hmtx;
       expect(table, isNotNull);
 
       expect(table.leftSideBearings, isEmpty);
@@ -302,7 +305,7 @@ void main() {
     });
 
     test('Glyph Substitution table', () {
-      final table = font.tableMap[kGSUBTag] as GlyphSubstitutionTable;
+      final table = font.gsub;
       expect(table, isNotNull);
 
       final scriptTable = table.scriptListTable;

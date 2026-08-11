@@ -2,7 +2,6 @@ import 'package:fontify_plus/src/common/generic_glyph.dart';
 import 'package:fontify_plus/src/otf/defaults.dart';
 import 'package:fontify_plus/src/otf/otf_builder.dart';
 import 'package:fontify_plus/src/otf/table/glyf.dart';
-import 'package:fontify_plus/src/otf/table/hmtx.dart';
 import 'package:fontify_plus/src/otf/table/post/post_script_data.dart';
 import 'package:fontify_plus/src/otf/table/post/post_script_version_20.dart';
 import 'package:fontify_plus/src/utils/misc.dart';
@@ -174,9 +173,11 @@ void main() {
             normalize: normalize,
           ).build();
 
-          final glyf = (font.tableMap[kGlyfTag]! as GlyphDataTable).glyphList;
-          final hmtx =
-              (font.tableMap[kHmtxTag]! as HorizontalMetricsTable).hMetrics;
+          // The builder was just told useOpenType: false, so this font has
+          // a glyf table; `require` says so and names the tag if it stops
+          // being true.
+          final glyf = font.tables.require<GlyphDataTable>(kGlyfTag).glyphList;
+          final hmtx = font.hmtx.hMetrics;
 
           expect(hmtx, hasLength(glyf.length));
 
