@@ -52,6 +52,15 @@ conversion leaves them invisible. fontify_plus outlines strokes by default
 data as fill geometry. Details, limitations, and troubleshooting:
 [doc/stroked_icons.md](doc/stroked_icons.md).
 
+## Variable stroke width
+
+Configure a minimum and maximum stroke width to emit a CFF2 variable font
+whose `wght` axis is the literal width in SVG units — `Icon(MyIcons.home,
+size: 16, weight: 1.33)` renders the icon drawn at width 1.33. YAML:
+`stroke_width_range: [1.33, 2]`; CLI: `--stroke-width-range=1.33,2`; API:
+`strokeWidthRange: StrokeWidthRange(1.33, 2)`. Requires outlining and OpenType
+outlines (both defaults). Full guide: [doc/variable_stroke.md](doc/variable_stroke.md).
+
 ## Glyph sizing
 
 By default each glyph is scaled so its longest side fills the em square

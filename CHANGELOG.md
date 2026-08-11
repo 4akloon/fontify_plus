@@ -1,7 +1,19 @@
 # Changelog
 
-## Unreleased
+## 0.6.0
 
+* **Variable stroke width.** Configure `stroke_width_range` in YAML,
+  `--stroke-width-range` on the CLI, or `strokeWidthRange` on `svgToOtf` to
+  emit a CFF2 variable font whose `wght` axis is the literal stroke width in
+  SVG units — `Icon(MyIcons.home, size: 16, weight: 1.33)` renders the
+  geometry drawn at width 1.33, not a 100–900 rescaling. Requires
+  `outline_strokes` and `opentype` (both defaults). Guide:
+  `doc/variable_stroke.md`.
+* **Output changes for every user**, not only those who enable the axis:
+  `example/fonts/my_icons.otf` went 3112 → 2272 bytes; `check` 97 → 22 points;
+  `arrow_right` 376 → 37 — a 27% size drop from removing redundant offset
+  subdivision on near-straight edges. That is why this release is a minor
+  bump rather than a patch.
 * **Breaking:** `OS2Table`'s 39 positional parameters are gone. The
   constructor now takes named parameters, and the fields live in one object
   per version that introduced them, **nested** the way OpenType's versions
@@ -177,6 +189,10 @@
   generation is already under way. Pairing `stroke_width_range` with `outline_strokes:
   false` or `opentype: false` fails the same way, naming both config keys,
   before font generation starts.
+* `generateFlutterClass` documents the variable `wght` axis in the generated
+  class comment when `strokeWidthRange` is set — the range, axis tag, and an
+  `Icon(..., weight:)` example — without changing the class shape or emitting a
+  size→width helper.
 * Fonts generated from icons with an exact-90° round join
   (`stroke-linejoin="round"`) may differ slightly from those produced by
   0.5.2. The join's arc is now segmented using the source path's tangents
