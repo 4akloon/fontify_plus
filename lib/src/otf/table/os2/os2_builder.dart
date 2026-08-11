@@ -53,59 +53,60 @@ OS2Table buildOS2Table(
 
   return OS2Table(
     null,
-    version,
-    _getAverageWidth(hmtx),
+    version: version,
+    xAvgCharWidth: _getAverageWidth(hmtx),
     // Pinned to 400 (Regular) even for a variable font whose `wght` axis
     // carries literal stroke widths in the 1.33-2.0 range. An honest
     // usWeightClass for that range would be 2 ("Extra-thin"), but generic
     // font tooling that reads usWeightClass without instancing the font
     // would then treat the icon font as thinner than Thin, which is a worse
     // default than a class that doesn't describe this axis at all.
-    400,
-    5, // Normal width
-    0, // Installable embedding
-    scriptXsize,
-    scriptYsize,
-    0, // zero X offset
-    (height * kDefaultSubscriptRelativeYoffset).round(),
-    scriptXsize,
-    scriptYsize,
-    0, // zero X offset
-    (height * kDefaultSuperscriptRelativeYoffset).round(),
-    (height * kDefaultStrikeoutRelativeSize).round(),
-    (height * kDefaultStrikeoutRelativeOffset).round(),
-    0, // No Classification
-    kDefaultPANOSE,
+    usWeightClass: 400,
+    usWidthClass: 5, // Normal width
+    fsType: 0, // Installable embedding
+    ySubscriptXSize: scriptXsize,
+    ySubscriptYSize: scriptYsize,
+    ySubscriptXOffset: 0,
+    ySubscriptYOffset: (height * kDefaultSubscriptRelativeYoffset).round(),
+    ySuperscriptXSize: scriptXsize,
+    ySuperscriptYSize: scriptYsize,
+    ySuperscriptXOffset: 0,
+    ySuperscriptYOffset: (height * kDefaultSuperscriptRelativeYoffset).round(),
+    yStrikeoutSize: (height * kDefaultStrikeoutRelativeSize).round(),
+    yStrikeoutPosition: (height * kDefaultStrikeoutRelativeOffset).round(),
+    sFamilyClass: 0, // No Classification
+    panose: kDefaultPANOSE,
 
     /// NOTE: Only 2 unicode ranges are used now.
     ///
     /// Should be made calculated, in case of using other ranges.
-    1, // Bit 1: Basic Latin. Includes space
-    (1 << 28) | (1 << 25), // Bits 57 & 60: Non-Plane 0 and Private Use Area
-    0,
-    0,
-    asciiAchVendID,
-    0x40 | 0x80, // REGULAR and USE_TYPO_METRICS
-    cmapFormat4subtable.startCode.first,
-    lastRealCharIndex,
-    hhea.ascender,
-    hhea.descender,
-    hhea.lineGap,
-    math.max(head.yMax, hhea.ascender),
-    -math.min(head.yMin, hhea.descender),
-    !isV1 ? null : 0, // The code page is not functional
-    !isV1 ? null : 0,
-    !isV4 ? null : 0,
-    !isV4 ? null : 0,
-    !isV4 ? null : 0,
-    !isV4 ? null : kUnicodeSpaceCharCode,
-    !isV4 ? null : _getMaxContext(gsub),
+    ulUnicodeRange1: 1, // Bit 1: Basic Latin. Includes space
+    // Bits 57 & 60: Non-Plane 0 and Private Use Area
+    ulUnicodeRange2: (1 << 28) | (1 << 25),
+    ulUnicodeRange3: 0,
+    ulUnicodeRange4: 0,
+    achVendID: asciiAchVendID,
+    fsSelection: 0x40 | 0x80, // REGULAR and USE_TYPO_METRICS
+    usFirstCharIndex: cmapFormat4subtable.startCode.first,
+    usLastCharIndex: lastRealCharIndex,
+    sTypoAscender: hhea.ascender,
+    sTypoDescender: hhea.descender,
+    sTypoLineGap: hhea.lineGap,
+    usWinAscent: math.max(head.yMax, hhea.ascender),
+    usWinDescent: -math.min(head.yMin, hhea.descender),
+    ulCodePageRange1: !isV1 ? null : 0, // The code page is not functional
+    ulCodePageRange2: !isV1 ? null : 0,
+    sxHeight: !isV4 ? null : 0,
+    sCapHeight: !isV4 ? null : 0,
+    usDefaultChar: !isV4 ? null : 0,
+    usBreakChar: !isV4 ? null : kUnicodeSpaceCharCode,
+    usMaxContext: !isV4 ? null : _getMaxContext(gsub),
 
     /// For fonts that were not designed for multiple optical-size variants,
     /// usLowerOpticalPointSize should be set to 0 (zero),
     /// and usUpperOpticalPointSize should be set to 0xFFFF.
-    !isV5 ? null : 0,
-    !isV5 ? null : 0xFFFE,
+    usLowerOpticalPointSize: !isV5 ? null : 0,
+    usUpperOpticalPointSize: !isV5 ? null : 0xFFFE,
   );
 }
 
