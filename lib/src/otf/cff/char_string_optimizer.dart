@@ -11,8 +11,8 @@ const _curveToOperators = [
 ];
 
 class CharStringOptimizer {
-  CharStringOptimizer(bool isCFF1)
-    : _limits = CharStringInterpreterLimits(isCFF1);
+  CharStringOptimizer(bool isCFF1, {int regionCount = 0})
+    : _limits = CharStringInterpreterLimits(isCFF1, regionCount: regionCount);
 
   final CharStringInterpreterLimits _limits;
 
