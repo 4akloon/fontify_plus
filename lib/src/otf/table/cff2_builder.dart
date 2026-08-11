@@ -60,7 +60,7 @@ CFF2Table _buildCFF2Table(List<List<GenericGlyph>> glyphMasterList) {
 
     final byteData = charStringWriter.writeCommands(
       CharStringBlender(
-        prepared.first.toCharStringCommandsForMasters(prepared, optimizer),
+        CharStringEncoder(prepared, optimizer).encode(),
       ).merge(),
     );
 

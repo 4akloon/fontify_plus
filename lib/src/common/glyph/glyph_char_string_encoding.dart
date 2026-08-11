@@ -5,35 +5,38 @@ import '../../utils/otf.dart';
 import '../outline.dart';
 import 'generic_glyph_base.dart';
 
-/// Turns a glyph's contours into CFF charstring commands.
-extension GlyphCharStringEncoding on GenericGlyph {
-  /// Turns this glyph's contours into CFF charstring commands.
-  List<CharStringCommand> toCharStringCommands(CharStringOptimizer optimizer) =>
-      toCharStringCommandsForMasters([this], optimizer).single;
+/// Encodes every master of one glyph into structurally identical command
+/// streams — same operators, same operand counts, in the same order.
+///
+/// The masters must already be point-compatible; `checkMastersCompatible`
+/// is what establishes that. What this adds is that the *encoding* of those
+/// compatible points is also common: every operator choice below is made
+/// from all masters at once rather than from each master's own coordinates,
+/// because the shorthand forms encode a dropped delta as an implicit zero
+/// and would otherwise discard a movement one master makes and another does
+/// not.
+///
+/// With a single master every joint test reduces to that master's own, so
+/// this reproduces the previous encoder exactly.
+///
+/// Unlike the former `GenericGlyph.toCharStringCommandsForMasters` extension,
+/// this takes its masters as an explicit constructor argument — the receiver
+/// glyph of that extension was never read, so
+/// `a.toCharStringCommandsForMasters([b, c], opt)` compiled, ignored `a`, and
+/// encoded `b` and `c`.
+class CharStringEncoder {
+  CharStringEncoder(this.masters, this.optimizer);
 
-  /// Encodes every master of one glyph into structurally identical command
-  /// streams — same operators, same operand counts, in the same order.
-  ///
-  /// The masters must already be point-compatible; `checkMastersCompatible`
-  /// is what establishes that. What this adds is that the *encoding* of those
-  /// compatible points is also common: every operator choice below is made
-  /// from all masters at once rather than from each master's own coordinates,
-  /// because the shorthand forms encode a dropped delta as an implicit zero
-  /// and would otherwise discard a movement one master makes and another does
-  /// not.
-  ///
-  /// With a single master every joint test reduces to that master's own, so
-  /// this reproduces the previous encoder exactly.
-  List<List<CharStringCommand>> toCharStringCommandsForMasters(
-    List<GenericGlyph> masters,
-    CharStringOptimizer optimizer,
-  ) {
+  final List<GenericGlyph> masters;
+  final CharStringOptimizer optimizer;
+
+  List<List<CharStringCommand>> encode() {
     if (masters.isEmpty) {
       throw ArgumentError('At least one master is required');
     }
 
     for (final master in masters) {
-      master._checkOutlines();
+      _checkOutlines(master);
     }
 
     // Every point accessor rebuilds its list per call, so each is read once.
@@ -116,8 +119,8 @@ extension GlyphCharStringEncoding on GenericGlyph {
     return optimizer.optimizeMasters(commandLists);
   }
 
-  void _checkOutlines() {
-    for (final outline in outlines) {
+  void _checkOutlines(GenericGlyph glyph) {
+    for (final outline in glyph.outlines) {
       if (outline.hasQuadCurves) {
         // NOTE: what about doing it implicitly?
         throw UnsupportedError('CharString outlines must contain cubic curves');
@@ -142,4 +145,11 @@ extension GlyphCharStringEncoding on GenericGlyph {
       }
     }
   }
+}
+
+/// Turns a glyph's contours into CFF charstring commands.
+extension GlyphCharStringEncoding on GenericGlyph {
+  /// Turns this glyph's contours into CFF charstring commands.
+  List<CharStringCommand> toCharStringCommands(CharStringOptimizer optimizer) =>
+      CharStringEncoder([this], optimizer).encode().single;
 }

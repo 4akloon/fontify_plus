@@ -17,7 +17,7 @@ import 'package:test/test.dart';
 /// [path] lets a second master trace a different-sized triangle while
 /// keeping the same M/L/L/Z command structure, which is what keeps the two
 /// masters' point counts and on-curve patterns compatible — a prerequisite
-/// `toCharStringCommandsForMasters` enforces.
+/// `CharStringEncoder` enforces.
 GenericGlyph _triangle([String path = 'M0 0 L10 0 L10 10 Z']) =>
     GenericGlyph.fromSvg(
       'icon',

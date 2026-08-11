@@ -6,9 +6,9 @@ import 'char_string_operator.dart';
 /// charstring, inserting `blend` wherever the masters disagree.
 ///
 /// [masters] must be structurally identical — same operators, same operand
-/// counts — which is what `toCharStringCommandsForMasters` guarantees. The
-/// first entry is the default master, the one the `fvar` default instance
-/// selects; every other entry contributes one region's deltas. [regionCount]
+/// counts — which is what `CharStringEncoder` guarantees. The first entry is
+/// the default master, the one the `fvar` default instance selects; every
+/// other entry contributes one region's deltas. [regionCount]
 /// is `masters.length - 1`, a property of this object rather than a
 /// recomputed local that must agree with a separately threaded argument.
 ///

@@ -59,10 +59,10 @@ void main() {
         const math.Point<num>(10, 3),
       ]);
 
-      final masters = a.toCharStringCommandsForMasters([
+      final masters = CharStringEncoder([
         a,
         b,
-      ], CharStringOptimizer(false));
+      ], CharStringOptimizer(false)).encode();
 
       expect(masters, hasLength(2));
       for (final commands in masters) {
@@ -86,10 +86,10 @@ void main() {
         const math.Point<num>(1, 9),
       ]);
 
-      final masters = a.toCharStringCommandsForMasters([
+      final masters = CharStringEncoder([
         a,
         b,
-      ], CharStringOptimizer(false));
+      ], CharStringOptimizer(false)).encode();
 
       List<String> shapeOf(List<CharStringCommand> commands) => [
         for (final c in commands) '${c.operator}:${c.operandList.length}',
@@ -123,10 +123,10 @@ void main() {
       // On its own, master A's curve moves nothing and is dropped entirely.
       expect(a.toCharStringCommands(CharStringOptimizer(false)), hasLength(1));
 
-      final masters = a.toCharStringCommandsForMasters([
+      final masters = CharStringEncoder([
         a,
         b,
-      ], CharStringOptimizer(false));
+      ], CharStringOptimizer(false)).encode();
 
       expect(masters[0].map((c) => c.operator), [vmoveto, rrcurveto]);
       expect(masters[1].map((c) => c.operator), [vmoveto, rrcurveto]);
@@ -151,10 +151,10 @@ void main() {
         const math.Point<num>(9, 10),
       ]);
 
-      final masters = a.toCharStringCommandsForMasters([
+      final masters = CharStringEncoder([
         a,
         b,
-      ], CharStringOptimizer(false));
+      ], CharStringOptimizer(false)).encode();
 
       for (final commands in masters) {
         expect(commands.map((c) => c.operator), [rmoveto, rlineto]);
@@ -196,10 +196,10 @@ void main() {
         onCurve: [true, false, false, true, false, false, true],
       );
 
-      final masters = a.toCharStringCommandsForMasters([
+      final masters = CharStringEncoder([
         a,
         b,
-      ], CharStringOptimizer(false));
+      ], CharStringOptimizer(false)).encode();
 
       for (final commands in masters) {
         expect(commands.map((c) => c.operator), [vmoveto, vvcurveto]);
@@ -226,19 +226,17 @@ void main() {
       ]);
 
       expect(
-        () => a.toCharStringCommandsForMasters([
+        () => CharStringEncoder([
           a,
           b,
-        ], CharStringOptimizer(false)),
+        ], CharStringOptimizer(false)).encode(),
         throwsArgumentError,
       );
     });
 
     test('at least one master is required', () {
       expect(
-        () => _glyph([
-          const math.Point<num>(0, 0),
-        ]).toCharStringCommandsForMasters([], CharStringOptimizer(false)),
+        () => CharStringEncoder([], CharStringOptimizer(false)).encode(),
         throwsArgumentError,
       );
     });
