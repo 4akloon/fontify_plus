@@ -20,6 +20,15 @@ class CFF2Table extends CFFTable implements CalculatableOffsets {
   factory CFF2Table.fromByteData(ByteData byteData, TableRecordEntry entry) =>
       _readCFF2Table(byteData, entry);
 
+  /// Builds a CFF2 table from [glyphMasterList].
+  ///
+  /// Each entry is one glyph's masters, default first — not a bare glyph
+  /// list. A single-element entry is a glyph that does not vary; every entry
+  /// being single-element is a static table, and [vstoreData] comes out
+  /// null. Two-element entries (one region) get a `vstore` built by
+  /// `singleRegionVariationStore`, which is currently the only region count
+  /// this factory accepts — every glyph must agree on its master count, and
+  /// that count cannot exceed two.
   factory CFF2Table.create(List<List<GenericGlyph>> glyphMasterList) =>
       _buildCFF2Table(glyphMasterList);
 

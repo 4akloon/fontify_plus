@@ -10,6 +10,29 @@ CFF2Table _buildCFF2Table(List<List<GenericGlyph>> glyphMasterList) {
       ? 0
       : glyphMasterList.first.length - 1;
 
+  // A glyph with zero masters (`length - 1 == -1`) would otherwise pass the
+  // consistency check below whenever every glyph agrees on having none, and
+  // then divide by zero inside CharStringInterpreterLimits.
+  if (regionCount < 0) {
+    throw ArgumentError('Every glyph must have at least one master');
+  }
+
+  // singleRegionVariationStore hard-codes exactly one region: it is built
+  // for this package's single wght axis and two masters, not for a general
+  // k-region store. blendCommands, optimizeMasters and
+  // CharStringInterpreterLimits all genuinely support more regions, so
+  // nothing below this line would fail on a third master — the charstrings
+  // would encode fine and decode into a store advertising one region while
+  // carrying two deltas per value, silently corrupting the font. This is
+  // the store builder's limit, not a CFF2 or interpreter one.
+  if (regionCount > 1) {
+    throw ArgumentError(
+      'singleRegionVariationStore only encodes a single region (two '
+      'masters per glyph); got $regionCount regions from '
+      '${regionCount + 1} masters per glyph',
+    );
+  }
+
   for (final masters in glyphMasterList) {
     if (masters.length - 1 != regionCount) {
       throw ArgumentError(
