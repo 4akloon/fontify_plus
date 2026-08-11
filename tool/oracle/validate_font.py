@@ -5,10 +5,16 @@ Usage:
   validate_font.py --variable VARIABLE.otf --static-prefix PREFIX
 
 `--variable` runs the full variable-font gate set on VARIABLE.otf:
-metadata round-trip, interpolation against static fonts at each axis stop,
-`pyftsubset` survival, and `ots-sanitize`. Static fonts at each stop are read
-from PREFIX + "{stop}_cff.otf" (e.g. PREFIX=fonts/proto/static_ yields
-fonts/proto/static_1.33_cff.otf).
+metadata round-trip, interpolation checks, `pyftsubset` survival, and
+`ots-sanitize`.
+
+Static fonts at PREFIX + "{stop}_cff.otf" are required for the default
+endpoint (2.0). Stops other than the planning width are *not* compared to
+independently rebuilt statics: this package plans outlining once at the
+axis maximum and replays that topology, so a static font regenerated at
+1.33/1.5 can diverge in subdivision even when the variable font is correct.
+Dart's `variable_font_test` pins the masters themselves; here the mid stop
+is checked as a lerp of the two instances (affinity survived encoding).
 
 Plain FONT arguments only check parse and round-trip save.
 """
@@ -39,6 +45,26 @@ def _outlines(font, glyph_name):
             if isinstance(arg, tuple):
                 points.extend(arg)
     return points
+
+
+def _icon_codepoints(cmap):
+    """PUA icon codepoints present in [cmap], each once."""
+    seen = set()
+    for code in ICON_CODEPOINTS:
+        if code in cmap and code not in seen:
+            seen.add(code)
+            yield code
+    for code in sorted(cmap):
+        if code >= 0xE000 and code not in seen:
+            seen.add(code)
+            yield code
+
+
+def _round_trip_instance(variable, weight):
+    instance = instantiateVariableFont(variable, {"wght": weight})
+    buffer = io.BytesIO()
+    instance.save(buffer)
+    return TTFont(io.BytesIO(buffer.getvalue()))
 
 
 def validate_static(path):
@@ -78,50 +104,42 @@ def validate_variable_metadata(path):
 
 
 def validate_interpolation(variable_path, static_prefix):
-    """Axis endpoints must match instancing; mid stop must match lerped endpoints."""
+    """Default endpoint matches static@max; mid matches lerp of endpoints."""
     variable = TTFont(variable_path)
     worst = 0.0
 
-    thin = instantiateVariableFont(variable, {"wght": STOPS[0]})
-    thick = instantiateVariableFont(variable, {"wght": STOPS[-1]})
-    thin_buffer = io.BytesIO()
-    thin.save(thin_buffer)
-    thin = TTFont(io.BytesIO(thin_buffer.getvalue()))
-    thick_buffer = io.BytesIO()
-    thick.save(thick_buffer)
-    thick = TTFont(io.BytesIO(thick_buffer.getvalue()))
+    thin = _round_trip_instance(variable, STOPS[0])
+    thick = _round_trip_instance(variable, STOPS[-1])
+    mid = _round_trip_instance(variable, 1.5)
 
     static_max_path = pathlib.Path(f"{static_prefix}2.0_cff.otf")
     if not static_max_path.is_file():
-        static_max_path = pathlib.Path("example/fonts/my_icons.otf")
-    if static_max_path.is_file():
-        static_max = TTFont(static_max_path)
-        static_cmap = static_max.getBestCmap()
-        thick_cmap = thick.getBestCmap()
-        for code in _icon_codepoints(variable, thick_cmap):
-            a = _outlines(thick, thick_cmap[code])
-            b = _outlines(static_max, static_cmap[code])
-            if len(a) != len(b):
-                raise AssertionError(
-                    f"max endpoint U+{code:04X}: {len(a)} points vs {len(b)}"
-                )
-            worst = max(
-                worst,
-                max((abs(x - y) for x, y in zip(a, b)), default=0),
-            )
+        raise AssertionError(f"missing static reference {static_max_path}")
 
-    thin_cmap = thin.getBestCmap()
+    static_max = TTFont(static_max_path)
+    static_cmap = static_max.getBestCmap()
     thick_cmap = thick.getBestCmap()
+    thin_cmap = thin.getBestCmap()
+    mid_cmap = mid.getBestCmap()
+
+    for code in _icon_codepoints(thick_cmap):
+        if code not in static_cmap:
+            raise AssertionError(f"U+{code:04X} missing from {static_max_path}")
+        a = _outlines(thick, thick_cmap[code])
+        b = _outlines(static_max, static_cmap[code])
+        if len(a) != len(b):
+            raise AssertionError(
+                f"max endpoint U+{code:04X}: {len(a)} points vs {len(b)}"
+            )
+        worst = max(
+            worst,
+            max((abs(x - y) for x, y in zip(a, b)), default=0),
+        )
+
     axis_span = STOPS[-1] - STOPS[0]
     mid_fraction = (1.5 - STOPS[0]) / axis_span
 
-    mid = instantiateVariableFont(variable, {"wght": 1.5})
-    buffer = io.BytesIO()
-    mid.save(buffer)
-    mid = TTFont(io.BytesIO(buffer.getvalue()))
-    mid_cmap = mid.getBestCmap()
-
-    for code in _icon_codepoints(variable, thin_cmap):
+    for code in _icon_codepoints(thin_cmap):
         thin_pts = _outlines(thin, thin_cmap[code])
         thick_pts = _outlines(thick, thick_cmap[code])
         mid_pts = _outlines(mid, mid_cmap[code])
@@ -130,23 +148,29 @@ def validate_interpolation(variable_path, static_prefix):
                 f"U+{code:04X}: point counts differ across stops "
                 f"({len(thin_pts)}, {len(mid_pts)}, {len(thick_pts)})"
             )
+        # Axis must move something — a silently static CFF2 would match at
+        # both endpoints of a fill glyph, so also require at least one icon
+        # to differ; checked after the loop via any_moved.
         for thin_v, thick_v, mid_v in zip(thin_pts, thick_pts, mid_pts):
             expected = thin_v + mid_fraction * (thick_v - thin_v)
             worst = max(worst, abs(mid_v - expected))
+
+    any_moved = False
+    for code in _icon_codepoints(thin_cmap):
+        thin_pts = _outlines(thin, thin_cmap[code])
+        thick_pts = _outlines(thick, thick_cmap[code])
+        if thin_pts != thick_pts:
+            any_moved = True
+            break
+    if not any_moved:
+        raise AssertionError(
+            "every icon is identical at axis min and max — axis is ignored"
+        )
 
     if worst > TOLERANCE:
         raise AssertionError(f"worst deviation {worst:.2f} > {TOLERANCE}")
 
     return f"interpolation consistent (worst {worst:.2f} units)"
-
-
-def _icon_codepoints(variable, cmap):
-    for code in ICON_CODEPOINTS:
-        if code in cmap:
-            yield code
-    for code in sorted(cmap):
-        if code >= 0xE000:
-            yield code
 
 
 def validate_subset(path):
@@ -192,7 +216,9 @@ def _ots_sanitize_command():
 
 
 def validate_ots(path):
-    subprocess.run(_ots_sanitize_command() + [str(path)], check=True, capture_output=True)
+    subprocess.run(
+        _ots_sanitize_command() + [str(path)], check=True, capture_output=True
+    )
     return "ots-sanitize clean"
 
 
@@ -246,5 +272,8 @@ if __name__ == "__main__":
             sys.exit(1)
 
     if not paths and variable_path is None:
-        print(f"usage: {sys.argv[0]} [--variable VAR --static-prefix PREFIX] FONT ...")
+        print(
+            f"usage: {sys.argv[0]} "
+            f"[--variable VAR --static-prefix PREFIX] FONT ..."
+        )
         sys.exit(2)

@@ -273,6 +273,26 @@ void main() {
       expect(font.tableMap, isNot(contains(kCFFTag)));
     });
 
+    test('OTFWriter emits fvar and STAT into the SFNT directory', () {
+      // tableMap membership and the encode-set registration test both stay
+      // green if encode silently drops those tags. The directory on the wire
+      // is what a consumer actually sees.
+      final font = _variableFontFrom('check', _svg('check'));
+      final bytes = OTFWriter().write(font);
+      final numTables = bytes.getUint16(4);
+      final tags = {
+        for (var i = 0; i < numTables; i++)
+          TableRecordEntry.fromByteData(
+            bytes,
+            kOffsetTableLength + i * kTableRecordEntryLength,
+          ).tag,
+      };
+
+      expect(tags, contains(kFvarTag));
+      expect(tags, contains(kStatTag));
+      expect(tags, contains(kCFF2Tag));
+    });
+
     test("names the axis, so fvar's axisNameID resolves", () {
       // OTS validates fvar's axisNameID and every STAT valueNameID against
       // the name table and rejects a font whose string is missing.
