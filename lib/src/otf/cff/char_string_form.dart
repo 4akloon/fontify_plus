@@ -19,73 +19,76 @@ class CharStringForm {
   final List<int> operandIndices;
 }
 
-/// Whether component [i] of the segment is zero in every master.
+/// Chooses the shortest charstring form of a segment from every master's
+/// deltas at once.
 ///
-/// The shorthand forms do not merely spell a segment more briefly: they encode
-/// the dropped component as an implicit zero. Taking one because the reference
-/// master happens to be axis-aligned would silently discard whatever the other
-/// master actually moves along that axis.
-bool _zeroInEvery(List<List<int>> deltas, int i) =>
-    deltas.every((master) => master[i] == 0);
+/// The across-masters zero rule is the whole idea: a shorthand form encodes a
+/// dropped component as an implicit zero, so the component may be dropped only
+/// when it is zero in every master.
+class CharStringFormChooser {
+  const CharStringFormChooser(this.deltas);
 
-/// The shortest charstring form of a move.
-CharStringForm movetoForm(List<List<int>> deltas) {
-  if (_zeroInEvery(deltas, 0)) {
-    return const CharStringForm(vmoveto, [1]);
+  /// One flat delta list per master, all the same length.
+  final List<List<int>> deltas;
+
+  /// Whether component [i] of the segment is zero in every master.
+  bool _zeroInEvery(int i) => deltas.every((master) => master[i] == 0);
+
+  /// The shortest charstring form of a move.
+  CharStringForm moveto() {
+    if (_zeroInEvery(0)) {
+      return const CharStringForm(vmoveto, [1]);
+    }
+
+    if (_zeroInEvery(1)) {
+      return const CharStringForm(hmoveto, [0]);
+    }
+
+    return const CharStringForm(rmoveto, [0, 1]);
   }
 
-  if (_zeroInEvery(deltas, 1)) {
-    return const CharStringForm(hmoveto, [0]);
+  /// The shortest charstring form of a line, by the same rule as [moveto].
+  CharStringForm lineto() {
+    if (_zeroInEvery(0)) {
+      return const CharStringForm(vlineto, [1]);
+    }
+
+    if (_zeroInEvery(1)) {
+      return const CharStringForm(hlineto, [0]);
+    }
+
+    return const CharStringForm(rlineto, [0, 1]);
   }
 
-  return const CharStringForm(rmoveto, [0, 1]);
-}
+  /// The shortest charstring form of a cubic segment.
+  ///
+  /// When the final delta moves along one axis only, the zero can be dropped and
+  /// the `vv`/`hh` form used, which also folds the first delta into that form's
+  /// single optional leading argument.
+  CharStringForm curveto() {
+    if (deltas.any((master) => master.length != 6)) {
+      throw ArgumentError('Each master must supply 6 deltas');
+    }
 
-/// The shortest charstring form of a line, by the same rule as [movetoForm].
-CharStringForm linetoForm(List<List<int>> deltas) {
-  if (_zeroInEvery(deltas, 0)) {
-    return const CharStringForm(vlineto, [1]);
+    if (_zeroInEvery(4)) {
+      return CharStringForm(vvcurveto, _compact(zeroAt: 4, leadingAt: 0));
+    }
+
+    if (_zeroInEvery(5)) {
+      return CharStringForm(hhcurveto, _compact(zeroAt: 5, leadingAt: 1));
+    }
+
+    return const CharStringForm(rrcurveto, [0, 1, 2, 3, 4, 5]);
   }
 
-  if (_zeroInEvery(deltas, 1)) {
-    return const CharStringForm(hlineto, [0]);
+  /// Drops the index at [zeroAt] and moves [leadingAt] to the front, or drops
+  /// that one too when it is zero in every master.
+  List<int> _compact({required int zeroAt, required int leadingAt}) {
+    final rest = [
+      for (var i = 0; i < 6; i++)
+        if (i != zeroAt) i,
+    ]..remove(leadingAt);
+
+    return _zeroInEvery(leadingAt) ? rest : [leadingAt, ...rest];
   }
-
-  return const CharStringForm(rlineto, [0, 1]);
-}
-
-/// The shortest charstring form of a cubic segment.
-///
-/// When the final delta moves along one axis only, the zero can be dropped and
-/// the `vv`/`hh` form used, which also folds the first delta into that form's
-/// single optional leading argument.
-CharStringForm curvetoForm(List<List<int>> deltas) {
-  if (deltas.any((master) => master.length != 6)) {
-    throw ArgumentError('Each master must supply 6 deltas');
-  }
-
-  if (_zeroInEvery(deltas, 4)) {
-    return CharStringForm(vvcurveto, _compact(deltas, zeroAt: 4, leadingAt: 0));
-  }
-
-  if (_zeroInEvery(deltas, 5)) {
-    return CharStringForm(hhcurveto, _compact(deltas, zeroAt: 5, leadingAt: 1));
-  }
-
-  return const CharStringForm(rrcurveto, [0, 1, 2, 3, 4, 5]);
-}
-
-/// Drops the index at [zeroAt] and moves [leadingAt] to the front, or drops
-/// that one too when it is zero in every master.
-List<int> _compact(
-  List<List<int>> deltas, {
-  required int zeroAt,
-  required int leadingAt,
-}) {
-  final rest = [
-    for (var i = 0; i < 6; i++)
-      if (i != zeroAt) i,
-  ]..remove(leadingAt);
-
-  return _zeroInEvery(deltas, leadingAt) ? rest : [leadingAt, ...rest];
 }

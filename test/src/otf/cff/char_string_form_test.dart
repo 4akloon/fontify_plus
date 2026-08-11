@@ -6,58 +6,58 @@ void main() {
   group('charstring form, decided across masters', () {
     test('a single master keeps every shorthand it takes today', () {
       expect(
-        movetoForm([
+        CharStringFormChooser([
           [0, 7],
-        ]).operator,
+        ]).moveto().operator,
         vmoveto,
       );
       expect(
-        movetoForm([
+        CharStringFormChooser([
           [0, 7],
-        ]).operandIndices,
+        ]).moveto().operandIndices,
         [1],
       );
       expect(
-        movetoForm([
+        CharStringFormChooser([
           [7, 0],
-        ]).operator,
+        ]).moveto().operator,
         hmoveto,
       );
       expect(
-        movetoForm([
+        CharStringFormChooser([
           [7, 0],
-        ]).operandIndices,
+        ]).moveto().operandIndices,
         [0],
       );
       expect(
-        movetoForm([
+        CharStringFormChooser([
           [7, 7],
-        ]).operator,
+        ]).moveto().operator,
         rmoveto,
       );
       expect(
-        movetoForm([
+        CharStringFormChooser([
           [7, 7],
-        ]).operandIndices,
+        ]).moveto().operandIndices,
         [0, 1],
       );
 
       expect(
-        linetoForm([
+        CharStringFormChooser([
           [0, 7],
-        ]).operator,
+        ]).lineto().operator,
         vlineto,
       );
       expect(
-        linetoForm([
+        CharStringFormChooser([
           [7, 0],
-        ]).operator,
+        ]).lineto().operator,
         hlineto,
       );
       expect(
-        linetoForm([
+        CharStringFormChooser([
           [7, 7],
-        ]).operator,
+        ]).lineto().operator,
         rlineto,
       );
     });
@@ -65,20 +65,20 @@ void main() {
     test('a component zero in one master only is written in full', () {
       // Master A moves straight up, master B also drifts sideways. Taking
       // vmoveto from A would encode B's dx as an implicit zero and lose it.
-      final form = movetoForm([
+      final form = CharStringFormChooser([
         [0, 7],
         [3, 7],
-      ]);
+      ]).moveto();
 
       expect(form.operator, rmoveto);
       expect(form.operandIndices, [0, 1]);
     });
 
     test('a component zero in every master is still dropped', () {
-      final form = linetoForm([
+      final form = CharStringFormChooser([
         [0, 7],
         [0, 9],
-      ]);
+      ]).lineto();
 
       expect(form.operator, vlineto);
       expect(form.operandIndices, [1]);
@@ -86,42 +86,42 @@ void main() {
 
     test('vvcurveto needs the final dx zero in every master', () {
       // dlist[4] is the last curve's dx.
-      final shared = curvetoForm([
+      final shared = CharStringFormChooser([
         [1, 2, 3, 4, 0, 6],
         [1, 2, 3, 4, 0, 8],
-      ]);
+      ]).curveto();
       expect(shared.operator, vvcurveto);
       // zeroAt 4 removed, leadingAt 0 (dx0 = 1, non-zero) moved to the front.
       expect(shared.operandIndices, [0, 1, 2, 3, 5]);
 
-      final split = curvetoForm([
+      final split = CharStringFormChooser([
         [1, 2, 3, 4, 0, 6],
         [1, 2, 3, 4, 5, 8],
-      ]);
+      ]).curveto();
       expect(split.operator, rrcurveto);
       expect(split.operandIndices, [0, 1, 2, 3, 4, 5]);
     });
 
     test('the leading delta is dropped only when zero in every master', () {
-      final dropped = curvetoForm([
+      final dropped = CharStringFormChooser([
         [0, 2, 3, 4, 0, 6],
         [0, 2, 3, 4, 0, 8],
-      ]);
+      ]).curveto();
       expect(dropped.operator, vvcurveto);
       expect(dropped.operandIndices, [1, 2, 3, 5]);
 
-      final kept = curvetoForm([
+      final kept = CharStringFormChooser([
         [0, 2, 3, 4, 0, 6],
         [1, 2, 3, 4, 0, 8],
-      ]);
+      ]).curveto();
       expect(kept.operator, vvcurveto);
       expect(kept.operandIndices, [0, 1, 2, 3, 5]);
     });
 
     test('hhcurveto is preferred only when vvcurveto does not apply', () {
-      final form = curvetoForm([
+      final form = CharStringFormChooser([
         [1, 2, 3, 4, 5, 0],
-      ]);
+      ]).curveto();
       expect(form.operator, hhcurveto);
       // zeroAt 5 removed, leadingAt 1 (dy0 = 2) moved to the front.
       expect(form.operandIndices, [1, 0, 2, 3, 4]);
@@ -133,60 +133,60 @@ void main() {
   // widening the decision to several masters did not quietly narrow what is
   // covered for one.
   group('charstring form, single master', () {
-    test('movetoForm prefers vmoveto when both deltas are zero', () {
+    test('moveto prefers vmoveto when both deltas are zero', () {
       expect(
-        movetoForm([
+        CharStringFormChooser([
           [0, 0],
-        ]).operator,
+        ]).moveto().operator,
         vmoveto,
       );
       expect(
-        movetoForm([
+        CharStringFormChooser([
           [0, 0],
-        ]).operandIndices,
+        ]).moveto().operandIndices,
         [1],
       );
     });
 
-    test('linetoForm keeps both deltas when neither is zero', () {
+    test('lineto keeps both deltas when neither is zero', () {
       expect(
-        linetoForm([
+        CharStringFormChooser([
           [5, 6],
-        ]).operandIndices,
+        ]).lineto().operandIndices,
         [0, 1],
       );
     });
 
-    test('curvetoForm throws unless every master supplies six deltas', () {
+    test('curveto throws unless every master supplies six deltas', () {
       expect(
-        () => curvetoForm([
+        () => CharStringFormChooser([
           [1, 2, 3, 4, 5],
-        ]),
+        ]).curveto(),
         throwsArgumentError,
       );
       expect(
-        () => curvetoForm([
+        () => CharStringFormChooser([
           [1, 2, 3, 4, 5, 6],
           [1, 2, 3, 4, 5],
-        ]),
+        ]).curveto(),
         throwsArgumentError,
       );
     });
 
-    test('curvetoForm falls back to rrcurveto when no final delta is zero', () {
-      final form = curvetoForm([
+    test('curveto falls back to rrcurveto when no final delta is zero', () {
+      final form = CharStringFormChooser([
         [1, 2, 3, 4, 5, 6],
-      ]);
+      ]).curveto();
 
       expect(form.operator, rrcurveto);
       expect(form.operandIndices, [0, 1, 2, 3, 4, 5]);
     });
 
-    test('curvetoForm prefers vvcurveto when both final deltas are zero', () {
+    test('curveto prefers vvcurveto when both final deltas are zero', () {
       expect(
-        curvetoForm([
+        CharStringFormChooser([
           [1, 2, 3, 4, 0, 0],
-        ]).operator,
+        ]).curveto().operator,
         vvcurveto,
       );
     });

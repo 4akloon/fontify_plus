@@ -92,18 +92,19 @@ extension GlyphCharStringEncoding on GenericGlyph {
     for (var i = 0; i < pointCount; i++) {
       if (isContourStart) {
         final deltas = deltasAt(i, 1);
-        emit(movetoForm(deltas), deltas);
+        final form = CharStringFormChooser(deltas);
+        emit(form.moveto(), deltas);
         isContourStart = false;
         continue;
       }
 
       if (!isOnCurveList[i] && !isOnCurveList[i + 1]) {
         final deltas = deltasAt(i, 3);
-        emit(curvetoForm(deltas), deltas);
+        emit(CharStringFormChooser(deltas).curveto(), deltas);
         i += 2;
       } else {
         final deltas = deltasAt(i, 1);
-        emit(linetoForm(deltas), deltas);
+        emit(CharStringFormChooser(deltas).lineto(), deltas);
       }
 
       if (endPoints.isNotEmpty && endPoints.first == i) {
