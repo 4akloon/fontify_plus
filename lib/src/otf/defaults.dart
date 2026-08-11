@@ -49,30 +49,30 @@ GenericGlyph _generateNotdefGlyph(int ascender) {
   final outlines = [
     // Outer rectangle clockwise
     Outline(
-      [
+      pointList: [
         outerRect.bottomLeft,
         outerRect.bottomRight,
         outerRect.topRight,
         outerRect.topLeft,
       ],
-      List.filled(4, true),
-      false,
-      true,
-      FillRule.nonzero,
+      isOnCurveList: List.filled(4, true),
+      hasCompactCurves: false,
+      hasQuadCurves: true,
+      fillRule: FillRule.nonzero,
     ),
 
     // Inner rectangle counter-clockwise
     Outline(
-      [
+      pointList: [
         innerRect.bottomLeft,
         innerRect.topLeft,
         innerRect.topRight,
         innerRect.bottomRight,
       ],
-      List.filled(4, true),
-      false,
-      true,
-      FillRule.nonzero,
+      isOnCurveList: List.filled(4, true),
+      hasCompactCurves: false,
+      hasQuadCurves: true,
+      fillRule: FillRule.nonzero,
     ),
   ];
 

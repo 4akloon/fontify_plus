@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 
 List<GenericGlyphMetrics> _metricsList() => [
   GenericGlyphMetrics.empty(),
-  GenericGlyphMetrics(-5, 700, -10, 800),
+  GenericGlyphMetrics(xMin: -5, xMax: 700, yMin: -10, yMax: 800),
 ];
 
 void main() {
@@ -77,7 +77,12 @@ void main() {
 
       final decoded = HeaderTable.fromByteData(
         bytes,
-        TableRecordEntry('head', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'head',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded.unitsPerEm, 1000);

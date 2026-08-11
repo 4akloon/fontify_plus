@@ -9,7 +9,7 @@ void main() {
   group('CmapSegmentedCoverageTable.create', () {
     test('declares format 12', () {
       final table = CmapSegmentedCoverageTable.create(
-        [CmapSegment(0x10000, 0x10010, 1)],
+        [CmapSegment(startCode: 0x10000, endCode: 0x10010, startGlyphID: 1)],
       );
 
       expect(table.format, kCmapFormat12);
@@ -17,7 +17,10 @@ void main() {
 
     test('one group per segment', () {
       final table = CmapSegmentedCoverageTable.create(
-        [CmapSegment(1, 2, 1), CmapSegment(10, 20, 2)],
+        [
+          CmapSegment(startCode: 1, endCode: 2, startGlyphID: 1),
+          CmapSegment(startCode: 10, endCode: 20, startGlyphID: 2),
+        ],
       );
 
       expect(table.numGroups, 2);
@@ -28,7 +31,7 @@ void main() {
   group('CmapSegmentedCoverageTable round trip', () {
     test('round-trips through encodeToBinary and fromByteData', () {
       final table = CmapSegmentedCoverageTable.create(
-        [CmapSegment(0x10000, 0x10010, 1)],
+        [CmapSegment(startCode: 0x10000, endCode: 0x10010, startGlyphID: 1)],
       );
       final bytes = ByteData(table.size);
 

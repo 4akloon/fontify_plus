@@ -4,21 +4,24 @@ import '../../../common/codable/binary.dart';
 
 /// Which variation regions one subtable's deltas apply to.
 class ItemVariationData extends BinaryCodable {
-  ItemVariationData(
-    this.itemCount,
-    this.shortDeltaCount,
-    this.regionIndexCount,
-    this.regionIndexes,
-  );
+  ItemVariationData({
+    required this.itemCount,
+    required this.shortDeltaCount,
+    required this.regionIndexCount,
+    required this.regionIndexes,
+  });
 
   factory ItemVariationData.fromByteData(ByteData byteData) {
     final regionIndexCount = byteData.getUint16(4);
 
     return ItemVariationData(
-      byteData.getUint16(0),
-      byteData.getUint16(2),
-      regionIndexCount,
-      List.generate(regionIndexCount, (i) => byteData.getUint16(6 + 2 * i)),
+      itemCount: byteData.getUint16(0),
+      shortDeltaCount: byteData.getUint16(2),
+      regionIndexCount: regionIndexCount,
+      regionIndexes: List.generate(
+        regionIndexCount,
+        (i) => byteData.getUint16(6 + 2 * i),
+      ),
     );
   }
 

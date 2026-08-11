@@ -14,7 +14,7 @@ void main() {
     });
 
     test('round-trips through encodeToBinary and fromByteData', () {
-      final record = EncodingRecord(3, 1, 100);
+      final record = EncodingRecord(platformID: 3, encodingID: 1, offset: 100);
       final bytes = ByteData(record.size);
 
       record.encodeToBinary(bytes);

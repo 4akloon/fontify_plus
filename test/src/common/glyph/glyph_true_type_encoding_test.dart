@@ -8,7 +8,15 @@ import 'package:test/test.dart';
 
 GenericGlyph glyphOf(List<Point<num>> points, List<bool> onCurve) =>
     GenericGlyph(
-      [Outline(points, onCurve, false, false, FillRule.nonzero)],
+      [
+        Outline(
+          pointList: points,
+          isOnCurveList: onCurve,
+          hasCompactCurves: false,
+          hasQuadCurves: false,
+          fillRule: FillRule.nonzero,
+        ),
+      ],
       const Rectangle(0, 0, 10, 10),
     );
 
@@ -60,18 +68,26 @@ void main() {
       final glyph = GenericGlyph(
         [
           Outline(
-            [const Point(0, 0), const Point(1, 0), const Point(1, 1)],
-            [true, true, true],
-            false,
-            false,
-            FillRule.nonzero,
+            pointList: [
+              const Point(0, 0),
+              const Point(1, 0),
+              const Point(1, 1),
+            ],
+            isOnCurveList: [true, true, true],
+            hasCompactCurves: false,
+            hasQuadCurves: false,
+            fillRule: FillRule.nonzero,
           ),
           Outline(
-            [const Point(5, 5), const Point(6, 5), const Point(6, 6)],
-            [true, true, true],
-            false,
-            false,
-            FillRule.nonzero,
+            pointList: [
+              const Point(5, 5),
+              const Point(6, 5),
+              const Point(6, 6),
+            ],
+            isOnCurveList: [true, true, true],
+            hasCompactCurves: false,
+            hasQuadCurves: false,
+            fillRule: FillRule.nonzero,
           ),
         ],
         const Rectangle(0, 0, 10, 10),

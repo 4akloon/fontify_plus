@@ -49,7 +49,12 @@ void main() {
 
       final decoded = NamingTableFormat0Header.fromByteData(
         bytes,
-        TableRecordEntry('name', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'name',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded!.count, 1);
@@ -61,7 +66,12 @@ void main() {
 
       final decoded = NamingTableFormat0Header.fromByteData(
         bytes,
-        TableRecordEntry('name', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'name',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded, isNull);

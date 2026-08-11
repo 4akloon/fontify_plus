@@ -45,7 +45,12 @@ void main() {
       // the bytes above start at the table's own beginning.
       final decoded = CFF1Table.fromByteData(
         bytes,
-        TableRecordEntry(kCFFTag, 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          kCFFTag,
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       // .notdef, space, and the one requested glyph.

@@ -14,11 +14,20 @@ ItemVariationStore _store() => ItemVariationStore(
   variationRegionListOffset: 12,
   itemVariationDataCount: 1,
   itemVariationDataOffsets: [0],
-  variationRegionList: VariationRegionList(1, 1, [
-    RegionAxisCoordinates(0, 0x4000, 0x8000),
-  ]),
+  variationRegionList: VariationRegionList(
+    axisCount: 1,
+    regionCount: 1,
+    regions: [
+      RegionAxisCoordinates(startCoord: 0, peakCoord: 0x4000, endCoord: 0x8000),
+    ],
+  ),
   itemVariationDataList: [
-    ItemVariationData(2, 1, 1, [0]),
+    ItemVariationData(
+      itemCount: 2,
+      shortDeltaCount: 1,
+      regionIndexCount: 1,
+      regionIndexes: [0],
+    ),
   ],
 );
 

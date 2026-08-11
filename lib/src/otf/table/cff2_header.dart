@@ -3,22 +3,26 @@ part of 'cff.dart';
 const _kCFF2HeaderSize = 5;
 
 class CFF2TableHeader implements BinaryCodable {
-  CFF2TableHeader(
-    this.majorVersion,
-    this.minorVersion,
-    this.headerSize,
-    this.topDictLength,
-  );
+  CFF2TableHeader({
+    required this.majorVersion,
+    required this.minorVersion,
+    required this.headerSize,
+    required this.topDictLength,
+  });
 
   factory CFF2TableHeader.fromByteData(ByteData byteData) => CFF2TableHeader(
-    byteData.getUint8(0),
-    byteData.getUint8(1),
-    byteData.getUint8(2),
-    byteData.getUint16(3),
+    majorVersion: byteData.getUint8(0),
+    minorVersion: byteData.getUint8(1),
+    headerSize: byteData.getUint8(2),
+    topDictLength: byteData.getUint16(3),
   );
 
-  factory CFF2TableHeader.create() =>
-      CFF2TableHeader(_kMajorVersion2, 0, _kCFF2HeaderSize, null);
+  factory CFF2TableHeader.create() => CFF2TableHeader(
+    majorVersion: _kMajorVersion2,
+    minorVersion: 0,
+    headerSize: _kCFF2HeaderSize,
+    topDictLength: null,
+  );
 
   final int majorVersion;
   final int minorVersion;

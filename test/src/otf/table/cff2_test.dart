@@ -63,7 +63,12 @@ void main() {
 
       final decoded = CFF2Table.fromByteData(
         bytes,
-        TableRecordEntry(kCFF2Tag, 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          kCFF2Tag,
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded.charStringsData.data, hasLength(2));

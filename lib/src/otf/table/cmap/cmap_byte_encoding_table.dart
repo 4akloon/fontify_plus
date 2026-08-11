@@ -11,25 +11,28 @@ const _kByteEncodingTableSize = 256 + 6;
 /// (1, 0) subtable to be present, not because anything reads it.
 class CmapByteEncodingTable extends CmapData {
   CmapByteEncodingTable(
-    super.format,
-    this.length,
-    this.language,
-    this.glyphIdArray,
-  );
+    super.format, {
+    required this.length,
+    required this.language,
+    required this.glyphIdArray,
+  });
 
   factory CmapByteEncodingTable.fromByteData(ByteData byteData, int offset) =>
       CmapByteEncodingTable(
         byteData.getUint16(offset),
-        byteData.getUint16(offset + 2),
-        byteData.getUint16(offset + 4),
-        List.generate(256, (i) => byteData.getUint8(offset + 6 + i)),
+        length: byteData.getUint16(offset + 2),
+        language: byteData.getUint16(offset + 4),
+        glyphIdArray: List.generate(
+          256,
+          (i) => byteData.getUint8(offset + 6 + i),
+        ),
       );
 
   factory CmapByteEncodingTable.create() => CmapByteEncodingTable(
     kCmapFormat0,
-    _kByteEncodingTableSize,
-    0,
-    List.filled(256, 0), // Not using standard mac glyphs
+    length: _kByteEncodingTableSize,
+    language: 0,
+    glyphIdArray: List.filled(256, 0), // Not using standard mac glyphs
   );
 
   final int length;

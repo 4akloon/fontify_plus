@@ -47,7 +47,12 @@ void main() {
 
         final decoded = PostScriptTable.fromByteData(
           bytes,
-          TableRecordEntry('post', 0, 0, bytes.lengthInBytes),
+          TableRecordEntry(
+            'post',
+            checkSum: 0,
+            offset: 0,
+            length: bytes.lengthInBytes,
+          ),
         );
 
         expect(decoded.data, isA<PostScriptVersion30>());
@@ -64,7 +69,12 @@ void main() {
 
         final decoded = PostScriptTable.fromByteData(
           bytes,
-          TableRecordEntry('post', 0, 0, bytes.lengthInBytes),
+          TableRecordEntry(
+            'post',
+            checkSum: 0,
+            offset: 0,
+            length: bytes.lengthInBytes,
+          ),
         );
 
         final data = decoded.data as PostScriptVersion20;

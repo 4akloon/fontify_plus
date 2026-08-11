@@ -5,11 +5,11 @@ import 'feature_record.dart';
 
 /// The lookups one feature applies.
 class FeatureTable implements BinaryCodable {
-  const FeatureTable(
-    this.featureParams,
-    this.lookupIndexCount,
-    this.lookupListIndices,
-  );
+  const FeatureTable({
+    required this.featureParams,
+    required this.lookupIndexCount,
+    required this.lookupListIndices,
+  });
 
   factory FeatureTable.fromByteData(
     ByteData byteData,
@@ -21,9 +21,9 @@ class FeatureTable implements BinaryCodable {
     final lookupIndexCount = byteData.getUint16(offset + 2);
 
     return FeatureTable(
-      byteData.getUint16(offset),
-      lookupIndexCount,
-      List.generate(
+      featureParams: byteData.getUint16(offset),
+      lookupIndexCount: lookupIndexCount,
+      lookupListIndices: List.generate(
         lookupIndexCount,
         (i) => byteData.getUint16(offset + 4 + i * 2),
       ),

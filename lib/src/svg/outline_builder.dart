@@ -249,7 +249,13 @@ class _ContourAccumulator {
     }
 
     _outlines.add(
-      Outline([..._points], [..._isOnCurve], false, false, _fillRule),
+      Outline(
+        pointList: [..._points],
+        isOnCurveList: [..._isOnCurve],
+        hasCompactCurves: false,
+        hasQuadCurves: false,
+        fillRule: _fillRule,
+      ),
     );
 
     _points.clear();

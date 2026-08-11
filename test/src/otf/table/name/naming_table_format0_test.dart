@@ -101,7 +101,12 @@ void main() {
 
       final decoded = NamingTableFormat0.fromByteData(
         bytes,
-        TableRecordEntry('name', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'name',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       )!;
 
       expect(decoded.familyName, 'My Icons');

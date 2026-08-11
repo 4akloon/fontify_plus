@@ -27,7 +27,12 @@ void main() {
 
       final decoded = GlyphSubstitutionTable.fromByteData(
         bytes,
-        TableRecordEntry('GSUB', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'GSUB',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(

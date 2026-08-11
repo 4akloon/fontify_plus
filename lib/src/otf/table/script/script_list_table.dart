@@ -16,13 +16,20 @@ List<ScriptRecord> _defaultScriptRecordList() => [
 ];
 
 const _kDefaultLangSys = LanguageSystemTable(
-  0,
-  0xFFFF, // no required features
-  1,
-  [0],
+  lookupOrder: 0,
+  requiredFeatureIndex: 0xFFFF,
+  featureIndexCount: // no required features
+      1,
+  featureIndices: [0],
 );
 
-const _kDefaultScriptTable = ScriptTable(4, 0, [], [], _kDefaultLangSys);
+const _kDefaultScriptTable = ScriptTable(
+  defaultLangSysOffset: 4,
+  langSysCount: 0,
+  langSysRecords: [],
+  langSysTables: [],
+  defaultLangSys: _kDefaultLangSys,
+);
 
 /// Every script the font declares support for.
 class ScriptListTable implements BinaryCodable {

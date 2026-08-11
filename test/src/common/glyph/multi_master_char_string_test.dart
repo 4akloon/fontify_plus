@@ -18,11 +18,11 @@ GenericGlyph _glyph(List<math.Point<num>> points, {List<bool>? onCurve}) =>
     GenericGlyph(
       [
         Outline(
-          points.toList(),
-          onCurve ?? List.filled(points.length, true),
-          false,
-          false,
-          FillRule.nonzero,
+          pointList: points.toList(),
+          isOnCurveList: onCurve ?? List.filled(points.length, true),
+          hasCompactCurves: false,
+          hasQuadCurves: false,
+          fillRule: FillRule.nonzero,
         ),
       ],
       const math.Rectangle<num>(0, 0, 100, 100),

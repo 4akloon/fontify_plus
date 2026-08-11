@@ -6,11 +6,11 @@ import 'package:fontify_plus/src/otf/table/lookup/lookup_table.dart';
 import 'package:test/test.dart';
 
 const _kSubtable = LigatureSubstitutionSubtable(
-  1,
-  6,
-  0,
-  [],
-  kDefaultCoverageTable,
+  substFormat: 1,
+  coverageOffset: 6,
+  ligatureSetCount: 0,
+  ligatureSetOffsets: [],
+  coverageTable: kDefaultCoverageTable,
 );
 
 void main() {

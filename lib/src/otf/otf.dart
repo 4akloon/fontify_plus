@@ -224,9 +224,9 @@ class OpenTypeFont implements BinaryCodable {
 
       table.entry = TableRecordEntry(
         tag,
-        calculateTableChecksum(encodedTable),
-        currentTableOffset,
-        tableSize,
+        checkSum: calculateTableChecksum(encodedTable),
+        offset: currentTableOffset,
+        length: tableSize,
       );
       entryList.add(table.entry!);
 

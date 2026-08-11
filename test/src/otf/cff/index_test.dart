@@ -44,13 +44,23 @@ void main() {
   group('CFFIndex construction and size', () {
     test('size accounts for the offset array and the offSize byte', () {
       // 2 elements -> 3 offsets, each offSize=1 byte, plus 1 offSize byte.
-      final index = CFFIndex(2, 1, [1, 2, 3], true);
+      final index = CFFIndex(
+        count: 2,
+        offSize: 1,
+        offsetList: [1, 2, 3],
+        isCFF1: true,
+      );
 
       expect(index.size, CFFIndex.countSizeFor(true) + 1 + 3);
     });
 
     test('encodeToBinary throws for an offSize outside 1..4', () {
-      final index = CFFIndex(1, 5, [1, 2], true);
+      final index = CFFIndex(
+        count: 1,
+        offSize: 5,
+        offsetList: [1, 2],
+        isCFF1: true,
+      );
 
       expect(() => encode(index), throwsA(isA<TableDataFormatException>()));
     });
@@ -58,7 +68,12 @@ void main() {
 
   group('CFFIndex.fromByteData / encodeToBinary round trip', () {
     test('round-trips a non-empty CFF1 index', () {
-      final original = CFFIndex(2, 1, [1, 5, 10], true);
+      final original = CFFIndex(
+        count: 2,
+        offSize: 1,
+        offsetList: [1, 5, 10],
+        isCFF1: true,
+      );
       final bytes = encode(original);
 
       final decoded = CFFIndex.fromByteData(bytes, true);
@@ -69,7 +84,12 @@ void main() {
     });
 
     test('round-trips a non-empty CFF2 index', () {
-      final original = CFFIndex(2, 1, [1, 5, 10], false);
+      final original = CFFIndex(
+        count: 2,
+        offSize: 1,
+        offsetList: [1, 5, 10],
+        isCFF1: false,
+      );
       final bytes = encode(original);
 
       final decoded = CFFIndex.fromByteData(bytes, false);
@@ -86,7 +106,12 @@ void main() {
 
     test('round-trips a multi-byte offSize', () {
       // A large offset that needs 2 bytes per entry.
-      final original = CFFIndex(1, 2, [1, 1000], true);
+      final original = CFFIndex(
+        count: 1,
+        offSize: 2,
+        offsetList: [1, 1000],
+        isCFF1: true,
+      );
       final bytes = encode(original);
 
       final decoded = CFFIndex.fromByteData(bytes, true);

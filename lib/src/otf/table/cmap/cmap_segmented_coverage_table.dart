@@ -46,9 +46,9 @@ class CmapSegmentedCoverageTable extends CmapData {
     final groups = [
       for (final segment in segmentList)
         SequentialMapGroup(
-          segment.startCode,
-          segment.endCode,
-          segment.startGlyphID,
+          startCharCode: segment.startCode,
+          endCharCode: segment.endCode,
+          startGlyphID: segment.startGlyphID,
         ),
     ];
 

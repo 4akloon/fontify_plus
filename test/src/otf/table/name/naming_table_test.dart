@@ -83,7 +83,12 @@ void main() {
 
       final decoded = NamingTable.fromByteData(
         bytes,
-        TableRecordEntry('name', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'name',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded, isA<NamingTableFormat0>());
@@ -95,7 +100,12 @@ void main() {
       expect(
         NamingTable.fromByteData(
           bytes,
-          TableRecordEntry('name', 0, 0, bytes.lengthInBytes),
+          TableRecordEntry(
+            'name',
+            checkSum: 0,
+            offset: 0,
+            length: bytes.lengthInBytes,
+          ),
         ),
         isNull,
       );

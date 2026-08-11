@@ -95,7 +95,12 @@ class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
 
     do {
       expectedOffSize++;
-      newIndex = CFFIndex(data.length, expectedOffSize, offsetList, isCFF1);
+      newIndex = CFFIndex(
+        count: data.length,
+        offSize: expectedOffSize,
+        offsetList: offsetList,
+        isCFF1: isCFF1,
+      );
       actualOffSize = (offsetList.last.bitLength / 8).ceil();
     } while (actualOffSize != expectedOffSize);
 

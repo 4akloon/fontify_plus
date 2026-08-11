@@ -6,7 +6,11 @@ import 'region_axis_coordinates.dart';
 
 /// The regions of design space a variation store refers to.
 class VariationRegionList extends BinaryCodable {
-  VariationRegionList(this.axisCount, this.regionCount, this.regions);
+  VariationRegionList({
+    required this.axisCount,
+    required this.regionCount,
+    required this.regions,
+  });
 
   factory VariationRegionList.fromByteData(ByteData byteData) {
     final axisCount = byteData.getUint16(0);
@@ -23,7 +27,11 @@ class VariationRegionList extends BinaryCodable {
           ),
     ];
 
-    return VariationRegionList(axisCount, regionCount, regions);
+    return VariationRegionList(
+      axisCount: axisCount,
+      regionCount: regionCount,
+      regions: regions,
+    );
   }
 
   final int axisCount;

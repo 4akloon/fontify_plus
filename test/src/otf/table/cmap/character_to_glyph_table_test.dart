@@ -67,7 +67,12 @@ void main() {
 
       final decoded = CharacterToGlyphTable.fromByteData(
         bytes,
-        TableRecordEntry('cmap', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'cmap',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded.data, hasLength(table.data.length));

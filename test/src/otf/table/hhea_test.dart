@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 
 List<GenericGlyphMetrics> _metricsList() => [
   GenericGlyphMetrics.empty(),
-  GenericGlyphMetrics(0, 700, 0, 800),
+  GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
 ];
 
 void main() {
@@ -67,7 +67,12 @@ void main() {
 
       final decoded = HorizontalHeaderTable.fromByteData(
         bytes,
-        TableRecordEntry('hhea', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'hhea',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded.ascender, 800);

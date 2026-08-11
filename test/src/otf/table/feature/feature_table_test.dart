@@ -8,7 +8,11 @@ import 'package:test/test.dart';
 void main() {
   group('FeatureTable.size', () {
     test('is 4 bytes plus 2 per lookup index', () {
-      const table = FeatureTable(0, 2, [0, 1]);
+      const table = FeatureTable(
+        featureParams: 0,
+        lookupIndexCount: 2,
+        lookupListIndices: [0, 1],
+      );
 
       expect(table.size, 8);
     });
@@ -16,7 +20,11 @@ void main() {
 
   group('FeatureTable round trip', () {
     test('round-trips through encodeToBinary and fromByteData', () {
-      const table = FeatureTable(0, 1, [3]);
+      const table = FeatureTable(
+        featureParams: 0,
+        lookupIndexCount: 1,
+        lookupListIndices: [3],
+      );
       final record = FeatureRecord('liga', 0);
       final bytes = ByteData(table.size);
 
@@ -29,7 +37,11 @@ void main() {
     });
 
     test('reads the table at the record\'s featureOffset', () {
-      const table = FeatureTable(0, 1, [3]);
+      const table = FeatureTable(
+        featureParams: 0,
+        lookupIndexCount: 1,
+        lookupListIndices: [3],
+      );
       final record = FeatureRecord('liga', 10);
       final bytes = ByteData(10 + table.size);
 

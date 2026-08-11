@@ -4,7 +4,7 @@ import 'package:test/test.dart';
 void main() {
   group('GenericGlyphMetrics', () {
     test('exposes the bounds it was constructed with', () {
-      final metrics = GenericGlyphMetrics(1, 5, 2, 8);
+      final metrics = GenericGlyphMetrics(xMin: 1, xMax: 5, yMin: 2, yMax: 8);
 
       expect(metrics.xMin, 1);
       expect(metrics.xMax, 5);
@@ -13,7 +13,7 @@ void main() {
     });
 
     test('width and height are the extents\' differences', () {
-      final metrics = GenericGlyphMetrics(1, 5, 2, 8);
+      final metrics = GenericGlyphMetrics(xMin: 1, xMax: 5, yMin: 2, yMax: 8);
 
       expect(metrics.width, 4);
       expect(metrics.height, 6);

@@ -20,7 +20,7 @@ void main() {
 
     test('advances a non-empty glyph by its own width', () {
       final metric = LongHorMetric.createForGlyph(
-        GenericGlyphMetrics(0, 700, 0, 800),
+        GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
         1000,
       );
 
@@ -52,7 +52,10 @@ void main() {
   group('HorizontalMetricsTable.create', () {
     test('produces one metric per glyph and no left side bearings', () {
       final table = HorizontalMetricsTable.create(
-        [GenericGlyphMetrics.empty(), GenericGlyphMetrics(0, 700, 0, 800)],
+        [
+          GenericGlyphMetrics.empty(),
+          GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
+        ],
         1000,
       );
 
@@ -63,8 +66,8 @@ void main() {
     test('advanceWidthMax is the largest advance width', () {
       final table = HorizontalMetricsTable.create(
         [
-          GenericGlyphMetrics(0, 100, 0, 100),
-          GenericGlyphMetrics(0, 700, 0, 800),
+          GenericGlyphMetrics(xMin: 0, xMax: 100, yMin: 0, yMax: 100),
+          GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
         ],
         1000,
       );
@@ -74,7 +77,7 @@ void main() {
 
     test('minLeftSideBearing is 0 for glyphs created with a zero lsb', () {
       final table = HorizontalMetricsTable.create(
-        [GenericGlyphMetrics(0, 700, 0, 800)],
+        [GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800)],
         1000,
       );
 
@@ -84,7 +87,9 @@ void main() {
     test(
       'getMinRightSideBearing and getMaxExtent read against the given metrics',
       () {
-        final metricsList = [GenericGlyphMetrics(0, 700, 0, 800)];
+        final metricsList = [
+          GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
+        ];
         final table = HorizontalMetricsTable.create(metricsList, 1000);
 
         expect(table.getMinRightSideBearing(metricsList), 0);
@@ -97,7 +102,7 @@ void main() {
     test('round-trips through encodeToBinary and fromByteData', () {
       final metricsList = [
         GenericGlyphMetrics.empty(),
-        GenericGlyphMetrics(0, 700, 0, 800),
+        GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
       ];
       final table = HorizontalMetricsTable.create(metricsList, 1000);
       final hhea = HorizontalHeaderTable.create(metricsList, table, 800, -200);
@@ -107,7 +112,12 @@ void main() {
 
       final decoded = HorizontalMetricsTable.fromByteData(
         bytes,
-        TableRecordEntry('hmtx', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'hmtx',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
         hhea,
         metricsList.length,
       );

@@ -6,14 +6,19 @@ import '../../utils/otf.dart';
 const kTableRecordEntryLength = 16;
 
 class TableRecordEntry implements BinaryCodable {
-  TableRecordEntry(this.tag, this.checkSum, this.offset, this.length);
+  TableRecordEntry(
+    this.tag, {
+    required this.checkSum,
+    required this.offset,
+    required this.length,
+  });
 
   factory TableRecordEntry.fromByteData(ByteData data, int entryOffset) =>
       TableRecordEntry(
         data.getTag(entryOffset),
-        data.getUint32(entryOffset + 4),
-        data.getUint32(entryOffset + 8),
-        data.getUint32(entryOffset + 12),
+        checkSum: data.getUint32(entryOffset + 4),
+        offset: data.getUint32(entryOffset + 8),
+        length: data.getUint32(entryOffset + 12),
       );
 
   final String tag;

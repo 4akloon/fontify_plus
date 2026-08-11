@@ -41,20 +41,33 @@
   exported from `package:fontify_plus/fontify_plus.dart`, but every one of its
   fields is reachable through `OpenTypeFont.os2`, so reading code breaks even
   without a `src/` import.)
-* **Breaking for `src/` importers:** the other wide positional constructors
-  the `OS2Table` audit turned up now take named parameters too —
+* **Breaking for `src/` importers:** the other positional constructors whose
+  neighbouring parameters share a type now take named parameters too, so that
+  a transposition stops compiling instead of shipping —
   `HeaderTable` (and `HeaderTable._`), `HorizontalHeaderTable`,
   `MaximumProfileTable.v1`, `CmapSegmentMappingToDeltaValuesTable`,
-  `CmapSegmentedCoverageTable`, `CFF1Table`, `CFF2Table`,
-  `PostScriptTableHeader`, `SimpleGlyphFlag`, `NameRecord` (both
-  constructors), `NamingTableFormat0Header`, `LookupTable`,
-  `GlyphSubstitutionTableHeader` and `ItemVariationStore`. Each had at least
-  one run of adjacent same-typed parameters — `SimpleGlyphFlag` took seven
-  bools in a row — where a transposition compiled and analyzed clean. The
-  table record entry stays positional where a constructor takes one; no
-  field, name, type or encoded offset changed, and none of these classes are
-  exported from the main library, so only code importing `src/` directly is
-  affected.
+  `CmapSegmentedCoverageTable`, `CmapByteEncodingTable`, `CmapSegment`,
+  `CharacterToGlyphTableHeader`, `EncodingRecord`, `SequentialMapGroup`,
+  `CFF1Table`, `CFF2Table`, `CFF1TableHeader`, `CFF2TableHeader`, `CFFIndex`,
+  `ItemVariationStore`, `ItemVariationData`, `VariationRegionList`,
+  `RegionAxisCoordinates`, `PostScriptTableHeader`, `SimpleGlyphFlag`,
+  `SimpleGlyph`, `GlyphHeader`, `GenericGlyphMetrics`, `Outline`,
+  `OffsetTable`, `TableRecordEntry`, `NameRecord` (both constructors),
+  `NamingTableFormat0Header`, `LookupTable`, `LigatureSubstitutionSubtable`,
+  `CoverageTableFormat1`, `FeatureTable`, `LanguageSystemTable`,
+  `ScriptTable` and `GlyphSubstitutionTableHeader`. `SimpleGlyphFlag` took
+  seven bools in a row; `GlyphHeader(numberOfContours, xMin, yMin, xMax,
+  yMax)` and `GenericGlyphMetrics(xMin, xMax, yMin, yMax)` ordered the same
+  four concepts differently, so code moving between them interleaved x and y
+  with a clean analyze.
+  A leading parameter of a type none of the others share stays positional —
+  the table record entry, a cmap subtable's format, a table record's tag.
+  Constructors whose parameters are an indexed sequence rather than distinct
+  roles keep their order (`Cubic(p0, p1, p2, p3)`, `CFFOperator(context, b0,
+  b1)`), as do two-parameter constructors and every constructor whose
+  neighbouring parameters already have distinct types. No field, name, type or
+  encoded offset changed, and none of these classes are exported from the main
+  library, so only code importing `src/` directly is affected.
 * **Breaking:** `OpenTypeFont.glyf`, `.loca`, `.cff` and `.cff2` are now
   nullable (`GlyphDataTable?`, `IndexToLocationTable?`, `CFF1Table?`,
   `CFF2Table?`). They previously returned a non-nullable type by casting the

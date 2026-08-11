@@ -6,7 +6,7 @@ import 'feature_record.dart';
 import 'feature_table.dart';
 
 const _kDefaultFeatureTableList = [
-  FeatureTable(0, 1, [0]),
+  FeatureTable(featureParams: 0, lookupIndexCount: 1, lookupListIndices: [0]),
 ];
 
 List<FeatureRecord> _createDefaultFeatureRecordList() => [

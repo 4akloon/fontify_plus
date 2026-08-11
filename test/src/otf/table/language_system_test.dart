@@ -25,13 +25,23 @@ void main() {
 
   group('LanguageSystemTable', () {
     test('size is 6 bytes plus 2 per feature index', () {
-      const table = LanguageSystemTable(0, 0xFFFF, 2, [0, 1]);
+      const table = LanguageSystemTable(
+        lookupOrder: 0,
+        requiredFeatureIndex: 0xFFFF,
+        featureIndexCount: 2,
+        featureIndices: [0, 1],
+      );
 
       expect(table.size, 10);
     });
 
     test('round-trips through encodeToBinary and fromByteData', () {
-      const table = LanguageSystemTable(0, 0xFFFF, 1, [0]);
+      const table = LanguageSystemTable(
+        lookupOrder: 0,
+        requiredFeatureIndex: 0xFFFF,
+        featureIndexCount: 1,
+        featureIndices: [0],
+      );
       final bytes = ByteData(table.size);
 
       table.encodeToBinary(bytes);

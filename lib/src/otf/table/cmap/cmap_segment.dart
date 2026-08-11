@@ -3,7 +3,11 @@
 /// Both cmap formats this package writes store the map as runs rather than
 /// per-character entries, so the same segment list feeds both.
 class CmapSegment {
-  CmapSegment(this.startCode, this.endCode, this.startGlyphID);
+  CmapSegment({
+    required this.startCode,
+    required this.endCode,
+    required this.startGlyphID,
+  });
 
   final int startCode;
   final int endCode;
@@ -26,9 +30,9 @@ List<CmapSegment> generateSegments(List<int> charCodeList) {
   void saveSegment() {
     segmentList.add(
       CmapSegment(
-        startCharCode,
-        prevCharCode,
-        startGlyphId + 1, // +1 because of .notdef
+        startCode: startCharCode,
+        endCode: prevCharCode,
+        startGlyphID: startGlyphId + 1, // +1 because of .notdef
       ),
     );
   }

@@ -43,11 +43,11 @@ GenericGlyph _zigzag(int segmentCount, int dy) {
   return GenericGlyph(
     [
       Outline(
-        points,
-        List.filled(points.length, true),
-        false,
-        false,
-        FillRule.nonzero,
+        pointList: points,
+        isOnCurveList: List.filled(points.length, true),
+        hasCompactCurves: false,
+        hasQuadCurves: false,
+        fillRule: FillRule.nonzero,
       ),
     ],
     math.Rectangle<num>(0, 0, segmentCount * 3, dy),
@@ -153,7 +153,12 @@ void main() {
 
         final decoded = CFF2Table.fromByteData(
           bytes,
-          TableRecordEntry(kCFF2Tag, 0, 0, bytes.lengthInBytes),
+          TableRecordEntry(
+            kCFF2Tag,
+            checkSum: 0,
+            offset: 0,
+            length: bytes.lengthInBytes,
+          ),
         );
         expect(
           decoded

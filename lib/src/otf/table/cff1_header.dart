@@ -5,22 +5,26 @@ const _kCFF1HeaderSize = 4;
 // NOTE: local subrs, encodings are omitted
 
 class CFF1TableHeader implements BinaryCodable {
-  CFF1TableHeader(
-    this.majorVersion,
-    this.minorVersion,
-    this.headerSize,
-    this.offSize,
-  );
+  CFF1TableHeader({
+    required this.majorVersion,
+    required this.minorVersion,
+    required this.headerSize,
+    required this.offSize,
+  });
 
   factory CFF1TableHeader.fromByteData(ByteData byteData) => CFF1TableHeader(
-    byteData.getUint8(0),
-    byteData.getUint8(1),
-    byteData.getUint8(2),
-    byteData.getUint8(3),
+    majorVersion: byteData.getUint8(0),
+    minorVersion: byteData.getUint8(1),
+    headerSize: byteData.getUint8(2),
+    offSize: byteData.getUint8(3),
   );
 
-  factory CFF1TableHeader.create() =>
-      CFF1TableHeader(1, 0, _kCFF1HeaderSize, null);
+  factory CFF1TableHeader.create() => CFF1TableHeader(
+    majorVersion: 1,
+    minorVersion: 0,
+    headerSize: _kCFF1HeaderSize,
+    offSize: null,
+  );
 
   final int majorVersion;
   final int minorVersion;

@@ -6,14 +6,18 @@ const kRegionAxisCoordinatesSize = 6;
 
 /// One axis's extent within a variation region.
 class RegionAxisCoordinates extends BinaryCodable {
-  RegionAxisCoordinates(this.startCoord, this.peakCoord, this.endCoord);
+  RegionAxisCoordinates({
+    required this.startCoord,
+    required this.peakCoord,
+    required this.endCoord,
+  });
 
   factory RegionAxisCoordinates.fromByteData(ByteData byteData) {
     // NOTE: not converting F2DOT14, because variations are ignored anyway
     return RegionAxisCoordinates(
-      byteData.getUint16(0),
-      byteData.getUint16(2),
-      byteData.getUint16(4),
+      startCoord: byteData.getUint16(0),
+      peakCoord: byteData.getUint16(2),
+      endCoord: byteData.getUint16(4),
     );
   }
 

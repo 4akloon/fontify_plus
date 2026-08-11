@@ -7,11 +7,11 @@ import 'encoding_record.dart';
 
 /// The cmap table's own header: a version and the encoding records.
 class CharacterToGlyphTableHeader implements BinaryCodable {
-  CharacterToGlyphTableHeader(
-    this.version,
-    this.numTables,
-    this.encodingRecords,
-  );
+  CharacterToGlyphTableHeader({
+    required this.version,
+    required this.numTables,
+    required this.encodingRecords,
+  });
 
   factory CharacterToGlyphTableHeader.fromByteData(
     ByteData byteData,
@@ -20,9 +20,9 @@ class CharacterToGlyphTableHeader implements BinaryCodable {
     final numTables = byteData.getUint16(entry.offset + 2);
 
     return CharacterToGlyphTableHeader(
-      byteData.getUint16(entry.offset),
-      numTables,
-      List.generate(
+      version: byteData.getUint16(entry.offset),
+      numTables: numTables,
+      encodingRecords: List.generate(
         numTables,
         (i) => EncodingRecord.fromByteData(
           byteData,

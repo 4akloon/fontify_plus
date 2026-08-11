@@ -6,11 +6,22 @@ import 'package:test/test.dart';
 void main() {
   group('SequentialMapGroup', () {
     test('size is fixed at 12 bytes', () {
-      expect(SequentialMapGroup(1, 2, 3).size, 12);
+      expect(
+        SequentialMapGroup(
+          startCharCode: 1,
+          endCharCode: 2,
+          startGlyphID: 3,
+        ).size,
+        12,
+      );
     });
 
     test('round-trips through encodeToBinary and fromByteData', () {
-      final group = SequentialMapGroup(0x10000, 0x10010, 5);
+      final group = SequentialMapGroup(
+        startCharCode: 0x10000,
+        endCharCode: 0x10010,
+        startGlyphID: 5,
+      );
       final bytes = ByteData(group.size);
 
       group.encodeToBinary(bytes);

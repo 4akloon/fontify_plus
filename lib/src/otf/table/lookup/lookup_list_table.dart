@@ -9,7 +9,13 @@ import 'lookup_table.dart';
 const kLookupListTableSize = 4;
 
 const _kDefaultSubtableList = [
-  LigatureSubstitutionSubtable(1, 6, 0, [], kDefaultCoverageTable),
+  LigatureSubstitutionSubtable(
+    substFormat: 1,
+    coverageOffset: 6,
+    ligatureSetCount: 0,
+    ligatureSetOffsets: [],
+    coverageTable: kDefaultCoverageTable,
+  ),
 ];
 
 const _kDefaultLookupTableList = [

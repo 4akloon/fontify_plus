@@ -10,7 +10,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('CmapData.create', () {
-    final segments = [CmapSegment(10, 20, 1)];
+    final segments = [CmapSegment(startCode: 10, endCode: 20, startGlyphID: 1)];
 
     test('dispatches format 0 to CmapByteEncodingTable', () {
       expect(

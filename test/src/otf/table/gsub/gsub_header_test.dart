@@ -35,7 +35,12 @@ void main() {
 
         final decoded = GlyphSubstitutionTableHeader.fromByteData(
           bytes,
-          TableRecordEntry('GSUB', 0, 0, bytes.lengthInBytes),
+          TableRecordEntry(
+            'GSUB',
+            checkSum: 0,
+            offset: 0,
+            length: bytes.lengthInBytes,
+          ),
         );
 
         expect(decoded.isV10, isTrue);
@@ -63,7 +68,12 @@ void main() {
 
         final decoded = GlyphSubstitutionTableHeader.fromByteData(
           bytes,
-          TableRecordEntry('GSUB', 0, 0, bytes.lengthInBytes),
+          TableRecordEntry(
+            'GSUB',
+            checkSum: 0,
+            offset: 0,
+            length: bytes.lengthInBytes,
+          ),
         );
 
         expect(decoded.isV10, isFalse);

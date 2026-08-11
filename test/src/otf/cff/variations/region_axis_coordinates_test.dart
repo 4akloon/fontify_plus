@@ -6,13 +6,21 @@ import 'package:test/test.dart';
 void main() {
   group('RegionAxisCoordinates', () {
     test('size is fixed at 6 bytes', () {
-      final coords = RegionAxisCoordinates(0, 0x4000, 0x8000);
+      final coords = RegionAxisCoordinates(
+        startCoord: 0,
+        peakCoord: 0x4000,
+        endCoord: 0x8000,
+      );
 
       expect(coords.size, 6);
     });
 
     test('round-trips through encodeToBinary and fromByteData', () {
-      final coords = RegionAxisCoordinates(0, 0x4000, 0x8000);
+      final coords = RegionAxisCoordinates(
+        startCoord: 0,
+        peakCoord: 0x4000,
+        endCoord: 0x8000,
+      );
       final bytes = ByteData(coords.size);
 
       coords.encodeToBinary(bytes);

@@ -10,16 +10,27 @@ import 'simple_glyph_coordinates.dart';
 /// A TrueType glyph made of contours, as opposed to a composite of other
 /// glyphs.
 class SimpleGlyph implements BinaryCodable {
-  SimpleGlyph(
-    this.header,
-    this.endPtsOfContours,
-    this.instructions,
-    this.flags,
-    this.pointList,
-  );
+  SimpleGlyph({
+    required this.header,
+    required this.endPtsOfContours,
+    required this.instructions,
+    required this.flags,
+    required this.pointList,
+  });
 
-  factory SimpleGlyph.empty() =>
-      SimpleGlyph(GlyphHeader(0, 0, 0, 0, 0), [], [], [], []);
+  factory SimpleGlyph.empty() => SimpleGlyph(
+    header: GlyphHeader(
+      numberOfContours: 0,
+      xMin: 0,
+      yMin: 0,
+      xMax: 0,
+      yMax: 0,
+    ),
+    endPtsOfContours: [],
+    instructions: [],
+    flags: [],
+    pointList: [],
+  );
 
   factory SimpleGlyph.fromByteData(
     ByteData byteData,
@@ -76,11 +87,11 @@ class SimpleGlyph implements BinaryCodable {
     final yAbs = relToAbsCoordinates(yCoordinates);
 
     return SimpleGlyph(
-      header,
-      endPtsOfContours,
-      instructions,
-      flags,
-      [
+      header: header,
+      endPtsOfContours: endPtsOfContours,
+      instructions: instructions,
+      flags: flags,
+      pointList: [
         for (var i = 0; i < xAbs.length; i++) math.Point<num>(xAbs[i], yAbs[i]),
       ],
     );

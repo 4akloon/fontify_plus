@@ -17,11 +17,11 @@ GenericGlyph _squareGlyph({required num side, Rectangle<num>? bounds}) =>
     GenericGlyph(
       [
         Outline(
-          [const Point(0, 0), Point(side, 0), Point(side, side)],
-          [true, true, true],
-          false,
-          false,
-          FillRule.nonzero,
+          pointList: [const Point(0, 0), Point(side, 0), Point(side, side)],
+          isOnCurveList: [true, true, true],
+          hasCompactCurves: false,
+          hasQuadCurves: false,
+          fillRule: FillRule.nonzero,
         ),
       ],
       bounds ?? Rectangle(0, 0, side, side),
@@ -87,11 +87,15 @@ void main() {
       final glyph = GenericGlyph(
         [
           Outline(
-            [const Point(5, 5), const Point(15, 5), const Point(15, 15)],
-            [true, true, true],
-            false,
-            false,
-            FillRule.nonzero,
+            pointList: [
+              const Point(5, 5),
+              const Point(15, 5),
+              const Point(15, 15),
+            ],
+            isOnCurveList: [true, true, true],
+            hasCompactCurves: false,
+            hasQuadCurves: false,
+            fillRule: FillRule.nonzero,
           ),
         ],
         const Rectangle(0, 0, 20, 20),
