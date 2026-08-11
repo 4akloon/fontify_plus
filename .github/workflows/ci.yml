@@ -107,6 +107,11 @@ jobs:
         working-directory: example
         run: flutter pub get
 
+      # Root package config for `dart run bin/fontify_plus.dart` inside
+      # build_proto_fonts.py — example/ flutter pub get does not create it.
+      - name: Install package dependencies
+        run: dart pub get --no-example
+
       # Rebuild proto assets with the package CLI so the matrix judges this
       # commit's writer, not a stale committed fixture.
       - name: Rebuild package-built proto fonts
