@@ -10,12 +10,7 @@ CFF2Table _buildCFF2Table(List<List<GenericGlyph>> glyphMasterList) {
       ? 0
       : glyphMasterList.first.length - 1;
 
-  // A glyph with zero masters (`length - 1 == -1`) would otherwise pass the
-  // consistency check below whenever every glyph agrees on having none, and
-  // then divide by zero inside CharStringInterpreterLimits.
-  if (regionCount < 0) {
-    throw ArgumentError('Every glyph must have at least one master');
-  }
+  final context = Cff2RegionContext(regionCount);
 
   for (final masters in glyphMasterList) {
     if (masters.length - 1 != regionCount) {
@@ -26,13 +21,6 @@ CFF2Table _buildCFF2Table(List<List<GenericGlyph>> glyphMasterList) {
     }
   }
 
-  // Rejects regionCount > 1 before any charstring work: CharStringBlender
-  // and the optimizer support more regions, but this store does not.
-  final vstoreData = regionCount == 0
-      ? null
-      : SingleRegionVariationStore(regionCount: regionCount).build();
-
-  final optimizer = CharStringOptimizer(false, regionCount: regionCount);
   const charStringWriter = CharStringWriter(isCFF1: false);
 
   final charStringRawList = glyphMasterList.map((masters) {
@@ -49,9 +37,7 @@ CFF2Table _buildCFF2Table(List<List<GenericGlyph>> glyphMasterList) {
     }).toList();
 
     final byteData = charStringWriter.writeCommands(
-      CharStringBlender(
-        CharStringEncoder(prepared, optimizer).encode(),
-      ).merge(),
+      context.encodeAndBlend(prepared),
     );
 
     return byteData.buffer.asUint8List();
@@ -66,7 +52,7 @@ CFF2Table _buildCFF2Table(List<List<GenericGlyph>> glyphMasterList) {
       charStringRawList,
       false,
     ),
-    vstoreData: vstoreData,
+    vstoreData: context.vstoreData,
     fontDictList: CFFIndexWithData<CFFDict>.create(
       [
         // Growable list: recalculateOffsets clears and rewrites the operands.
