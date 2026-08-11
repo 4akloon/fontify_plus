@@ -107,5 +107,37 @@ void main() {
 
       expect(records, isEmpty);
     });
+
+    test('two mixed-width files are each named in their own warning', () {
+      // Each file's message carries its own name, so this cannot tell
+      // `logger.w` apart from `logger.logOnce` (the two messages differ and
+      // so are never deduplicated either way) — but it does pin the
+      // "collapsing across an icon set would hide every file but the first"
+      // property the CHANGELOG describes: building an icon set must not
+      // lose either file's warning.
+      final records = capturePrints(() {
+        glyphMastersFromSvg('first', _mixedWidthSvg, _range);
+        glyphMastersFromSvg('second', _mixedWidthSvg, _range);
+      });
+
+      final joined = records.join('\n');
+
+      expect(joined, contains('first'));
+      expect(joined, contains('second'));
+    });
+
+    test('the same name warns every time, not only the first', () {
+      // This is what actually distinguishes `logger.w` from `logger.logOnce`:
+      // with the file's name baked into the message, two *different* names
+      // never collide in `logOnce`'s dedup set regardless of which method is
+      // used (see the test above), so only two calls that would produce the
+      // exact same message can tell them apart.
+      final records = capturePrints(() {
+        glyphMastersFromSvg('same', _mixedWidthSvg, _range);
+        glyphMastersFromSvg('same', _mixedWidthSvg, _range);
+      });
+
+      expect(records, hasLength(2));
+    });
   });
 }

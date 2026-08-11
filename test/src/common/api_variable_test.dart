@@ -1,4 +1,5 @@
 import 'package:fontify_plus/src/common/api.dart';
+import 'package:fontify_plus/src/common/glyph/glyph_masters.dart';
 import 'package:fontify_plus/src/common/stroke_width_range.dart';
 import 'package:fontify_plus/src/job/fontify_exception.dart';
 import 'package:fontify_plus/src/utils/otf.dart';
@@ -77,5 +78,59 @@ void main() {
       expect(result.font.tableMap.containsKey(kFvarTag), isFalse);
       expect(result.font.tableMap.containsKey(kCFFTag), isTrue);
     });
+
+    test('the default instance is built from the maximum-width master', () {
+      // Regression guard: swapping `glyphList = masters.min` / `minGlyphList
+      // = masters.max` in svgToOtf leaves every other assertion in this
+      // file, the full suite, byte identity and even the oracle's
+      // "default 2.0" report green — none of them look at *which* geometry
+      // the default instance actually draws, only that a default exists.
+      // `createFromGlyphs` only mutates `glyphList`'s glyph *metadata*
+      // (assigning charcodes), never its outlines, so `result.glyphList`'s
+      // points survive unfitted and can be compared directly against a
+      // freshly built, unfitted `max` master.
+      final range = StrokeWidthRange(1.33, 2);
+      final result = svgToOtf(
+        svgMap: {'a': _strokedSvg},
+        strokeWidthRange: range,
+      );
+      final direct = glyphMastersFromSvg('a', _strokedSvg, range);
+
+      expect(result.glyphList.single.pointList, direct.max.pointList);
+      expect(
+        result.glyphList.single.pointList,
+        isNot(equals(direct.min.pointList)),
+      );
+    });
+
+    test(
+      'generateFlutterClass sees a charcode on every range-built glyph',
+      () {
+        // Regression guard: `_generateCharCodes` (otf_builder.dart) writes
+        // charcodes only onto the list handed to `createFromGlyphs` as
+        // `glyphList`. If `svgToOtf` ever returned `minGlyphList` as
+        // `result.glyphList` instead — same length, same order, so every
+        // other assertion here would still pass — `generateFlutterClass`
+        // would silently emit a class with zero `IconData` constants: no
+        // error, no warning.
+        final result = svgToOtf(
+          svgMap: {'a': _strokedSvg, 'b': _strokedSvg},
+          strokeWidthRange: StrokeWidthRange(1.33, 2),
+        );
+
+        expect(
+          result.glyphList.map((g) => g.metadata.charCode),
+          everyElement(isNotNull),
+        );
+
+        final source = generateFlutterClass(
+          glyphList: result.glyphList,
+          className: 'RangeIcons',
+          familyName: result.font.familyName,
+        );
+
+        expect('static const IconData'.allMatches(source), hasLength(2));
+      },
+    );
   });
 }
