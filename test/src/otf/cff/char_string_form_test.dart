@@ -6,56 +6,56 @@ void main() {
   group('charstring form, decided across masters', () {
     test('a single master keeps every shorthand it takes today', () {
       expect(
-        CharStringFormChooser([
+        const CharStringFormChooser([
           [0, 7],
         ]).moveto().operator,
         vmoveto,
       );
       expect(
-        CharStringFormChooser([
+        const CharStringFormChooser([
           [0, 7],
         ]).moveto().operandIndices,
         [1],
       );
       expect(
-        CharStringFormChooser([
+        const CharStringFormChooser([
           [7, 0],
         ]).moveto().operator,
         hmoveto,
       );
       expect(
-        CharStringFormChooser([
+        const CharStringFormChooser([
           [7, 0],
         ]).moveto().operandIndices,
         [0],
       );
       expect(
-        CharStringFormChooser([
+        const CharStringFormChooser([
           [7, 7],
         ]).moveto().operator,
         rmoveto,
       );
       expect(
-        CharStringFormChooser([
+        const CharStringFormChooser([
           [7, 7],
         ]).moveto().operandIndices,
         [0, 1],
       );
 
       expect(
-        CharStringFormChooser([
+        const CharStringFormChooser([
           [0, 7],
         ]).lineto().operator,
         vlineto,
       );
       expect(
-        CharStringFormChooser([
+        const CharStringFormChooser([
           [7, 0],
         ]).lineto().operator,
         hlineto,
       );
       expect(
-        CharStringFormChooser([
+        const CharStringFormChooser([
           [7, 7],
         ]).lineto().operator,
         rlineto,
@@ -65,7 +65,7 @@ void main() {
     test('a component zero in one master only is written in full', () {
       // Master A moves straight up, master B also drifts sideways. Taking
       // vmoveto from A would encode B's dx as an implicit zero and lose it.
-      final form = CharStringFormChooser([
+      final form = const CharStringFormChooser([
         [0, 7],
         [3, 7],
       ]).moveto();
@@ -75,7 +75,7 @@ void main() {
     });
 
     test('a component zero in every master is still dropped', () {
-      final form = CharStringFormChooser([
+      final form = const CharStringFormChooser([
         [0, 7],
         [0, 9],
       ]).lineto();
@@ -86,7 +86,7 @@ void main() {
 
     test('vvcurveto needs the final dx zero in every master', () {
       // dlist[4] is the last curve's dx.
-      final shared = CharStringFormChooser([
+      final shared = const CharStringFormChooser([
         [1, 2, 3, 4, 0, 6],
         [1, 2, 3, 4, 0, 8],
       ]).curveto();
@@ -94,7 +94,7 @@ void main() {
       // zeroAt 4 removed, leadingAt 0 (dx0 = 1, non-zero) moved to the front.
       expect(shared.operandIndices, [0, 1, 2, 3, 5]);
 
-      final split = CharStringFormChooser([
+      final split = const CharStringFormChooser([
         [1, 2, 3, 4, 0, 6],
         [1, 2, 3, 4, 5, 8],
       ]).curveto();
@@ -103,14 +103,14 @@ void main() {
     });
 
     test('the leading delta is dropped only when zero in every master', () {
-      final dropped = CharStringFormChooser([
+      final dropped = const CharStringFormChooser([
         [0, 2, 3, 4, 0, 6],
         [0, 2, 3, 4, 0, 8],
       ]).curveto();
       expect(dropped.operator, vvcurveto);
       expect(dropped.operandIndices, [1, 2, 3, 5]);
 
-      final kept = CharStringFormChooser([
+      final kept = const CharStringFormChooser([
         [0, 2, 3, 4, 0, 6],
         [1, 2, 3, 4, 0, 8],
       ]).curveto();
@@ -119,7 +119,7 @@ void main() {
     });
 
     test('hhcurveto is preferred only when vvcurveto does not apply', () {
-      final form = CharStringFormChooser([
+      final form = const CharStringFormChooser([
         [1, 2, 3, 4, 5, 0],
       ]).curveto();
       expect(form.operator, hhcurveto);
@@ -135,13 +135,13 @@ void main() {
   group('charstring form, single master', () {
     test('moveto prefers vmoveto when both deltas are zero', () {
       expect(
-        CharStringFormChooser([
+        const CharStringFormChooser([
           [0, 0],
         ]).moveto().operator,
         vmoveto,
       );
       expect(
-        CharStringFormChooser([
+        const CharStringFormChooser([
           [0, 0],
         ]).moveto().operandIndices,
         [1],
@@ -150,7 +150,7 @@ void main() {
 
     test('lineto keeps both deltas when neither is zero', () {
       expect(
-        CharStringFormChooser([
+        const CharStringFormChooser([
           [5, 6],
         ]).lineto().operandIndices,
         [0, 1],
@@ -159,13 +159,13 @@ void main() {
 
     test('curveto throws unless every master supplies six deltas', () {
       expect(
-        () => CharStringFormChooser([
+        () => const CharStringFormChooser([
           [1, 2, 3, 4, 5],
         ]).curveto(),
         throwsArgumentError,
       );
       expect(
-        () => CharStringFormChooser([
+        () => const CharStringFormChooser([
           [1, 2, 3, 4, 5, 6],
           [1, 2, 3, 4, 5],
         ]).curveto(),
@@ -174,7 +174,7 @@ void main() {
     });
 
     test('curveto falls back to rrcurveto when no final delta is zero', () {
-      final form = CharStringFormChooser([
+      final form = const CharStringFormChooser([
         [1, 2, 3, 4, 5, 6],
       ]).curveto();
 
@@ -184,7 +184,7 @@ void main() {
 
     test('curveto prefers vvcurveto when both final deltas are zero', () {
       expect(
-        CharStringFormChooser([
+        const CharStringFormChooser([
           [1, 2, 3, 4, 0, 0],
         ]).curveto().operator,
         vvcurveto,
