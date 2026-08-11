@@ -54,27 +54,29 @@ void encodeOS2Table(OS2Table table, ByteData byteData) {
     byteData.setUint8(32 + i, version0.panose[i]);
   }
 
-  // A present group is the table's own statement that its version declares
-  // these fields — the constructor holds the two in step — so there is
-  // nothing left here to force-unwrap.
+  // Walking the nesting rather than the shorthand getters: reaching the
+  // version-4 block requires having written the version-1 one, which is the
+  // format's own rule and now the code's shape as well. A present group is
+  // the table's statement that its version declares those fields — the
+  // constructor throws if the two disagree — so nothing here force-unwraps.
   if (table.version1 case final version1?) {
     byteData
       ..setUint32(78, version1.ulCodePageRange1)
       ..setUint32(82, version1.ulCodePageRange2);
-  }
 
-  if (table.version4 case final version4?) {
-    byteData
-      ..setInt16(86, version4.sxHeight)
-      ..setInt16(88, version4.sCapHeight)
-      ..setUint16(90, version4.usDefaultChar)
-      ..setUint16(92, version4.usBreakChar)
-      ..setUint16(94, version4.usMaxContext);
-  }
+    if (version1.version4 case final version4?) {
+      byteData
+        ..setInt16(86, version4.sxHeight)
+        ..setInt16(88, version4.sCapHeight)
+        ..setUint16(90, version4.usDefaultChar)
+        ..setUint16(92, version4.usBreakChar)
+        ..setUint16(94, version4.usMaxContext);
 
-  if (table.version5 case final version5?) {
-    byteData
-      ..setUint16(96, version5.usLowerOpticalPointSize)
-      ..setUint16(98, version5.usUpperOpticalPointSize);
+      if (version4.version5 case final version5?) {
+        byteData
+          ..setUint16(96, version5.usLowerOpticalPointSize)
+          ..setUint16(98, version5.usUpperOpticalPointSize);
+      }
+    }
   }
 }

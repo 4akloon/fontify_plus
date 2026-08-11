@@ -4,29 +4,43 @@
 
 * **Breaking:** `OS2Table`'s 39 positional parameters are gone. The
   constructor now takes named parameters, and the fields live in one object
-  per version that introduced them: `version0` (`OS2Version0Fields`, always
-  present) and the nullable `version1`, `version4`, `version5`
-  (`OS2Version1Fields`, `OS2Version4Fields`, `OS2Version5Fields`). Roughly
-  thirty of those positional parameters were adjacent `int`s —
-  `ySubscriptXSize` next to `ySubscriptYSize`, the four `ulUnicodeRange`s,
-  the two `ulCodePageRange`s, the `sTypo*`/`usWin*` runs — so transposing a
-  neighbouring pair compiled, analyzed clean and shipped a font that was
-  wrong only in the rendering. Grouping settles the second half: a null
-  group means the table ends there, which is the rule the format already
-  has, so `sxHeight` set while `ulCodePageRange1` is null — constructible
-  before, unrepresentable in OpenType — no longer type-checks. Reading a
-  field moves one level down: `table.achVendID` becomes
-  `table.version0.achVendID`, `table.sxHeight` becomes
-  `table.version4?.sxHeight`, and the `?` is the reminder that a
-  version-1 table genuinely has no `sxHeight`. `version` is still a stored
-  `int` and still reports what the font declares, including the versions 2
-  and 3 that add no fields this package models; `size` is now counted from
-  the groups present rather than from `version`, which produces the same
-  number for every table the reader can build. The encoded byte order is
-  untouched. (`OS2Table` itself is not exported from
-  `package:fontify_plus/fontify_plus.dart`, but every one of its fields is
-  reachable through `OpenTypeFont.os2`, so reading code breaks even without
-  a `src/` import.)
+  per version that introduced them, **nested** the way OpenType's versions
+  accumulate: `version0` (`OS2Version0Fields`, always present) and a nullable
+  `version1` (`OS2Version1Fields`) that owns a nullable `version4`
+  (`OS2Version4Fields`) that owns a nullable `version5`
+  (`OS2Version5Fields`). Roughly thirty of those positional parameters were
+  adjacent `int`s — `ySubscriptXSize` next to `ySubscriptYSize`, the four
+  `ulUnicodeRange`s, the two `ulCodePageRange`s, the `sTypo*`/`usWin*` runs —
+  so transposing a neighbouring pair compiled, analyzed clean and shipped a
+  font that was wrong only in the rendering.
+  Nesting settles the second half. A null group means the table ends there,
+  which is the rule the format already has, and because a higher group has
+  nowhere to live except inside a lower one, `sxHeight` set while
+  `ulCodePageRange1` is absent genuinely does not type-check. Reading a field
+  moves down the chain: `table.achVendID` becomes `table.version0.achVendID`,
+  and `table.sxHeight` becomes `table.version4?.sxHeight` — `version4` and
+  `version5` remain on `OS2Table` as shorthand getters for
+  `version1?.version4` and `version1?.version4?.version5`, and the `?` is the
+  reminder that a version-1 table genuinely has no `sxHeight`.
+  `version` is still a stored `int` and still reports what the font declares,
+  including the versions 2 and 3 that add no fields this package models. The
+  one thing nesting cannot enforce is that `version` agrees with the groups,
+  so **the constructor now throws `TableDataFormatException` when it does
+  not** — in either direction, in release builds as well as debug. That
+  replaces a check the previous encoder made by force-unwrapping each
+  optional field: building a version-5 table without its version-5 group used
+  to crash on encode, and must not instead emit a 96-byte table whose version
+  field claims 100 bytes of content.
+  `size` is now counted from the groups present rather than from `version`.
+  For every table this package can read out of a well-formed font it produces
+  the same number as before; for a corrupt table whose version field is
+  negative (`version` is read as an `int16`, so 0xFFFF arrives as -1) it now
+  measures 78 bytes and re-encodes a version-0-shaped table carrying that
+  version verbatim, where it used to measure 0 and fail mid-encode with an
+  `IndexError`. The encoded byte order is untouched. (`OS2Table` itself is not
+  exported from `package:fontify_plus/fontify_plus.dart`, but every one of its
+  fields is reachable through `OpenTypeFont.os2`, so reading code breaks even
+  without a `src/` import.)
 * **Breaking for `src/` importers:** the other wide positional constructors
   the `OS2Table` audit turned up now take named parameters too —
   `HeaderTable` (and `HeaderTable._`), `HorizontalHeaderTable`,
@@ -40,8 +54,7 @@
   table record entry stays positional where a constructor takes one; no
   field, name, type or encoded offset changed, and none of these classes are
   exported from the main library, so only code importing `src/` directly is
-  affected. Constructors of five parameters or fewer were audited and left
-  as they are.
+  affected.
 * **Breaking:** `OpenTypeFont.glyf`, `.loca`, `.cff` and `.cff2` are now
   nullable (`GlyphDataTable?`, `IndexToLocationTable?`, `CFF1Table?`,
   `CFF2Table?`). They previously returned a non-nullable type by casting the

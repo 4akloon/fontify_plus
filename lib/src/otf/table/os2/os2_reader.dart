@@ -56,26 +56,32 @@ OS2Table readOS2Table(ByteData byteData, TableRecordEntry entry) {
       usWinAscent: byteData.getUint16(entry.offset + 74),
       usWinDescent: byteData.getUint16(entry.offset + 76),
     ),
+    // Each group owns the next, so the nesting here is the table's shape:
+    // where the reader stops is where the table stops.
     version1: !isV1
         ? null
         : OS2Version1Fields(
             ulCodePageRange1: byteData.getUint32(entry.offset + 78),
             ulCodePageRange2: byteData.getUint32(entry.offset + 82),
-          ),
-    version4: !isV4
-        ? null
-        : OS2Version4Fields(
-            sxHeight: byteData.getInt16(entry.offset + 86),
-            sCapHeight: byteData.getInt16(entry.offset + 88),
-            usDefaultChar: byteData.getUint16(entry.offset + 90),
-            usBreakChar: byteData.getUint16(entry.offset + 92),
-            usMaxContext: byteData.getUint16(entry.offset + 94),
-          ),
-    version5: !isV5
-        ? null
-        : OS2Version5Fields(
-            usLowerOpticalPointSize: byteData.getUint16(entry.offset + 96),
-            usUpperOpticalPointSize: byteData.getUint16(entry.offset + 98),
+            version4: !isV4
+                ? null
+                : OS2Version4Fields(
+                    sxHeight: byteData.getInt16(entry.offset + 86),
+                    sCapHeight: byteData.getInt16(entry.offset + 88),
+                    usDefaultChar: byteData.getUint16(entry.offset + 90),
+                    usBreakChar: byteData.getUint16(entry.offset + 92),
+                    usMaxContext: byteData.getUint16(entry.offset + 94),
+                    version5: !isV5
+                        ? null
+                        : OS2Version5Fields(
+                            usLowerOpticalPointSize: byteData.getUint16(
+                              entry.offset + 96,
+                            ),
+                            usUpperOpticalPointSize: byteData.getUint16(
+                              entry.offset + 98,
+                            ),
+                          ),
+                  ),
           ),
   );
 }

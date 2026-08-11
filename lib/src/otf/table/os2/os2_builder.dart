@@ -101,25 +101,29 @@ OS2Table buildOS2Table(
     // The code page is not functional.
     version1: !isV1
         ? null
-        : const OS2Version1Fields(ulCodePageRange1: 0, ulCodePageRange2: 0),
-    version4: !isV4
-        ? null
-        : OS2Version4Fields(
-            sxHeight: 0,
-            sCapHeight: 0,
-            usDefaultChar: 0,
-            usBreakChar: kUnicodeSpaceCharCode,
-            usMaxContext: _getMaxContext(gsub),
-          ),
+        : OS2Version1Fields(
+            ulCodePageRange1: 0,
+            ulCodePageRange2: 0,
+            version4: !isV4
+                ? null
+                : OS2Version4Fields(
+                    sxHeight: 0,
+                    sCapHeight: 0,
+                    usDefaultChar: 0,
+                    usBreakChar: kUnicodeSpaceCharCode,
+                    usMaxContext: _getMaxContext(gsub),
 
-    /// For fonts that were not designed for multiple optical-size variants,
-    /// usLowerOpticalPointSize should be set to 0 (zero),
-    /// and usUpperOpticalPointSize should be set to 0xFFFF.
-    version5: !isV5
-        ? null
-        : const OS2Version5Fields(
-            usLowerOpticalPointSize: 0,
-            usUpperOpticalPointSize: 0xFFFE,
+                    /// For fonts that were not designed for multiple
+                    /// optical-size variants, usLowerOpticalPointSize should
+                    /// be set to 0 (zero), and usUpperOpticalPointSize should
+                    /// be set to 0xFFFF.
+                    version5: !isV5
+                        ? null
+                        : const OS2Version5Fields(
+                            usLowerOpticalPointSize: 0,
+                            usUpperOpticalPointSize: 0xFFFE,
+                          ),
+                  ),
           ),
   );
 }

@@ -130,12 +130,21 @@ class OS2Version0Fields {
   final int usWinDescent;
 }
 
-/// The code page coverage `OS/2` version 1 added.
+/// The code page coverage `OS/2` version 1 added, and whatever follows it.
+///
+/// The groups nest because OpenType's versions are cumulative: a table that
+/// has [OS2Version4Fields] necessarily has the version-1 fields too. Owning
+/// the next group rather than sitting beside it is what makes "`sxHeight` set
+/// while `ulCodePageRange1` is absent" unrepresentable — there is nowhere to
+/// put the version-4 group except inside this one.
 class OS2Version1Fields {
   /// Creates the version-1 field group.
+  ///
+  /// [version4] null means the table ends after the code page ranges.
   const OS2Version1Fields({
     required this.ulCodePageRange1,
     required this.ulCodePageRange2,
+    this.version4,
   });
 
   /// Code Page Character Range bits 0-31.
@@ -143,21 +152,27 @@ class OS2Version1Fields {
 
   /// Code Page Character Range bits 32-63.
   final int ulCodePageRange2;
+
+  /// The group version 4 adds, or null when the table ends at version 1.
+  final OS2Version4Fields? version4;
 }
 
-/// The metrics `OS/2` version 4 added.
+/// The metrics `OS/2` version 4 added, and whatever follows them.
 ///
 /// OpenType attaches these to version 2; this package's version map
 /// (`kOS2VersionDataSize`) has no entry below version 4, so a version-2 or
 /// version-3 table is read without them.
 class OS2Version4Fields {
   /// Creates the version-4 field group.
+  ///
+  /// [version5] null means the table ends after these metrics.
   const OS2Version4Fields({
     required this.sxHeight,
     required this.sCapHeight,
     required this.usDefaultChar,
     required this.usBreakChar,
     required this.usMaxContext,
+    this.version5,
   });
 
   /// Height of a lowercase `x`.
@@ -174,6 +189,9 @@ class OS2Version4Fields {
 
   /// Longest glyph sequence any layout feature matches.
   final int usMaxContext;
+
+  /// The group version 5 adds, or null when the table ends at version 4.
+  final OS2Version5Fields? version5;
 }
 
 /// The optical size range `OS/2` version 5 added.

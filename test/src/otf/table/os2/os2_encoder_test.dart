@@ -44,21 +44,24 @@ OS2Table _table(int version) => OS2Table(
   version0: _version0,
   version1: version < kOS2Version1
       ? null
-      : const OS2Version1Fields(ulCodePageRange1: 1, ulCodePageRange2: 0),
-  version4: version < kOS2Version4
-      ? null
-      : const OS2Version4Fields(
-          sxHeight: 500,
-          sCapHeight: 700,
-          usDefaultChar: 32,
-          usBreakChar: 32,
-          usMaxContext: 1,
-        ),
-  version5: version < kOS2Version5
-      ? null
-      : const OS2Version5Fields(
-          usLowerOpticalPointSize: 0,
-          usUpperOpticalPointSize: 0xFFFE,
+      : OS2Version1Fields(
+          ulCodePageRange1: 1,
+          ulCodePageRange2: 0,
+          version4: version < kOS2Version4
+              ? null
+              : OS2Version4Fields(
+                  sxHeight: 500,
+                  sCapHeight: 700,
+                  usDefaultChar: 32,
+                  usBreakChar: 32,
+                  usMaxContext: 1,
+                  version5: version < kOS2Version5
+                      ? null
+                      : const OS2Version5Fields(
+                          usLowerOpticalPointSize: 0,
+                          usUpperOpticalPointSize: 0xFFFE,
+                        ),
+                ),
         ),
 );
 

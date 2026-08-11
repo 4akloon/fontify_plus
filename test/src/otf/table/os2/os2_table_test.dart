@@ -16,7 +16,7 @@ const _kUnitsPerEm = 1000;
 
 List<GenericGlyphMetrics> _metricsList() => [
   GenericGlyphMetrics.empty(),
-  GenericGlyphMetrics(0, 700, 0, 800),
+  GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
 ];
 
 List<GenericGlyph> _fullGlyphList() => [
@@ -80,7 +80,12 @@ void main() {
 
       final decoded = OS2Table.fromByteData(
         bytes,
-        TableRecordEntry('OS/2', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'OS/2',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded.version, table.version);
