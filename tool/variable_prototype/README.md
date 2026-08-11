@@ -2,10 +2,12 @@
 
 Throwaway Python + fontTools scripts used to decide, before any package code
 is written, which static outline format — CFF or TrueType (`glyf`) — survives
-merging into a variable font with a `wght` axis driving stroke width. Nothing
-here is shipped; it only produces the static "master" fonts that later Phase 0
-steps feed into `fontTools.varLib` to build and inspect an actual variable
-font.
+merging into a variable font with a `wght` axis driving stroke width. The
+scripts themselves are not shipped; they produce the static "master" fonts
+that later Phase 0 steps feed into `fontTools.varLib` to build and inspect an
+actual variable font. Those outputs *are* shipped, though: the regenerated
+fonts under `example/fonts/proto/` ride in the pub tarball and gate CI (see
+"The render matrix is a standing gate" below).
 
 ## The three glyphs
 
@@ -327,7 +329,11 @@ What follows, against the kill criteria the spec registered in advance:
   symmetrically and the `gvar` side is measured on an incomplete font. What
   survives scrutiny is the difference in headroom against the gate, not the
   gap between those two numbers.
-- The render matrix is a standing gate, not a one-off. It must be wired into CI
-  (Phase 3), and its fonts under `example/fonts/proto/` are still the pre-0.5.2
-  copies — they need regenerating, and the `ProtoGlyf*`/`ProtoGvar` families
-  can be retired with the `gvar` candidate.
+- The render matrix is a standing gate, not a one-off, and it has since been
+  wired into CI (Phase 3: the `variable-stroke-render-matrix` job in
+  `.github/workflows/ci.yml`, plus `tool/oracle/validate_font.py` for the
+  fonttools round-trip check). Its fonts under `example/fonts/proto/` have
+  been regenerated post-0.5.2, and the `ProtoGlyf*`/`ProtoGvar` families were
+  retired along with the `gvar` candidate (commit `c1b5a16`). What it still
+  does not cover is the first bullet above: Linux and Windows remain
+  untested, for either format.
