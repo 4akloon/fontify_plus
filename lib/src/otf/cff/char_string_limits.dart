@@ -1,6 +1,8 @@
 /// Interpreter limits the CFF specification places on a charstring.
 class CharStringInterpreterLimits {
   factory CharStringInterpreterLimits(bool isCFF1, {int regionCount = 0}) {
+    assert(regionCount >= 0, 'regionCount must not be negative');
+
     if (isCFF1) {
       return const CharStringInterpreterLimits._(48);
     }
@@ -22,10 +24,15 @@ class CharStringInterpreterLimits {
 
   const CharStringInterpreterLimits._(this.argumentStackLimit);
 
-  /// How many operands may be on the argument stack at once.
+  /// How many operands a *pre-blend* command may carry.
   ///
-  /// A command with more operands than this has to be split, which is what the
-  /// charstring optimizer uses this for.
+  /// With `regionCount == 0` this is also the interpreter's real stack
+  /// ceiling. With `regionCount > 0` it is smaller than that ceiling on
+  /// purpose: blending a command of `n` operands expands it to
+  /// `n * (regionCount + 1) + 1` operands on the stack, so this field caps
+  /// `n` at whatever keeps that expansion within the true 513-operand limit,
+  /// not at 513 itself. The charstring optimizer uses this to decide how much
+  /// it may merge.
   final int argumentStackLimit;
 }
 

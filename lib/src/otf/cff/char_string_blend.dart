@@ -12,8 +12,15 @@ import 'char_string_operator.dart';
 ///
 /// A command whose operands agree in every master is emitted unchanged. That
 /// is not only an optimisation: a filled icon does not vary with stroke width
-/// at all, and paying two extra operands per value to say "and the delta is
-/// zero" would put a cost on exactly the glyphs that have nothing to vary.
+/// at all, and paying one delta per value plus one trailing count per command
+/// to say "and nothing changed" would put a cost on exactly the glyphs that
+/// have nothing to vary.
+///
+/// When there are no regions (a single master), the returned list is the
+/// default master's own list object, not a copy — callers must not mutate
+/// it or the commands/operands it holds. The same aliasing applies to any
+/// command that passes through unchanged when there are regions: it is the
+/// default master's own [CharStringCommand], not a copy of it.
 List<CharStringCommand> blendCommands(List<List<CharStringCommand>> masters) {
   if (masters.isEmpty) {
     throw ArgumentError('At least one master is required');
@@ -74,11 +81,14 @@ List<CharStringCommand> blendCommands(List<List<CharStringCommand>> masters) {
 
     // n default values, then n * k deltas, then n, then the operator.
     //
-    // With one region the two candidate orderings for those n * k deltas —
-    // grouped by operand or grouped by region — are the same sequence, so
-    // this cannot be got wrong today. Adding a second region makes them
-    // differ: check the CFF2 specification's `blend` entry before doing so
-    // rather than extending the loop below by symmetry.
+    // The deltas are grouped by operand, region-minor (all of operand 0's
+    // deltas, then all of operand 1's, and so on) — the ordering the CFF2
+    // `blend` operator's specification describes and the one fontTools'
+    // blend assembler produces. With a single region that ordering is
+    // indistinguishable from the alternative (grouped by region), so it
+    // could not have been checked by any test until a second region existed;
+    // the three-master cases in char_string_blend_test.dart now exercise it
+    // directly.
     out
       ..add(
         CharStringCommand(blend, [

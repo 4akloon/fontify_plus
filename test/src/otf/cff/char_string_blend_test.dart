@@ -71,7 +71,26 @@ void main() {
       expect(out[0].operandList.map((o) => o.value), [100, -10, 1]);
     });
 
+    test('an empty master list is rejected', () {
+      expect(() => blendCommands([]), throwsArgumentError);
+    });
+
     test('divergent structure is rejected', () {
+      // Matcher for the per-command guard specifically: RangeError also
+      // `is ArgumentError`, so a bare throwsArgumentError would still pass
+      // if that guard were deleted and the missing bounds check crashed
+      // instead. Pinning the message rules that out.
+      final throwsDivergence = throwsA(
+        isA<ArgumentError>().having(
+          (e) => e.message,
+          'message',
+          contains('diverge'),
+        ),
+      );
+
+      // Operand counts differ (2 vs 1); the operators happen to differ too,
+      // but this alone does not exercise the operator comparison, since the
+      // operand-count comparison already trips first.
       expect(
         () => blendCommands([
           [
@@ -81,9 +100,27 @@ void main() {
             _cmd(hlineto, [10]),
           ],
         ]),
-        throwsArgumentError,
+        throwsDivergence,
       );
 
+      // Operand counts agree (one operand each); only the operator differs.
+      // This is the case that catches a guard weakened to check only operand
+      // count — with the operator half deleted, blendCommands would emit
+      // blend + hlineto and silently discard vlineto's y-move.
+      expect(
+        () => blendCommands([
+          [
+            _cmd(hlineto, [10]),
+          ],
+          [
+            _cmd(vlineto, [30]),
+          ],
+        ]),
+        throwsDivergence,
+      );
+
+      // Different command counts is a separate, earlier guard with its own
+      // message, so it is checked only for ArgumentError in general.
       expect(
         () => blendCommands([
           [
@@ -97,6 +134,64 @@ void main() {
         throwsArgumentError,
       );
     });
+
+    test(
+      'three masters: the deltas are grouped by operand, region-minor',
+      () {
+        // A single-operand command. Region 1 (master index 1) matches the
+        // default, region 2 (master index 2) does not.
+        final out = blendCommands([
+          [
+            _cmd(hlineto, [10]),
+          ],
+          [
+            _cmd(hlineto, [10]),
+          ],
+          [
+            _cmd(hlineto, [11]),
+          ],
+        ]);
+
+        expect(out.map((c) => c.operator), [blend, hlineto]);
+        // base, then region 1's delta (0), then region 2's delta (1), then
+        // the operand count (1).
+        expect(out[0].operandList.map((o) => o.value), [10, 0, 1, 1]);
+        expect(out[1].operandList, isEmpty);
+      },
+    );
+
+    test(
+      'three masters, two operands: region-minor grouping within each '
+      'operand',
+      () {
+        final out = blendCommands([
+          [
+            _cmd(rlineto, [10, 20]),
+          ],
+          [
+            _cmd(rlineto, [12, 20]),
+          ],
+          [
+            _cmd(rlineto, [10, 23]),
+          ],
+        ]);
+
+        expect(out.map((c) => c.operator), [blend, rlineto]);
+        // base (10, 20), then operand 0's deltas across both regions
+        // (2, 0), then operand 1's deltas across both regions (0, 3), then
+        // the operand count (2).
+        expect(out[0].operandList.map((o) => o.value), [
+          10,
+          20,
+          2,
+          0,
+          0,
+          3,
+          2,
+        ]);
+        expect(out[1].operandList, isEmpty);
+      },
+    );
 
     test(
       'the region-aware stack limit keeps a real blend under the CFF2 '
