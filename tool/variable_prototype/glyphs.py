@@ -45,14 +45,18 @@ def plus(width):
 
 
 def ring(width):
-    """Pre-offset circle: the stroke band drawn as two filled contours.
+    """Circular stroke — same contract as [plus]: a real stroke-width the
+    package can re-outline under --stroke-width-range.
 
-    Offsetting is done here rather than by fontify_plus so both masters have
-    four arcs per contour whatever the width.
+    Pre-offset fills (two contours baked at a fixed width) look like a ring
+    when drawn statically, but they have no stroke for GlyphMasterBuilder to
+    vary, so the variable font ends up with zero blends on this glyph and the
+    render matrix's "axis is not silently ignored" check fails.
     """
-    outer = _circle_path(12, 12, 8 + width / 2)
-    inner = _circle_path(12, 12, 8 - width / 2, clockwise=False)
-    return _svg(f'<path d="{outer}{inner}" fill="#000"/>')
+    return _svg(
+        f'<circle cx="12" cy="12" r="8" stroke="#000" stroke-width="{width}" '
+        f'fill="none"/>'
+    )
 
 
 def dot(width):
