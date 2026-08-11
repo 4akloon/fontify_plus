@@ -107,6 +107,15 @@ jobs:
         working-directory: example
         run: flutter pub get
 
+      # `flutter drive -d chrome` launches a headed Chrome (its own
+      # --web-run-headless plumbing is unreliable — flutter/flutter#95085),
+      # so it needs a display to open a window against even though nothing
+      # is ever shown. Xvfb provides a virtual one.
+      - name: Install Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
       # CanvasKit is what the render matrix runs here. This is the one leg of
       # the platform matrix that needs no emulator or macOS/iOS runner, so it
       # is the standing gate; the rest of the matrix is deliberately not
@@ -114,7 +123,7 @@ jobs:
       - name: Run the variable stroke render matrix on Chrome (CanvasKit)
         working-directory: example
         run: |
-          flutter drive \
+          xvfb-run --auto-servernum flutter drive \
             --driver=test_driver/integration_test.dart \
             --target=integration_test/variable_stroke_test.dart \
             -d chrome
