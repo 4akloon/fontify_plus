@@ -7,7 +7,7 @@ import 'package:test/test.dart';
 void main() {
   group('single region variation store', () {
     test('the region spans the whole axis and peaks at the minimum', () {
-      final store = singleRegionVariationStore().store;
+      final store = SingleRegionVariationStore().build().store;
       final region = store.variationRegionList.regions.single;
 
       // F2Dot14. The fvar default sits at the axis maximum, so normalized
@@ -21,8 +21,11 @@ void main() {
     test('the subtable carries no delta sets, only a region count', () {
       // CFF2 keeps its deltas inside the charstrings. The subtable exists so
       // a `blend` at vsindex 0 knows how many deltas follow each value.
-      final data =
-          singleRegionVariationStore().store.itemVariationDataList.single;
+      final data = SingleRegionVariationStore()
+          .build()
+          .store
+          .itemVariationDataList
+          .single;
 
       expect(data.itemCount, 0);
       expect(data.shortDeltaCount, 0);
@@ -31,7 +34,7 @@ void main() {
     });
 
     test('it round-trips through the package reader', () {
-      final data = singleRegionVariationStore();
+      final data = SingleRegionVariationStore().build();
       final bytes = ByteData(data.size);
       data.encodeToBinary(bytes);
 
@@ -47,7 +50,7 @@ void main() {
     });
 
     test('every declared byte is written', () {
-      final data = singleRegionVariationStore();
+      final data = SingleRegionVariationStore().build();
       final bytes = ByteData(data.size);
       data.encodeToBinary(bytes);
 

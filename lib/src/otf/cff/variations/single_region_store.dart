@@ -18,45 +18,63 @@ const _kNormalizedDefault = 0x0000;
 /// region covers all of it: it peaks at -1, where its scalar is 1 and a
 /// charstring's delta applies in full, and falls to 0 at the default, where
 /// the delta contributes nothing. A default in the middle of the range would
-/// need a region on each side, and so twice the deltas — a case this function
+/// need a region on each side, and so twice the deltas — a case this class
 /// deliberately does not handle.
 ///
-/// The offsets inside are recomputed by `encodeToBinary`, so the zero and the
-/// placeholder offset list passed for them here are not data. The item count
-/// is not one of those: `size` is what sizes the output buffer, is called
-/// before `encodeToBinary` gets a chance to correct anything, and (per
-/// `ItemVariationStore`'s own documented convention) trusts that field as-is
-/// — so it is passed as the real count, matching the one-element data list
-/// below, rather than as a zero encodeToBinary would fix up too late.
-VariationStoreData singleRegionVariationStore() => VariationStoreData(
-  0,
-  ItemVariationStore(
-    format: 1,
-    variationRegionListOffset: 0,
-    // Real, not a placeholder; see doc above.
-    itemVariationDataCount: 1,
-    itemVariationDataOffsets: <int>[0],
-    variationRegionList: const VariationRegionList(
-      axisCount: 1,
-      regionCount: 1,
-      regions: [
-        RegionAxisCoordinates(
-          startCoord: _kNormalizedMinimum,
-          peakCoord: _kNormalizedMinimum,
-          endCoord: _kNormalizedDefault,
+/// Constructing with [regionCount] other than 1 rejects the request: that
+/// limit used to live only in the CFF2 builder, where a third master would
+/// otherwise encode fine and decode into a store advertising one region while
+/// carrying two deltas per value.
+class SingleRegionVariationStore {
+  SingleRegionVariationStore({int regionCount = 1}) {
+    if (regionCount != 1) {
+      throw ArgumentError(
+        'singleRegionVariationStore only encodes a single region (two '
+        'masters per glyph); got $regionCount regions from '
+        '${regionCount + 1} masters per glyph',
+      );
+    }
+  }
+
+  /// Builds the store.
+  ///
+  /// The offsets inside are recomputed by `encodeToBinary`, so the zero and the
+  /// placeholder offset list passed for them here are not data. The item count
+  /// is not one of those: `size` is what sizes the output buffer, is called
+  /// before `encodeToBinary` gets a chance to correct anything, and (per
+  /// `ItemVariationStore`'s own documented convention) trusts that field as-is
+  /// — so it is passed as the real count, matching the one-element data list
+  /// below, rather than as a zero encodeToBinary would fix up too late.
+  VariationStoreData build() => VariationStoreData(
+    0,
+    ItemVariationStore(
+      format: 1,
+      variationRegionListOffset: 0,
+      // Real, not a placeholder; see doc above.
+      itemVariationDataCount: 1,
+      itemVariationDataOffsets: <int>[0],
+      variationRegionList: const VariationRegionList(
+        axisCount: 1,
+        regionCount: 1,
+        regions: [
+          RegionAxisCoordinates(
+            startCoord: _kNormalizedMinimum,
+            peakCoord: _kNormalizedMinimum,
+            endCoord: _kNormalizedDefault,
+          ),
+        ],
+      ),
+      // No delta sets: a CFF2 charstring carries its own deltas inline, and
+      // this subtable's only job is to tell `blend` at vsindex 0 how many
+      // regions — and therefore how many deltas per value — to expect.
+      itemVariationDataList: [
+        const ItemVariationData(
+          itemCount: 0,
+          shortDeltaCount: 0,
+          regionIndexCount: 1,
+          regionIndexes: [0],
         ),
       ],
     ),
-    // No delta sets: a CFF2 charstring carries its own deltas inline, and
-    // this subtable's only job is to tell `blend` at vsindex 0 how many
-    // regions — and therefore how many deltas per value — to expect.
-    itemVariationDataList: [
-      const ItemVariationData(
-        itemCount: 0,
-        shortDeltaCount: 0,
-        regionIndexCount: 1,
-        regionIndexes: [0],
-      ),
-    ],
-  ),
-);
+  );
+}

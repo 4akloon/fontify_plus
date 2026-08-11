@@ -26,7 +26,7 @@ class CFF2Table extends CFFTable implements CalculatableOffsets {
   /// list. A single-element entry is a glyph that does not vary; every entry
   /// being single-element is a static table, and [vstoreData] comes out
   /// null. Two-element entries (one region) get a `vstore` built by
-  /// `singleRegionVariationStore`, which is currently the only region count
+  /// `SingleRegionVariationStore`, which is currently the only region count
   /// this factory accepts — every glyph must agree on its master count, and
   /// that count cannot exceed two.
   factory CFF2Table.create(List<List<GenericGlyph>> glyphMasterList) =>
