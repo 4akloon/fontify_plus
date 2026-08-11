@@ -20,8 +20,8 @@ class CFF2Table extends CFFTable implements CalculatableOffsets {
   factory CFF2Table.fromByteData(ByteData byteData, TableRecordEntry entry) =>
       _readCFF2Table(byteData, entry);
 
-  factory CFF2Table.create(List<GenericGlyph> glyphList) =>
-      _buildCFF2Table(glyphList);
+  factory CFF2Table.create(List<List<GenericGlyph>> glyphMasterList) =>
+      _buildCFF2Table(glyphMasterList);
 
   final CFF2TableHeader header;
   final CFFDict topDict;

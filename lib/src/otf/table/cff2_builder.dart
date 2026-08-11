@@ -1,20 +1,44 @@
 part of 'cff.dart';
 
-/// Builds a CFF2 table for [glyphList].
-CFF2Table _buildCFF2Table(List<GenericGlyph> glyphList) {
+/// Builds a CFF2 table for [glyphMasterList].
+///
+/// Each entry is one glyph's masters, default first. A single-element entry
+/// is a glyph that does not vary; every entry being single-element is a
+/// static CFF2 table, and produces no `vstore` at all.
+CFF2Table _buildCFF2Table(List<List<GenericGlyph>> glyphMasterList) {
+  final regionCount = glyphMasterList.isEmpty
+      ? 0
+      : glyphMasterList.first.length - 1;
+
+  for (final masters in glyphMasterList) {
+    if (masters.length - 1 != regionCount) {
+      throw ArgumentError(
+        'Every glyph must have the same number of masters: '
+        '${regionCount + 1} vs ${masters.length}',
+      );
+    }
+  }
+
+  final optimizer = CharStringOptimizer(false, regionCount: regionCount);
   const charStringWriter = CharStringWriter(isCFF1: false);
 
-  final charStringRawList = glyphList.map((g) {
-    final glyph = g.copy();
+  final charStringRawList = glyphMasterList.map((masters) {
+    final prepared = masters.map((g) {
+      final glyph = g.copy();
 
-    for (final outline in glyph.outlines) {
-      outline
-        ..decompactImplicitPoints()
-        ..quadToCubic();
-    }
+      for (final outline in glyph.outlines) {
+        outline
+          ..decompactImplicitPoints()
+          ..quadToCubic();
+      }
+
+      return glyph;
+    }).toList();
 
     final byteData = charStringWriter.writeCommands(
-      glyph.toCharStringCommands(CharStringOptimizer(false)),
+      blendCommands(
+        prepared.first.toCharStringCommandsForMasters(prepared, optimizer),
+      ),
     );
 
     return byteData.buffer.asUint8List();
@@ -26,7 +50,7 @@ CFF2Table _buildCFF2Table(List<GenericGlyph> glyphList) {
     CFFDict.empty(),
     CFFIndexWithData<Uint8List>.create([], false),
     CFFIndexWithData<Uint8List>.create(charStringRawList, false),
-    null, // vstore omitted - no variations
+    regionCount == 0 ? null : singleRegionVariationStore(),
     CFFIndexWithData<CFFDict>.create(
       [
         CFFDict([CFFDictEntry([], op.private)]),
