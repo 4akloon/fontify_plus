@@ -14,7 +14,7 @@ import 'table/all.dart';
 /// [kNameIDmap] covers every [NameID], so the lookup cannot miss; it is
 /// nullable because the same map is also read the other way round, for IDs
 /// arriving off the wire.
-final _kStrokeWidthAxisNameID = kNameIDmap.getValueForKey(
+final _strokeWidthAxisNameID = kNameIDmap.getValueForKey(
   NameID.strokeWidthAxis,
 )!;
 
@@ -155,11 +155,22 @@ class OpenTypeFontBuilder {
     // to differ from it, handled below via [advanceWidthOverrides].
     //
     // Only the default master is measured, on a variable font as well as a
-    // static one. That is what makes `HVAR` unnecessary: the advance width is
-    // the em square (or the normalized band), not the ink, so it is the same
-    // at every point on the axis. `head`'s bounding box is the default
-    // master's, which is the widest one — the minimum master's ink is
-    // strictly inside it.
+    // static one. That is what makes `HVAR` unnecessary, and the reason is
+    // that `hmtx` is written exactly once: with no per-region delta for an
+    // instancer to apply, the advance is axis-invariant by construction.
+    //
+    // Not because the advance is the em square — it usually is not. With
+    // `normalize: true` (the default) `advanceWidthOverrides` below is all
+    // null, so `LongHorMetric.createForGlyph` uses each glyph's own ink
+    // width: this package's four example icons advance by 947, 1000, 958 and
+    // 1000, not by a uniform 1000. Only `normalize: false` pins every custom
+    // glyph to `unitsPerEm`. What matters here is that either number is
+    // taken from the default — widest — master and then frozen, so a thin
+    // instance keeps the wide master's advance and gains sidebearing instead
+    // of reflowing as the axis moves.
+    //
+    // `head`'s bounding box comes from the same measurement, which is again
+    // the widest master's — the minimum master's ink is strictly inside it.
     final glyphMetricsList = [
       for (final glyph in defaultGlyphList) glyph.metrics,
       for (final glyph in resizedGlyphList) glyph.metrics,
@@ -276,11 +287,11 @@ class OpenTypeFontBuilder {
         ]),
         kFvarTag: FontVariationsTable.create(
           strokeWidthRange,
-          axisNameID: _kStrokeWidthAxisNameID,
+          axisNameID: _strokeWidthAxisNameID,
         ),
         kStatTag: StyleAttributesTable.create(
           strokeWidthRange,
-          axisNameID: _kStrokeWidthAxisNameID,
+          axisNameID: _strokeWidthAxisNameID,
         ),
       },
       kCmapTag: cmap,

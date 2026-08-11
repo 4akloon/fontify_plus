@@ -122,9 +122,14 @@
   stroke width of 1.33 rather than for a rescaling of one.
   `glyphList` stays the *default* master — the maximum width — because that
   is the instance `fvar` selects by default and the one every metric is
-  computed from. Advance widths are constant across the axis (they are the em
-  square, or the normalized band, not the ink), which is why no `HVAR` table
-  is written.
+  computed from. No `HVAR` table is written and none is needed: `hmtx` is
+  emitted once, from that master, so a glyph's advance is the same at every
+  point on the axis. Note that this advance is *not* a uniform em under the
+  default `normalize: true` — it is each glyph's own ink width, so the four
+  icons in this package's `example/svg` advance by 947, 1000, 958 and 1000
+  at 1000 upem. Pass `normalize: false` for a uniform one-em advance. Either
+  way the number is the widest master's, so a thin instance gains
+  sidebearing rather than reflowing as the axis moves.
   Both masters are fitted onto the em square with **one** transform, taken
   from the default master, never with one transform each. Fitting the thinner
   master on its own would scale it up until its own longest side filled the

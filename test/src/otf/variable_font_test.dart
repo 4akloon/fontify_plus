@@ -27,16 +27,35 @@ const _firstIconGlyphIndex = 2;
 String _svg(String name) => File('example/svg/$name.svg').readAsStringSync();
 
 /// Builds a variable font from one SVG's two masters.
-OpenTypeFont _variableFontFrom(String name, String xmlString) {
-  final masters = glyphMastersFromSvg(name, xmlString, _range);
+OpenTypeFont _variableFontFrom(
+  String name,
+  String xmlString, {
+  bool? normalize,
+}) => _variableFontFromAll({name: xmlString}, normalize: normalize);
+
+/// Builds a variable font from several SVGs' masters, in the given order.
+OpenTypeFont _variableFontFromAll(
+  Map<String, String> svgMap, {
+  bool? normalize,
+}) {
+  final masters = [
+    for (final entry in svgMap.entries)
+      glyphMastersFromSvg(entry.key, entry.value, _range),
+  ];
 
   return OpenTypeFont.createFromGlyphs(
-    glyphList: [masters.max],
-    minGlyphList: [masters.min],
+    glyphList: [for (final m in masters) m.max],
+    minGlyphList: [for (final m in masters) m.min],
     strokeWidthRange: _range,
     fontName: 'Variable Icons',
+    normalize: normalize,
   );
 }
+
+/// Every icon in `example/svg`, in the order the checked-in font uses.
+Map<String, String> _exampleSvgs() => {
+  for (final name in ['arrow_right', 'plus', 'check', 'menu']) name: _svg(name),
+};
 
 // ---------------------------------------------------------------------------
 // A CFF2 charstring reader, just wide enough for what this package writes.
@@ -74,6 +93,8 @@ class _InkBox {
   double get centreX => (xMin + xMax) / 2;
 
   double get centreY => (yMin + yMax) / 2;
+
+  double get longestSide => math.max(xMax - xMin, yMax - yMin);
 }
 
 /// The ink box every master of one CFF2 [charString] draws.
@@ -278,6 +299,19 @@ void main() {
       expect(font.fvar!.range.max, _range.max);
     });
 
+    test('STAT names the endpoints of the axis fvar declares', () {
+      // Making the separately-built tables agree is this task's whole job,
+      // and this is the pairing nothing else checks. A STAT built from a
+      // different range parses, sanitizes and passes the oracle — it just
+      // declares format 1 axis values sitting *off* the axis, so
+      // STAT-driven style matching offers instances no `fvar` coordinate
+      // can select.
+      final font = _variableFontFrom('check', _svg('check'));
+
+      expect(font.stat!.range.min, font.fvar!.range.min);
+      expect(font.stat!.range.max, font.fvar!.range.max);
+    });
+
     test(
       'pins usWeightClass to 400 even though the axis is a stroke width',
       () {
@@ -290,6 +324,32 @@ void main() {
         expect(font.os2.version0.usWeightClass, 400);
       },
     );
+
+    test('works with normalize: false, on a uniform one-em advance', () {
+      // The one reachable combination the rest of this file does not touch.
+      // `ArtboardFitting` takes a different `placementFor` branch — it never
+      // translates — so "both masters share one transform" has to hold for
+      // it too, and the advance stops being each glyph's ink and becomes the
+      // em.
+      final font = _variableFontFrom('check', _svg('check'), normalize: false);
+
+      expect(font.tableMap, contains(kCFF2Tag));
+      expect(font.tableMap, contains(kFvarTag));
+      expect(
+        font.hmtx.hMetrics[_firstIconGlyphIndex].advanceWidth,
+        kDefaultOpenTypeUnitsPerEm,
+      );
+
+      final boxes = _masterInkBoxes(
+        font.cff2!.charStringsData.data[_firstIconGlyphIndex],
+        2,
+      );
+
+      expect(boxes[1].xMin, greaterThan(boxes[0].xMin));
+      expect(boxes[1].xMax, lessThan(boxes[0].xMax));
+      expect(boxes[1].centreX, closeTo(boxes[0].centreX, 2));
+      expect(boxes[1].centreY, closeTo(boxes[0].centreY, 2));
+    });
 
     test('encodes and reads back without throwing', () {
       final font = _variableFontFrom('check', _svg('check'));
@@ -336,6 +396,30 @@ void main() {
       expect(minBox.yMax, lessThan(maxBox.yMax));
     });
 
+    test('the shared transform is the default master, not the minimum', () {
+      // Containment above says the two masters share *a* transform; it says
+      // nothing about *whose*. Deriving the placement from `minGlyphList`
+      // instead satisfies every other assertion in this file — and every
+      // other test in the suite, the byte-identity gate and the oracle —
+      // while scaling the thin master to fill the band and dragging the
+      // thick one 6-8% past it. Overflowing glyphs clip against their
+      // neighbours and sit oversized beside every other font in the UI.
+      //
+      // Checked on all four example icons, because the two that already sit
+      // exactly on the em (`plus`, `menu`) have no slack to absorb a
+      // mis-sourced placement.
+      final font = _variableFontFromAll(_exampleSvgs());
+      final charStrings = font.cff2!.charStringsData.data;
+
+      for (var i = _firstIconGlyphIndex; i < charStrings.length; i++) {
+        expect(
+          _masterInkBoxes(charStrings[i], 2)[0].longestSide,
+          lessThanOrEqualTo(kDefaultOpenTypeUnitsPerEm.toDouble()),
+          reason: 'glyph $i overflows the em square',
+        );
+      }
+    });
+
     test('independently fitting the minimum master would scale it up', () {
       // The other half of the assertion above: "strictly inside" only
       // discriminates because independent fitting really would not produce a
@@ -349,6 +433,15 @@ void main() {
         descender: -kDefaultBaselineExtension,
       );
 
+      //
+      // The comparison is strict only because `GenericGlyphMetrics`
+      // truncates each extreme to an int independently, and does so on the
+      // *raw* artboard where a unit is worth ~55 font units, which makes the
+      // two scale factors differ by more than the band. Exact metrics would
+      // put both masters' longest sides at 1000 and turn this red — while
+      // improving the code. If that happens, weaken it to
+      // `greaterThanOrEqualTo`; the property being pinned is "not smaller",
+      // and it is `>=` that the test above depends on.
       final fittedMin = fitting.fit(masters.min).metrics;
       final fittedMax = fitting.fit(masters.max).metrics;
 
@@ -363,25 +456,36 @@ void main() {
       // that nonetheless moved the glyph sideways between masters would still
       // bend every width between them, and "strictly inside" alone does not
       // rule that out — a box can be nested and off-centre.
-      final font = _variableFontFrom('check', _svg('check'));
+      //
+      // Not exact, for two separate reasons, and the smaller one dominates:
+      //
+      // * Truncation. Each master's coordinates go through `p.x.toInt()`
+      //   independently on the way into a charstring, which can move either
+      //   edge of either box by up to a unit. This is all of `check`'s drift:
+      //   at full double precision its two centres agree to 16 digits, and
+      //   the 0.5 below appears only after truncation.
+      // * Geometry, up to about a unit. A stroke grows by half its width
+      //   along the outward normal, which cancels in the centre exactly only
+      //   where the box's two extremes face opposite ways. `arrow_right`'s do
+      //   not quite: its masters' x centres genuinely differ by 0.962 before
+      //   any rounding.
+      //
+      // Measured across all four example icons the worst case is `arrow_right`
+      // at exactly 1.0, so the tolerance is 2 rather than sitting on that
+      // boundary — `closeTo` is inclusive, and a gate that passes only
+      // because of that is not a gate. There is room for it: the failure
+      // being guarded against moves this centre by 34 units.
+      final font = _variableFontFromAll(_exampleSvgs());
+      final charStrings = font.cff2!.charStringsData.data;
 
-      final boxes = _masterInkBoxes(
-        font.cff2!.charStringsData.data[_firstIconGlyphIndex],
-        2,
-      );
-      final maxBox = boxes[0];
-      final minBox = boxes[1];
+      for (var i = _firstIconGlyphIndex; i < charStrings.length; i++) {
+        final boxes = _masterInkBoxes(charStrings[i], 2);
+        final maxBox = boxes[0];
+        final minBox = boxes[1];
 
-      // Within a font unit rather than exactly: a stroke grows by half its
-      // width along the outward normal, which cancels in the centre exactly
-      // only where the two extremes face opposite ways. `check.svg`'s round
-      // caps point in different directions, so the cubics approximating them
-      // put the horizontal extremes at slightly different angles and the x
-      // centre drifts by half a unit at 1000 upem (y comes out exact). The
-      // failure this guards against is two orders of magnitude larger:
-      // independently fitting the masters moves this centre by 34 units.
-      expect(minBox.centreX, closeTo(maxBox.centreX, 1));
-      expect(minBox.centreY, closeTo(maxBox.centreY, 1));
+        expect(minBox.centreX, closeTo(maxBox.centreX, 2), reason: 'glyph $i');
+        expect(minBox.centreY, closeTo(maxBox.centreY, 2), reason: 'glyph $i');
+      }
     });
   });
 
