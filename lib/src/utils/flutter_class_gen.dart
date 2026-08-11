@@ -129,9 +129,7 @@ import 'package:flutter/widgets.dart';
 
     final text = rounded.toStringAsFixed(2);
 
-    return text
-        .replaceAll(RegExp(r'0+$'), '')
-        .replaceAll(RegExp(r'\.$'), '');
+    return text.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
   }
 
   String get _docComment =>

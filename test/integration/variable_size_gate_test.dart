@@ -61,8 +61,7 @@ void main() {
     staticBytes = _encode(staticResult.font);
     variableBytes = _encode(variableResult.font);
     iconCodePoints = [
-      for (final glyph in variableResult.glyphList)
-        glyph.metadata.charCode!,
+      for (final glyph in variableResult.glyphList) glyph.metadata.charCode!,
     ];
   });
 
@@ -95,6 +94,8 @@ void main() {
             '${staticSubset.length} B (limit ${limit.toStringAsFixed(0)} B)',
       );
     },
-    skip: _hasPyftsubset ? null : 'pyftsubset not installed — install fonttools',
+    skip: _hasPyftsubset
+        ? null
+        : 'pyftsubset not installed — install fonttools',
   );
 }
