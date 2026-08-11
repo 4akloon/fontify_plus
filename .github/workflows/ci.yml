@@ -39,6 +39,32 @@ jobs:
       - name: Run tests
         run: dart test
 
+      # A second, independent implementation of the OTF/OTF-variable spec.
+      # The package's own reader agreeing with its own writer proves nothing
+      # about the outside world; this does. Only run once (not once per SDK
+      # in the matrix) since it doesn't depend on the Dart SDK version.
+      #
+      # example/fonts/my_icons.otf is a static font — nothing wires fvar/STAT
+      # into the font builder yet. example/fonts/proto/variable_cff2.otf (the
+      # format Task 5 chose) is a real variable font, built by fontTools'
+      # own varLib rather than this package, but it still exercises the
+      # oracle's variable-font branch, which my_icons.otf alone cannot.
+      - uses: actions/setup-python@v5
+        if: matrix.sdk == 'stable'
+        with:
+          python-version: '3.12'
+
+      - name: Install fonttools
+        if: matrix.sdk == 'stable'
+        run: pip install fonttools
+
+      - name: Validate generated fonts against fonttools
+        if: matrix.sdk == 'stable'
+        run: |
+          python3 tool/oracle/validate_font.py \
+            example/fonts/my_icons.otf \
+            example/fonts/proto/variable_cff2.otf
+
   publish-dry-run:
     name: Publish dry-run
     runs-on: ubuntu-latest
