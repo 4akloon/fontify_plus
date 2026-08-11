@@ -9,6 +9,14 @@ import 'reader.dart';
 import 'table/all.dart';
 
 /// Ordered list of table tags for encoding (Optimized Table Ordering)
+///
+/// Anything in [OpenTypeFont.tableMap] whose tag is not listed here is
+/// silently skipped by [_encodeTables] — no error, no log line. In
+/// particular, `kFvarTag` ('fvar') and `kStatTag` ('STAT') are NOT listed:
+/// whichever change wires the variable-width axis into the builder MUST add
+/// both here, or the encoder will produce a static-looking font that quietly
+/// carries no axis. See also the `default:` case in `reader.dart`'s
+/// `_createTableFromEntry`, which has the same gap on the read side.
 const _kTableTagsToEncode = {
   kHeadTag,
   kHheaTag,

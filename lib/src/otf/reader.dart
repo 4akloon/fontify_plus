@@ -119,6 +119,12 @@ class OTFReader {
       case kCFF2Tag:
         return CFFTable.fromByteData(_byteData, entry);
       default:
+        // `kFvarTag` ('fvar') and `kStatTag` ('STAT') have no case above, so
+        // they fall through to here and are silently dropped rather than
+        // parsed. Whichever change wires the variable-width axis into the
+        // builder MUST add cases for both, or this package will not be able
+        // to read back a variable font it just wrote — see the matching gap
+        // in otf.dart's `_kTableTagsToEncode` on the write side.
         debuggerOTF.debugUnsupportedTable(entry.tag);
         return null;
     }
