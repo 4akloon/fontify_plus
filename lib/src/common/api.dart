@@ -148,6 +148,7 @@ SvgToOtfResult svgToOtf({
 /// * [package] is the name of a font package. Used to provide a font through package dependency.
 /// * [fontFileName] is font file's name. Used in generated docs for class.
 /// * [indent] is a number of spaces in leading indentation for class' members. Defaults to 2.
+/// * [strokeWidthRange], when given, documents the variable `wght` axis in the class comment.
 ///
 /// Returns content of a class file.
 String generateFlutterClass({
@@ -157,6 +158,7 @@ String generateFlutterClass({
   String? fontFileName,
   String? package,
   int? indent,
+  StrokeWidthRange? strokeWidthRange,
 }) {
   final generator = FlutterClassGenerator(
     glyphList,
@@ -165,6 +167,7 @@ String generateFlutterClass({
     fontFileName: fontFileName,
     familyName: familyName,
     package: package,
+    strokeWidthRange: strokeWidthRange,
   );
 
   return generator.generate();

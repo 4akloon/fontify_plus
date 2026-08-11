@@ -1,4 +1,6 @@
+import 'package:fontify_plus/src/common/api.dart';
 import 'package:fontify_plus/src/common/generic_glyph.dart';
+import 'package:fontify_plus/src/common/stroke_width_range.dart';
 import 'package:fontify_plus/src/otf/defaults.dart';
 import 'package:fontify_plus/src/utils/flutter_class_gen.dart';
 import 'package:test/test.dart';
@@ -6,6 +8,11 @@ import 'package:test/test.dart';
 GenericGlyph _glyph(String name, int charCode) => GenericGlyph.empty()
   ..metadata.name = name
   ..metadata.charCode = charCode;
+
+final _glyphList = [
+  _glyph('arrow_up', 0xE001),
+  _glyph('arrow_down', 0xE002),
+];
 
 void main() {
   group('FlutterClassGenerator.generate defaults', () {
@@ -122,6 +129,43 @@ void main() {
 
       expect(source, contains('// Generated code: do not hand-edit.'));
       expect(source, contains("import 'package:flutter/widgets.dart';"));
+    });
+  });
+
+  group('FlutterClassGenerator variable stroke width', () {
+    test('a variable font documents its axis in the class comment', () {
+      final source = generateFlutterClass(
+        glyphList: _glyphList,
+        className: 'MyIcons',
+        strokeWidthRange: StrokeWidthRange(1.33, 2),
+      );
+
+      expect(source, contains('Variable stroke width: 1.33 … 2.0'));
+      expect(source, contains('wght'));
+      expect(source, contains('Icon(MyIcons.'));
+      expect(source, contains('weight: 1.33'));
+    });
+
+    test('a static font gains no axis lines at all', () {
+      final source = generateFlutterClass(
+        glyphList: _glyphList,
+        className: 'MyIcons',
+      );
+
+      expect(source, isNot(contains('Variable stroke width')));
+      expect(source, isNot(contains('wght')));
+    });
+
+    test('the class shape is unchanged either way', () {
+      final variable = generateFlutterClass(
+        glyphList: _glyphList,
+        className: 'MyIcons',
+        strokeWidthRange: StrokeWidthRange(1.33, 2),
+      );
+
+      expect(variable, contains('abstract final class MyIcons {'));
+      expect(variable, contains('static const IconData'));
+      expect(variable, isNot(contains('double strokeWidthFor')));
     });
   });
 }
