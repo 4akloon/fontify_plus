@@ -26,9 +26,9 @@ flutter:
       fonts:
         - asset: fonts/my_icons.otf
     # gvar lost the format decision (Task 5) and was retired from the render
-    # matrix — see the comment in integration_test/variable_stroke_test.dart
-    # and tool/variable_prototype/README.md. Only the winning format's
-    # families remain.
+    # matrix — see integration_test/variable_stroke_test.dart and
+    # tool/variable_prototype/README.md. Rebuilt by tool/build_proto_fonts.py
+    # (package CLI, not varLib).
     - family: ProtoCff2
       fonts:
         - asset: fonts/proto/variable_cff2.otf
