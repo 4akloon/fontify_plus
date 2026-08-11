@@ -6,6 +6,9 @@ import 'abstract.dart';
 const _kHeaderSize = 16;
 const _kAxisRecordSize = 20;
 
+/// This table always writes exactly one axis, `wght`.
+const _kAxisCount = 1;
+
 /// Converts to the 16.16 fixed point `fvar` stores axis values in.
 int _fixed(double value) => (value * 65536).round();
 
@@ -36,10 +39,13 @@ class FontVariationsTable extends FontTable {
       ..setUint16(2, 0) // minorVersion
       ..setUint16(4, _kHeaderSize) // axesArrayOffset
       ..setUint16(6, 2) // reserved, required to be 2
-      ..setUint16(8, 1) // axisCount
+      ..setUint16(8, _kAxisCount) // axisCount
       ..setUint16(10, _kAxisRecordSize) // axisSize
       ..setUint16(12, 0) // instanceCount
-      ..setUint16(14, 0); // instanceSize, unused with no instances
+      // The spec's instanceSize formula applies unconditionally, not only
+      // when instanceCount > 0 — HarfBuzz's fvar sanitizer checks it that
+      // way and drops the whole table if it's short, even with no instances.
+      ..setUint16(14, _kAxisCount * 4 + 4); // instanceSize
 
     const tag = 'wght';
 

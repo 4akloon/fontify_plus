@@ -6,6 +6,25 @@ import 'package:fontify_plus/src/otf/table/table_record_entry.dart';
 import 'package:fontify_plus/src/utils/otf.dart';
 import 'package:test/test.dart';
 
+/// The NameIDs this format's fixed default-string map actually writes.
+///
+/// `NameID.values` also includes purpose-specific IDs — like
+/// `strokeWidthAxis`, an `fvar` axis name — that other tables contribute once
+/// they're wired in, not this one, so those are excluded here rather than
+/// asserted (incorrectly) to be present.
+const _kStandardNameIds = [
+  NameID.copyright,
+  NameID.fontFamily,
+  NameID.fontSubfamily,
+  NameID.uniqueID,
+  NameID.fullFontName,
+  NameID.version,
+  NameID.postScriptName,
+  NameID.manufacturer,
+  NameID.description,
+  NameID.urlVendor,
+];
+
 void main() {
   group('NamingTableFormat0.create', () {
     test('familyName is the font name it was given', () {
@@ -25,8 +44,11 @@ void main() {
         const Revision(1, 0),
       );
 
-      // 10 NameIDs, written for 2 platform templates (Mac + Windows).
-      expect(table.header.nameRecordList, hasLength(20));
+      // Written for 2 platform templates (Mac + Windows).
+      expect(
+        table.header.nameRecordList,
+        hasLength(_kStandardNameIds.length * 2),
+      );
     });
 
     test('uses the given description when provided', () {
@@ -59,14 +81,7 @@ void main() {
         const Revision(1, 0),
       );
 
-      for (final id in NameID.values) {
-        // strokeWidthAxis is a `fvar` axis name: it is written into the
-        // `name` table once `fvar` is wired into the font builder, not by
-        // this format's fixed set of default strings.
-        if (id == NameID.strokeWidthAxis) {
-          continue;
-        }
-
+      for (final id in _kStandardNameIds) {
         expect(table.getStringByNameId(id), isNotNull, reason: '$id');
       }
     });

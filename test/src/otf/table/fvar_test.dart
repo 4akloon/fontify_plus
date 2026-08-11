@@ -23,9 +23,14 @@ void main() {
       expect(data.getUint16(0), 1, reason: 'majorVersion');
       expect(data.getUint16(2), 0, reason: 'minorVersion');
       expect(data.getUint16(4), 16, reason: 'axesArrayOffset');
+      expect(data.getUint16(6), 2, reason: 'reserved');
       expect(data.getUint16(8), 1, reason: 'axisCount');
       expect(data.getUint16(10), 20, reason: 'axisSize');
       expect(data.getUint16(12), 0, reason: 'instanceCount');
+      // The spec's formula for instanceSize applies unconditionally, not only
+      // when instanceCount > 0: HarfBuzz's fvar sanitizer checks it that way
+      // and drops the whole table if it's short, even with no instances.
+      expect(data.getUint16(14), 8, reason: 'instanceSize');
     });
 
     test('writes the axis as wght in 16.16 fixed point', () {
