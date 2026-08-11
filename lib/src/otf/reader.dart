@@ -121,10 +121,14 @@ class OTFReader {
       default:
         // `kFvarTag` ('fvar') and `kStatTag` ('STAT') have no case above, so
         // they fall through to here and are silently dropped rather than
-        // parsed. Whichever change wires the variable-width axis into the
-        // builder MUST add cases for both, or this package will not be able
-        // to read back a variable font it just wrote — see the matching gap
-        // in otf.dart's `_kTableTagsToEncode` on the write side.
+        // parsed — neither table has a `fromByteData` yet, and this package
+        // has no consumer for a reader nothing calls. This is a known,
+        // deliberate gap, not an oversight: reading a variable font this
+        // package wrote back through `OTFReader` drops both tables, so a
+        // read-modify-write round trip produces a static font. Anything
+        // doing read-modify-write must not route a variable font through
+        // this reader. Tracked in
+        // https://github.com/4akloon/fontify_plus/issues/12.
         debuggerOTF.debugUnsupportedTable(entry.tag);
         return null;
     }

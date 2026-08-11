@@ -140,5 +140,30 @@ void main() {
       expect(table.usLowerOpticalPointSize, 0);
       expect(table.usUpperOpticalPointSize, 0xFFFE);
     });
+
+    test(
+      'pins usWeightClass to 400 regardless of the wght axis range',
+      () {
+        // An honest usWeightClass for a 1.33-2.0 stroke-width axis would be
+        // 2 ("Extra-thin"), but generic tooling that reads this field
+        // without instancing the font would then call the icon font
+        // thinner than Thin. 400 (Regular) is the deliberate, documented
+        // choice — see the comment in os2_builder.dart. This pins that
+        // choice so a future change can't drift it without updating this
+        // test.
+        final hmtx = _hmtx();
+
+        final table = buildOS2Table(
+          hmtx,
+          _head(),
+          _hhea(hmtx),
+          _cmap(),
+          GlyphSubstitutionTable.create(),
+          'PfPl',
+        );
+
+        expect(table.usWeightClass, 400);
+      },
+    );
   });
 }

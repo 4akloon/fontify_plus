@@ -11,12 +11,11 @@ import 'table/all.dart';
 /// Ordered list of table tags for encoding (Optimized Table Ordering)
 ///
 /// Anything in [OpenTypeFont.tableMap] whose tag is not listed here is
-/// silently skipped by [_encodeTables] — no error, no log line. In
-/// particular, `kFvarTag` ('fvar') and `kStatTag` ('STAT') are NOT listed:
-/// whichever change wires the variable-width axis into the builder MUST add
-/// both here, or the encoder will produce a static-looking font that quietly
-/// carries no axis. See also the `default:` case in `reader.dart`'s
-/// `_createTableFromEntry`, which has the same gap on the read side.
+/// silently skipped by [_encodeTables] — no error, no log line. `kFvarTag`
+/// ('fvar') and `kStatTag` ('STAT') are listed (last, so existing fonts'
+/// table order is unchanged): a new table still needs an entry here, and a
+/// matching case in `reader.dart`'s `_createTableFromEntry`, or it will be
+/// dropped on write (this set) or read (that switch) without any error.
 const _kTableTagsToEncode = {
   kHeadTag,
   kHheaTag,
@@ -31,7 +30,18 @@ const _kTableTagsToEncode = {
   kCFFTag,
   kCFF2Tag,
   kGSUBTag,
+  kFvarTag,
+  kStatTag,
 };
+
+/// Exposes [_kTableTagsToEncode] for `table_registration_test.dart`.
+///
+/// Not annotated `@visibleForTesting`: `meta` is only a transitive
+/// dependency here (via other packages' pubspec, not this package's), and
+/// this task adds no new dependency. This comment is the substitute —
+/// the getter exists solely so the encode-set test can see the constant
+/// without making it public API.
+const debugTableTagsToEncode = _kTableTagsToEncode;
 
 /// {@category api}
 /// An OpenType font.

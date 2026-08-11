@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:fontify_plus/src/otf/table/name/name_id.dart';
 import 'package:fontify_plus/src/otf/table/name/naming_table.dart';
 import 'package:fontify_plus/src/otf/table/name/naming_table_format0.dart';
 import 'package:fontify_plus/src/otf/table/table_record_entry.dart';
@@ -20,6 +21,53 @@ void main() {
         NamingTable.create('My Icons', null, const Revision(1, 0), format: 99),
         isNull,
       );
+    });
+
+    test('no axis name record without an axis', () {
+      final table = NamingTable.create('Test', null, const Revision(1, 0))!;
+
+      expect(table.getStringByNameId(NameID.strokeWidthAxis), isNull);
+    });
+
+    test('the axis name is written once per platform template', () {
+      // OTS validates fvar's axisNameID and every STAT valueNameID against
+      // the name table and rejects the font if the string is missing.
+      final table =
+          NamingTable.create(
+                'Test',
+                null,
+                const Revision(1, 0),
+                axisName: 'Stroke Width',
+              )!
+              as NamingTableFormat0;
+
+      expect(table.getStringByNameId(NameID.strokeWidthAxis), 'Stroke Width');
+      expect(
+        table.header.nameRecordList.where((r) => r.nameID == 256).length,
+        2,
+      );
+    });
+
+    test('records stay in ascending nameID order within a platform', () {
+      final table =
+          NamingTable.create(
+                'Test',
+                null,
+                const Revision(1, 0),
+                axisName: 'Stroke Width',
+              )!
+              as NamingTableFormat0;
+
+      for (final platform in {
+        for (final r in table.header.nameRecordList) r.platformID,
+      }) {
+        final ids = [
+          for (final r in table.header.nameRecordList)
+            if (r.platformID == platform) r.nameID,
+        ];
+
+        expect(ids, orderedEquals([...ids]..sort()));
+      }
     });
   });
 

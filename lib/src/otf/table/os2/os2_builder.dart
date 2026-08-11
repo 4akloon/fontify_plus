@@ -55,7 +55,13 @@ OS2Table buildOS2Table(
     null,
     version,
     _getAverageWidth(hmtx),
-    400, // Regular weight
+    // Pinned to 400 (Regular) even for a variable font whose `wght` axis
+    // carries literal stroke widths in the 1.33-2.0 range. An honest
+    // usWeightClass for that range would be 2 ("Extra-thin"), but generic
+    // font tooling that reads usWeightClass without instancing the font
+    // would then treat the icon font as thinner than Thin, which is a worse
+    // default than a class that doesn't describe this axis at all.
+    400,
     5, // Normal width
     0, // Installable embedding
     scriptXsize,

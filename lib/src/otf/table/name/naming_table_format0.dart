@@ -28,9 +28,15 @@ class NamingTableFormat0 extends NamingTable {
   factory NamingTableFormat0.create(
     String fontName,
     String? description,
-    Revision revision,
-  ) {
-    final stringForNameMap = _defaultStrings(fontName, description, revision);
+    Revision revision, {
+    String? axisName,
+  }) {
+    final stringForNameMap = _defaultStrings(
+      fontName,
+      description,
+      revision,
+      axisName,
+    );
 
     final stringList = [
       for (var i = 0; i < _kNameRecordTemplateList.length; i++)
@@ -91,10 +97,16 @@ class NamingTableFormat0 extends NamingTable {
   }
 
   /// Values for name ids in sorted order
+  ///
+  /// [axisName], when given, is appended last: iteration order here is
+  /// record order, and 256 ([NameID.strokeWidthAxis]) is the highest ID
+  /// this package writes, so appending keeps every platform's records
+  /// sorted by nameID as the `name` table spec requires.
   static Map<NameID, String> _defaultStrings(
     String fontName,
     String? description,
     Revision revision,
+    String? axisName,
   ) => {
     NameID.copyright: 'Copyright $kVendorName ${DateTime.now().year}',
     NameID.fontFamily: fontName,
@@ -106,6 +118,7 @@ class NamingTableFormat0 extends NamingTable {
     NameID.manufacturer: kVendorName,
     NameID.description: description ?? 'Generated using $kVendorName',
     NameID.urlVendor: kVendorUrl,
+    NameID.strokeWidthAxis: ?axisName,
   };
 
   final NamingTableFormat0Header header;
