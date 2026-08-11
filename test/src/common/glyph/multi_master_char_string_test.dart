@@ -134,6 +134,86 @@ void main() {
       expect(masters[1][1].operandList.map((o) => o.value), [1, 2, 2, 2, 2, 2]);
     });
 
+    test('a merged rlineto run keeps each master on its own coordinates', () {
+      // Two adjacent rlineto commands merge into one. The merge has to append
+      // each master's own operands to that master's command: appending master
+      // 0's to all of them would hand the thick master the thin outline for
+      // that run, and the variation deltas for those points would come out
+      // zero. Nothing downstream can detect that, so it is asserted here.
+      final a = _glyph([
+        const math.Point<num>(1, 1),
+        const math.Point<num>(3, 4),
+        const math.Point<num>(6, 8),
+      ]);
+      final b = _glyph([
+        const math.Point<num>(2, 1),
+        const math.Point<num>(5, 5),
+        const math.Point<num>(9, 10),
+      ]);
+
+      final masters = a.toCharStringCommandsForMasters([
+        a,
+        b,
+      ], CharStringOptimizer(false));
+
+      for (final commands in masters) {
+        expect(commands.map((c) => c.operator), [rmoveto, rlineto]);
+      }
+      expect(masters[0][0].operandList.map((o) => o.value), [1, 1]);
+      expect(masters[1][0].operandList.map((o) => o.value), [2, 1]);
+      expect(masters[0][1].operandList.map((o) => o.value), [2, 3, 3, 4]);
+      expect(masters[1][1].operandList.map((o) => o.value), [3, 4, 4, 5]);
+    });
+
+    test('a merged vvcurveto run keeps each master on its own coordinates', () {
+      // The curve merge carries an extra condition — neither side may hold a
+      // leading delta — and is the one place operand counts could differ, so
+      // it gets its own fixture. Every curve here starts and ends with a zero
+      // dx in both masters, which is what makes the form `vvcurveto` with the
+      // leading delta dropped: four operands each, so the two merge.
+      final a = _glyph(
+        [
+          const math.Point<num>(0, 0),
+          const math.Point<num>(0, 10),
+          const math.Point<num>(5, 15),
+          const math.Point<num>(5, 20),
+          const math.Point<num>(5, 25),
+          const math.Point<num>(10, 30),
+          const math.Point<num>(10, 35),
+        ],
+        onCurve: [true, false, false, true, false, false, true],
+      );
+      final b = _glyph(
+        [
+          const math.Point<num>(0, 0),
+          const math.Point<num>(0, 12),
+          const math.Point<num>(6, 18),
+          const math.Point<num>(6, 24),
+          const math.Point<num>(6, 30),
+          const math.Point<num>(12, 36),
+          const math.Point<num>(12, 42),
+        ],
+        onCurve: [true, false, false, true, false, false, true],
+      );
+
+      final masters = a.toCharStringCommandsForMasters([
+        a,
+        b,
+      ], CharStringOptimizer(false));
+
+      for (final commands in masters) {
+        expect(commands.map((c) => c.operator), [vmoveto, vvcurveto]);
+      }
+      expect(masters[0][1].operandList.map((o) => o.value), [
+        10, 5, 5, 5, //
+        5, 5, 5, 5,
+      ]);
+      expect(masters[1][1].operandList.map((o) => o.value), [
+        12, 6, 6, 6, //
+        6, 6, 6, 6,
+      ]);
+    });
+
     test('mismatched point counts are rejected, not silently truncated', () {
       final a = _glyph([
         const math.Point<num>(0, 0),
