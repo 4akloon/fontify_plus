@@ -84,6 +84,13 @@ void main() {
                   isNotEmpty,
                   reason: 'contour $c at width $width',
                 );
+                // Bounds the loop below on all three lists' behalf: a
+                // regression that shortened a contour's tail (e.g. a join or
+                // cap dropping segments at one width but not another) would
+                // otherwise pass vacuously, since the loop only ever indexes
+                // as far as `actual[c].length`.
+                expect(low[c].length, actual[c].length, reason: 'contour $c');
+                expect(high[c].length, actual[c].length, reason: 'contour $c');
 
                 for (var s = 0; s < actual[c].length; s++) {
                   // Typed, not dynamic: `avoid_dynamic_calls` is on, and a

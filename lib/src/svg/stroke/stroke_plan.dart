@@ -143,10 +143,6 @@ class StrokePlan {
       final segment = segments[i];
       final offset = offsets[i].evaluate(target.radius);
 
-      if (offset.isEmpty) {
-        continue;
-      }
-
       if (result.isNotEmpty) {
         result.addAll(
           joiner.join(
