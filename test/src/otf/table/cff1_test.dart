@@ -19,7 +19,10 @@ CFF1Table buildCff1Table({int glyphCount = 1}) {
     fontName: 'Test',
   );
 
-  return font.cff;
+  // `font.cff` is nullable — a TrueType font has no CFF table at all — but
+  // this one was just built with the default CFF outlines, so `require` both
+  // states that and names the tag if the default ever changes.
+  return font.tables.require<CFF1Table>(kCFFTag);
 }
 
 void main() {

@@ -90,10 +90,15 @@ class OTFReader {
           numGlyphs,
         );
       case kGlyfTag:
+        // `require` rather than the nullable `_font.loca`: glyf's contents
+        // are unreadable without loca's offsets, and `_tagsParseOrder` puts
+        // loca first precisely so it is already parsed by now. A glyf table
+        // with no loca beside it is a malformed font, and this says which
+        // tag is missing instead of failing later on a null.
         return GlyphDataTable.fromByteData(
           _byteData,
           entry,
-          _font.loca,
+          _font.tables.require<IndexToLocationTable>(kLocaTag),
           numGlyphs,
         );
       case kGSUBTag:

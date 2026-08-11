@@ -17,6 +17,14 @@ import 'fixtures/ttf_expected_data.dart';
 const _kTestFontAssetPath = '$kTestAssetsDir/test_font.ttf';
 const _kTestCFF2fontAssetPath = '$kTestAssetsDir/test_cff2_font.otf';
 
+/// The glyf table of a font these tests already know is TrueType.
+///
+/// `font.glyf` is nullable because a CFF font has no glyf at all; every use
+/// below is on `test_font.ttf`, so `require` states that and names the tag if
+/// the fixture ever stops being a TrueType font.
+GlyphDataTable _glyf(OpenTypeFont font) =>
+    font.tables.require<GlyphDataTable>(kGlyfTag);
+
 void main() {
   late OpenTypeFont font;
 
@@ -364,9 +372,9 @@ void main() {
       final glyphNameList = (font.post.data as PostScriptVersion20).glyphNames
           .map((s) => s.string)
           .toList();
-      final glyphList = font.glyf.glyphList
-          .map((e) => GenericGlyph.fromSimpleTrueTypeGlyph(e))
-          .toList();
+      final glyphList = _glyf(
+        font,
+      ).glyphList.map((e) => GenericGlyph.fromSimpleTrueTypeGlyph(e)).toList();
 
       for (var i = 0; i < glyphList.length; i++) {
         glyphList[i].metadata.name = glyphNameList[i];
@@ -442,7 +450,7 @@ void main() {
     });
 
     test('CFF2 Read & Write', () {
-      final table = font.cff2;
+      final table = font.tables.require<CFF2Table>(kCFF2Tag);
 
       final originalCFF2byteList = byteData.buffer
           .asUint8List(table.entry!.offset, table.size)
@@ -484,22 +492,22 @@ void main() {
     });
 
     test('Conversion from TrueType and back', () {
-      final genericList = font.glyf.glyphList
-          .map((e) => GenericGlyph.fromSimpleTrueTypeGlyph(e))
-          .toList();
+      final genericList = _glyf(
+        font,
+      ).glyphList.map((e) => GenericGlyph.fromSimpleTrueTypeGlyph(e)).toList();
       final simpleList = genericList
           .map((e) => e.toSimpleTrueTypeGlyph())
           .toList();
 
       for (var i = 0; i < genericList.length; i++) {
-        expect(simpleList[i].pointList, font.glyf.glyphList[i].pointList);
+        expect(simpleList[i].pointList, _glyf(font).glyphList[i].pointList);
       }
     });
 
     test('Decompact and compact back', () {
-      final genericList = font.glyf.glyphList
-          .map((e) => GenericGlyph.fromSimpleTrueTypeGlyph(e))
-          .toList();
+      final genericList = _glyf(
+        font,
+      ).glyphList.map((e) => GenericGlyph.fromSimpleTrueTypeGlyph(e)).toList();
 
       for (final g in genericList) {
         for (final o in g.outlines) {
@@ -526,7 +534,7 @@ void main() {
       for (var i = 0; i < genericList.length; i++) {
         final newLength = simpleList[i].pointList.length;
         final expectedLength =
-            changedForReason[i] ?? font.glyf.glyphList[i].pointList.length;
+            changedForReason[i] ?? _glyf(font).glyphList[i].pointList.length;
         expect(newLength, expectedLength);
       }
     });

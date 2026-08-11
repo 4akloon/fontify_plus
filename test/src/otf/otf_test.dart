@@ -45,21 +45,21 @@ void main() {
         expect(font.gsub.lookupListTable.lookupTables, isNotEmpty);
         expect(font.os2.achVendID, isNotEmpty);
         expect(font.post.header.version.major, isNonNegative);
-        expect(font.cff.charStringsData.data, isNotEmpty);
+        expect(font.cff?.charStringsData.data, isNotEmpty);
       },
     );
 
-    test('glyf throws when the font has no glyf table (OpenType/CFF)', () {
+    test('glyf is null when the font has no glyf table (OpenType/CFF)', () {
       final font = _buildFont();
 
-      expect(() => font.glyf, throwsA(isA<TypeError>()));
+      expect(font.glyf, isNull);
     });
 
     test('resolves glyf/loca for a TrueType font', () {
       final font = _buildFont(useOpenType: false);
 
-      expect(font.glyf.glyphList, isNotEmpty);
-      expect(font.loca.glyphOffsets, isNotEmpty);
+      expect(font.glyf?.glyphList, isNotEmpty);
+      expect(font.loca?.glyphOffsets, isNotEmpty);
     });
   });
 
