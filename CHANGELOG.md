@@ -112,6 +112,34 @@
   supported replacement for mutating a font's table set after construction:
   build the map first and pass it to the `OpenTypeFont` constructor, whose
   signature is unchanged.
+* `OpenTypeFont.createFromGlyphs` can now build a **variable font** whose
+  `wght` axis is the icon's stroke width. Pass `minGlyphList` — the same
+  glyphs as `glyphList`, in the same order, drawn at the thin end of the
+  range — together with `strokeWidthRange`, and the outlines move out of
+  `CFF` into a `CFF2` table carrying both masters, while `fvar` and `STAT`
+  declare the axis and a `name` record labels it "Stroke Width". The axis
+  values are literal stroke widths, so `Icon(icon, weight: 1.33)` asks for a
+  stroke width of 1.33 rather than for a rescaling of one.
+  `glyphList` stays the *default* master — the maximum width — because that
+  is the instance `fvar` selects by default and the one every metric is
+  computed from. Advance widths are constant across the axis (they are the em
+  square, or the normalized band, not the ink), which is why no `HVAR` table
+  is written.
+  Both masters are fitted onto the em square with **one** transform, taken
+  from the default master, never with one transform each. Fitting the thinner
+  master on its own would scale it up until its own longest side filled the
+  same em band, which moves the centreline between the masters and bends
+  every width in between — a font that parses, sanitizes and renders
+  correctly at both endpoints and subtly wrong everywhere else.
+  The two parameters must be supplied together, must be the same length, and
+  require `useOpenType: true`, since a TrueType variable font would need
+  `gvar`, which this package does not write; every other combination throws
+  `ArgumentError`. `StrokeWidthRange` is now exported from
+  `package:fontify_plus/fontify_plus.dart`.
+  Omitting both leaves the static path untouched, down to the byte.
+  Note one limitation: `OpenTypeFont.fromByteData` cannot read `fvar` or
+  `STAT` back, so a read-modify-write round trip through `OTFReader` turns a
+  variable font into a static one.
 * Fonts generated from icons with an exact-90° round join
   (`stroke-linejoin="round"`) may differ slightly from those produced by
   0.5.2. The join's arc is now segmented using the source path's tangents

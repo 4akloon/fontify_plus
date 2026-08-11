@@ -12,6 +12,13 @@ const kDefaultOpenTypeUnitsPerEm = 1000;
 const kDefaultBaselineExtension = 150;
 const kDefaultFontRevision = Revision(1, 0);
 
+/// The display name written for the `wght` axis of a variable font.
+///
+/// Not "Weight": the axis carries literal stroke widths, so the name a font
+/// picker shows should say what the number means. `fvar`'s `axisNameID` and
+/// every `STAT` `valueNameID` resolve to this one string.
+const kStrokeWidthAxisName = 'Stroke Width';
+
 // Default glyph indicies for post table.
 const kDefaultGlyphIndex = <int>[
   0, // .notdef

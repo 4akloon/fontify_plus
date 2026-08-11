@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import '../common/calculatable_offsets.dart';
 import '../common/codable/binary.dart';
 import '../common/generic_glyph.dart';
+import '../common/stroke_width_range.dart';
 import '../utils/otf.dart';
 import 'font_tables.dart';
 import 'otf_builder.dart';
@@ -66,8 +67,9 @@ class OpenTypeFont implements BinaryCodable {
 
   /// Generates new OpenType font.
   ///
-  /// Mutates every glyph's metadata,
-  /// so that it contains newly generated charcode.
+  /// Mutates every [glyphList] glyph's metadata,
+  /// so that it contains newly generated charcode. [minGlyphList], when
+  /// given, is left alone.
   ///
   /// * [glyphList] is a list of generic glyphs. Required.
   /// * [fontName] is a font name.
@@ -85,6 +87,21 @@ class OpenTypeFont implements BinaryCodable {
   /// * If [normalize] is set to true, each glyph is scaled so that its own
   /// longest side fills the em square, then centred. Defaults to true —
   /// see `GlyphFitting`.
+  /// * [minGlyphList] is the same glyphs as [glyphList], drawn at the
+  /// minimum of [strokeWidthRange]. Supplying it makes the font *variable*:
+  /// the outlines move to a `CFF2` table carrying both masters, and `fvar`
+  /// and `STAT` declare a `wght` axis whose values are literal stroke
+  /// widths. [glyphList] stays the default master (the maximum width),
+  /// which is the instance `fvar` selects and the one every metric is
+  /// computed from. Both lists are indexed together and must have the same
+  /// length. Omitted for a static font.
+  /// * [strokeWidthRange] is the span that axis covers. It must be given
+  /// exactly when [minGlyphList] is — a second master with no axis would be
+  /// dropped, an axis with no second master would vary nothing — and it
+  /// requires `useOpenType: true`, since a TrueType variable font would need
+  /// `gvar`, which this package does not write.
+  ///
+  /// Throws [ArgumentError] for any of those combinations.
   factory OpenTypeFont.createFromGlyphs({
     required List<GenericGlyph> glyphList,
     String? fontName,
@@ -94,6 +111,8 @@ class OpenTypeFont implements BinaryCodable {
     bool? useOpenType,
     bool? usePostV2,
     bool? normalize,
+    List<GenericGlyph>? minGlyphList,
+    StrokeWidthRange? strokeWidthRange,
   }) => OpenTypeFontBuilder(
     glyphList: glyphList,
     fontName: fontName,
@@ -103,6 +122,8 @@ class OpenTypeFont implements BinaryCodable {
     useOpenType: useOpenType,
     usePostV2: usePostV2,
     normalize: normalize,
+    minGlyphList: minGlyphList,
+    strokeWidthRange: strokeWidthRange,
   ).build();
 
   final OffsetTable offsetTable;
