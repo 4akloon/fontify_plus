@@ -13,7 +13,7 @@ import 'table_record_entry.dart';
 const _kLongHorMetricSize = 4;
 
 class LongHorMetric implements BinaryCodable {
-  LongHorMetric(this.advanceWidth, this.lsb);
+  const LongHorMetric(this.advanceWidth, this.lsb);
 
   factory LongHorMetric.fromByteData(ByteData byteData, int offset) {
     return LongHorMetric(

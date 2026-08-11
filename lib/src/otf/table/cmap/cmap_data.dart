@@ -11,7 +11,7 @@ import 'cmap_segmented_coverage_table.dart';
 
 /// One cmap subtable, in whichever format it declares.
 abstract class CmapData implements BinaryCodable {
-  CmapData(this.format);
+  const CmapData(this.format);
 
   /// Reads the subtable at [offset], or null when its format is unsupported.
   static CmapData? fromByteData(ByteData byteData, int offset) {

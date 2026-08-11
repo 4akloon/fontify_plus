@@ -105,7 +105,7 @@ class CFFIndexWithData<T> implements BinaryCodable, CalculatableOffsets {
     } while (actualOffSize != expectedOffSize);
 
     if (actualOffSize > 4) {
-      throw TableDataFormatException('INDEX offset overflow');
+      throw const TableDataFormatException('INDEX offset overflow');
     }
 
     return newIndex;

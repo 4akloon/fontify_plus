@@ -11,7 +11,7 @@ import 'sequential_map_group.dart';
 /// The same shape as format 4 without the BMP ceiling, which is why icon sets
 /// mapped into the private use area beyond U+FFFF need it.
 class CmapSegmentedCoverageTable extends CmapData {
-  CmapSegmentedCoverageTable(
+  const CmapSegmentedCoverageTable(
     super.format, {
     required this.reserved,
     required this.length,

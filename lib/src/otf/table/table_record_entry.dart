@@ -6,7 +6,7 @@ import '../../utils/otf.dart';
 const kTableRecordEntryLength = 16;
 
 class TableRecordEntry implements BinaryCodable {
-  TableRecordEntry(
+  const TableRecordEntry(
     this.tag, {
     required this.checkSum,
     required this.offset,

@@ -261,7 +261,7 @@ class OpenTypeFontBuilder {
     );
 
     if (name == null) {
-      throw TableDataFormatException('Unknown "name" table format');
+      throw const TableDataFormatException('Unknown "name" table format');
     }
 
     final cmap = CharacterToGlyphTable.create(fullGlyphList);

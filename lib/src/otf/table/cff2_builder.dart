@@ -79,7 +79,11 @@ CFF2Table _buildCFF2Table(List<List<GenericGlyph>> glyphMasterList) {
     vstoreData: regionCount == 0 ? null : singleRegionVariationStore(),
     fontDictList: CFFIndexWithData<CFFDict>.create(
       [
-        CFFDict([CFFDictEntry([], op.private)]),
+        // Growable list: recalculateOffsets clears and rewrites the operands.
+        // List.empty (not []) so prefer_const_constructors cannot freeze it.
+        CFFDict([
+          CFFDictEntry(List<CFFOperand>.empty(growable: true), op.private),
+        ]),
       ],
       false,
     ),

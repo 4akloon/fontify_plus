@@ -9,7 +9,7 @@ const _kOffsetTableTrueTypeVersion = 0x00010000;
 const _kOffsetTableOpenTypeVersion = 0x4F54544F;
 
 class OffsetTable implements BinaryCodable {
-  OffsetTable({
+  const OffsetTable({
     required this.sfntVersion,
     required this.numTables,
     required this.searchRange,

@@ -10,7 +10,7 @@ import 'simple_glyph_coordinates.dart';
 /// A TrueType glyph made of contours, as opposed to a composite of other
 /// glyphs.
 class SimpleGlyph implements BinaryCodable {
-  SimpleGlyph({
+  const SimpleGlyph({
     required this.header,
     required this.endPtsOfContours,
     required this.instructions,
@@ -18,7 +18,7 @@ class SimpleGlyph implements BinaryCodable {
     required this.pointList,
   });
 
-  factory SimpleGlyph.empty() => SimpleGlyph(
+  factory SimpleGlyph.empty() => const SimpleGlyph(
     header: GlyphHeader(
       numberOfContours: 0,
       xMin: 0,

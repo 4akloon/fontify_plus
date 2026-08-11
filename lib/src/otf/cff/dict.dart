@@ -9,7 +9,7 @@ import 'operator.dart';
 const _kOperatorEscapeByte = 0x0C;
 
 class CFFDictEntry extends BinaryCodable {
-  CFFDictEntry(this.operandList, this.operator);
+  const CFFDictEntry(this.operandList, this.operator);
 
   factory CFFDictEntry.fromByteData(ByteData byteData, int startOffset) {
     final operandList = <CFFOperand>[];
@@ -43,7 +43,7 @@ class CFFDictEntry extends BinaryCodable {
       }
     }
 
-    throw TableDataFormatException('No operator for CFF dict entry');
+    throw const TableDataFormatException('No operator for CFF dict entry');
   }
 
   final CFFOperator operator;

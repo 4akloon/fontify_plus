@@ -7,7 +7,7 @@ import 'encoding_record.dart';
 
 /// The cmap table's own header: a version and the encoding records.
 class CharacterToGlyphTableHeader implements BinaryCodable {
-  CharacterToGlyphTableHeader({
+  const CharacterToGlyphTableHeader({
     required this.version,
     required this.numTables,
     required this.encodingRecords,

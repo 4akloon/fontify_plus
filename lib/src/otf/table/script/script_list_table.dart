@@ -33,7 +33,11 @@ const _kDefaultScriptTable = ScriptTable(
 
 /// Every script the font declares support for.
 class ScriptListTable implements BinaryCodable {
-  ScriptListTable(this.scriptCount, this.scriptRecords, this.scriptTables);
+  const ScriptListTable(
+    this.scriptCount,
+    this.scriptRecords,
+    this.scriptTables,
+  );
 
   factory ScriptListTable.fromByteData(ByteData byteData, int offset) {
     final scriptCount = byteData.getUint16(offset);

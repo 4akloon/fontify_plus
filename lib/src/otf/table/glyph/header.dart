@@ -5,7 +5,7 @@ import '../../../common/codable/binary.dart';
 const _kGlyphHeaderSize = 10;
 
 class GlyphHeader implements BinaryCodable {
-  GlyphHeader({
+  const GlyphHeader({
     required this.numberOfContours,
     required this.xMin,
     required this.yMin,

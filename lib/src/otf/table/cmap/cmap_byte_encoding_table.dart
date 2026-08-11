@@ -10,7 +10,7 @@ const _kByteEncodingTableSize = 256 + 6;
 /// Written empty. It exists because some Macintosh consumers still expect a
 /// (1, 0) subtable to be present, not because anything reads it.
 class CmapByteEncodingTable extends CmapData {
-  CmapByteEncodingTable(
+  const CmapByteEncodingTable(
     super.format, {
     required this.length,
     required this.language,

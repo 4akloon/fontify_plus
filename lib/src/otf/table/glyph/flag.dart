@@ -13,7 +13,7 @@ const _kOverlapSimpleValue = 0x40;
 const _kReservedValue = 0x80;
 
 class SimpleGlyphFlag implements BinaryCodable {
-  SimpleGlyphFlag({
+  const SimpleGlyphFlag({
     required this.onCurvePoint,
     required this.xShortVector,
     required this.yShortVector,

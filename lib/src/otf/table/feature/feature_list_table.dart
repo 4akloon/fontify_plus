@@ -15,7 +15,11 @@ List<FeatureRecord> _createDefaultFeatureRecordList() => [
 
 /// Every layout feature the font declares.
 class FeatureListTable implements BinaryCodable {
-  FeatureListTable(this.featureCount, this.featureRecords, this.featureTables);
+  const FeatureListTable(
+    this.featureCount,
+    this.featureRecords,
+    this.featureTables,
+  );
 
   factory FeatureListTable.fromByteData(ByteData byteData, int offset) {
     final featureCount = byteData.getUint16(offset);

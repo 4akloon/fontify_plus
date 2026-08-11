@@ -31,7 +31,7 @@ const _kDefaultLookupTableList = [
 
 /// Every lookup in the font, in application order.
 class LookupListTable implements BinaryCodable {
-  LookupListTable(this.lookupCount, this.lookups, this.lookupTables);
+  const LookupListTable(this.lookupCount, this.lookups, this.lookupTables);
 
   factory LookupListTable.fromByteData(ByteData byteData, int offset) {
     final lookupCount = byteData.getUint16(offset);
@@ -52,7 +52,7 @@ class LookupListTable implements BinaryCodable {
   }
 
   factory LookupListTable.create() =>
-      LookupListTable(1, [4], _kDefaultLookupTableList);
+      const LookupListTable(1, [4], _kDefaultLookupTableList);
 
   final int lookupCount;
   final List<int> lookups;

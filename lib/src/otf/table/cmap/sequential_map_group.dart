@@ -6,7 +6,7 @@ const kSequentialMapGroupSize = 12;
 
 /// One run of a format 12 subtable.
 class SequentialMapGroup implements BinaryCodable {
-  SequentialMapGroup({
+  const SequentialMapGroup({
     required this.startCharCode,
     required this.endCharCode,
     required this.startGlyphID,

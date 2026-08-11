@@ -17,6 +17,7 @@ class FontTables {
   /// Wraps the given map, which stays live rather than being copied:
   /// `OTFReader` hands its map to `OpenTypeFont` before it has finished
   /// filling it, and then keeps adding tables to it.
+  // Not const: [asMap] is a late final view over a live map the reader fills.
   FontTables(this._byTag);
 
   final Map<String, FontTable> _byTag;

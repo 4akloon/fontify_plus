@@ -175,7 +175,7 @@ class OTFReader {
     final actualFontChecksum = calculateFontChecksum(byteDataCopy);
 
     if (_font.head.checkSumAdjustment != actualFontChecksum) {
-      throw ChecksumException.font();
+      throw const ChecksumException.font();
     }
   }
 }

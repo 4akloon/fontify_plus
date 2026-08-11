@@ -6,7 +6,7 @@ const kNameRecordSize = 12;
 
 /// Where one name string lives, and which platform and name ID it is for.
 class NameRecord implements BinaryCodable {
-  NameRecord({
+  const NameRecord({
     required this.platformID,
     required this.encodingID,
     required this.languageID,

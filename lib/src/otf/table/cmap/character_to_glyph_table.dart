@@ -71,7 +71,7 @@ class CharacterToGlyphTable extends FontTable {
     // Format 4 table must end with 0xFFFF char code
     final segmentListFormat4 = [
       ...segmentList,
-      CmapSegment(startCode: 0xFFFF, endCode: 0xFFFF, startGlyphID: 1),
+      const CmapSegment(startCode: 0xFFFF, endCode: 0xFFFF, startGlyphID: 1),
     ];
 
     final subtableByFormat = {

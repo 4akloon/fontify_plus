@@ -9,7 +9,7 @@ import 'naming_table.dart';
 
 /// The format 0 header: a record per string, then the storage area.
 class NamingTableFormat0Header implements BinaryCodable {
-  NamingTableFormat0Header({
+  const NamingTableFormat0Header({
     required this.format,
     required this.count,
     required this.stringOffset,

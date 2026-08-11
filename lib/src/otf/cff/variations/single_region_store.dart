@@ -36,7 +36,7 @@ VariationStoreData singleRegionVariationStore() => VariationStoreData(
     // Real, not a placeholder; see doc above.
     itemVariationDataCount: 1,
     itemVariationDataOffsets: <int>[0],
-    variationRegionList: VariationRegionList(
+    variationRegionList: const VariationRegionList(
       axisCount: 1,
       regionCount: 1,
       regions: [
@@ -51,11 +51,11 @@ VariationStoreData singleRegionVariationStore() => VariationStoreData(
     // this subtable's only job is to tell `blend` at vsindex 0 how many
     // regions — and therefore how many deltas per value — to expect.
     itemVariationDataList: [
-      ItemVariationData(
+      const ItemVariationData(
         itemCount: 0,
         shortDeltaCount: 0,
         regionIndexCount: 1,
-        regionIndexes: const [0],
+        regionIndexes: [0],
       ),
     ],
   ),

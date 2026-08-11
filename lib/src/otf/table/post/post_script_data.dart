@@ -11,7 +11,7 @@ const kPostVersion30 = 0x00030000;
 
 /// The variable part of the `post` table, whichever version declares it.
 abstract class PostScriptData implements BinaryCodable {
-  PostScriptData();
+  const PostScriptData();
 
   static PostScriptData? fromByteData(
     ByteData byteData,
@@ -24,7 +24,7 @@ abstract class PostScriptData implements BinaryCodable {
       case kPostVersion20:
         return PostScriptVersion20.fromByteData(byteData, offset);
       case kPostVersion30:
-        return PostScriptVersion30();
+        return const PostScriptVersion30();
     }
 
     debuggerOTF.debugUnsupportedTableVersion(kPostTag, version);
@@ -40,7 +40,7 @@ abstract class PostScriptData implements BinaryCodable {
 /// The default here — glyph names cost bytes and nothing in an icon font
 /// consumes them.
 class PostScriptVersion30 extends PostScriptData {
-  PostScriptVersion30();
+  const PostScriptVersion30();
 
   @override
   int get size => 0;

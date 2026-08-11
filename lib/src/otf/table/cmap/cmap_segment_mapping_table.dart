@@ -10,7 +10,7 @@ import 'cmap_segment.dart';
 /// The one subtable every consumer understands, so it is written even when
 /// format 12 already covers the same glyphs.
 class CmapSegmentMappingToDeltaValuesTable extends CmapData {
-  CmapSegmentMappingToDeltaValuesTable(
+  const CmapSegmentMappingToDeltaValuesTable(
     super.format, {
     required this.length,
     required this.language,

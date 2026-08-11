@@ -26,7 +26,7 @@ OS2Table buildOS2Table(
   final asciiAchVendID = achVendID.getAsciiPrintable();
 
   if (asciiAchVendID.length != 4) {
-    throw TableDataFormatException(
+    throw const TableDataFormatException(
       'Incorrect achVendID tag format in OS/2 table',
     );
   }

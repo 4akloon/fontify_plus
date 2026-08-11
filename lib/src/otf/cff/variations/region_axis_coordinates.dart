@@ -6,7 +6,7 @@ const kRegionAxisCoordinatesSize = 6;
 
 /// One axis's extent within a variation region.
 class RegionAxisCoordinates extends BinaryCodable {
-  RegionAxisCoordinates({
+  const RegionAxisCoordinates({
     required this.startCoord,
     required this.peakCoord,
     required this.endCoord,

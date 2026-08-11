@@ -8,7 +8,7 @@ const kPostHeaderSize = 32;
 
 /// The fixed part of the `post` table, present in every version.
 class PostScriptTableHeader implements BinaryCodable {
-  PostScriptTableHeader({
+  const PostScriptTableHeader({
     required this.version,
     required this.italicAngle,
     required this.underlinePosition,

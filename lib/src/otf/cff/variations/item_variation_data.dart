@@ -4,7 +4,7 @@ import '../../../common/codable/binary.dart';
 
 /// Which variation regions one subtable's deltas apply to.
 class ItemVariationData extends BinaryCodable {
-  ItemVariationData({
+  const ItemVariationData({
     required this.itemCount,
     required this.shortDeltaCount,
     required this.regionIndexCount,

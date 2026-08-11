@@ -3,7 +3,7 @@
 /// Both cmap formats this package writes store the map as runs rather than
 /// per-character entries, so the same segment list feeds both.
 class CmapSegment {
-  CmapSegment({
+  const CmapSegment({
     required this.startCode,
     required this.endCode,
     required this.startGlyphID,

@@ -19,6 +19,7 @@ import 'sub_path.dart';
 /// subpaths (a plus sign, an X) need no clipping pass. Contours are emitted in
 /// consistent orientation to make that hold.
 class StrokeOutliner {
+  // Not const: the initializer reads [stroke].radius, not a constant expression.
   StrokeOutliner(this.stroke)
     : _offsetter = CubicOffsetter(
         distance: stroke.radius,

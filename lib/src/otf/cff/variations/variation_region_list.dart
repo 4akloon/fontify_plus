@@ -6,7 +6,7 @@ import 'region_axis_coordinates.dart';
 
 /// The regions of design space a variation store refers to.
 class VariationRegionList extends BinaryCodable {
-  VariationRegionList({
+  const VariationRegionList({
     required this.axisCount,
     required this.regionCount,
     required this.regions,
