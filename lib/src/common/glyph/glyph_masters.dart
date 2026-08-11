@@ -8,6 +8,7 @@ import '../../svg/stroke/stroke_outliner.dart';
 import '../../svg/stroke/stroke_properties.dart';
 import '../../svg/svg_parser.dart';
 import '../../utils/exception.dart';
+import '../../utils/logger.dart';
 import '../outline.dart';
 import '../stroke_width_range.dart';
 import 'generic_glyph_base.dart';
@@ -52,6 +53,26 @@ GlyphMasters glyphMastersFromSvg(
 ) {
   final geometry = parseSvgGeometry(name, xmlString);
   final height = geometry.height;
+
+  // The axis replaces every authored stroke-width with one value, so an icon
+  // that deliberately drew a hairline detail against thicker main strokes
+  // loses that hierarchy. The override is what "strokeWidth = 1.33" means and
+  // is not up for negotiation here, but the loss is a real design decision
+  // being taken on the author's behalf, so it is not taken quietly.
+  final authoredWidths = {
+    for (final shape in geometry.shapes)
+      if (shape.stroke != null) shape.stroke!.width,
+  };
+
+  if (authoredWidths.length > 1) {
+    final widths = (authoredWidths.toList()..sort()).join(', ');
+
+    logger.w(
+      '$name: draws strokes at more than one width ($widths). The '
+      'stroke_width_range axis applies one width to all of them, so the '
+      'difference between them is lost.',
+    );
+  }
 
   final minOutlines = <Outline>[];
   final maxOutlines = <Outline>[];

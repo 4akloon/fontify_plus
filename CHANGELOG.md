@@ -145,6 +145,22 @@
   Note one limitation: `OpenTypeFont.fromByteData` cannot read `fvar` or
   `STAT` back, so a read-modify-write round trip through `OTFReader` turns a
   variable font into a static one.
+* `svgToOtf` now takes that same `strokeWidthRange`, so a variable font is
+  reachable straight from SVG input rather than only from glyphs built by
+  hand. Passing it builds each icon's two masters from its SVG (via
+  `glyphMastersFromSvg`) instead of one fixed-width glyph, and hands
+  `OpenTypeFont.createFromGlyphs` the maximum-width master as `glyphList`
+  and the minimum-width one as `minGlyphList`; `result.glyphList` keeps
+  carrying that maximum-width master, since it is what `generateFlutterClass`
+  reads charcodes from. Two combinations are rejected before anything is
+  built, as `FontifyException`, not silently: `outlineStrokes: false` (a
+  filled region does not depend on stroke width, so there is nothing left
+  for the axis to move) and `useOpenType: false` (a TrueType variable font
+  would need `gvar`, which this package does not write). An SVG whose
+  stroked shapes are drawn at more than one width now also logs a warning
+  naming the file and every width found — the axis overrides them all with
+  one value, and that loss used to be silent. Omitting `strokeWidthRange`
+  leaves output unchanged, down to the byte.
 * Fonts generated from icons with an exact-90° round join
   (`stroke-linejoin="round"`) may differ slightly from those produced by
   0.5.2. The join's arc is now segmented using the source path's tangents
