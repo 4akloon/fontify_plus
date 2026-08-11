@@ -196,18 +196,32 @@ StrokeWidthRange _coerceStrokeWidthRange(JobField field, Object value) {
 }
 
 double _coerceStrokeWidthEndpoint(JobField field, Object? raw) {
+  double? value;
   if (raw is num) {
-    return raw.toDouble();
+    value = raw.toDouble();
+  } else if (raw is String) {
+    value = num.tryParse(raw.trim())?.toDouble();
   }
-  if (raw is String) {
-    final parsed = num.tryParse(raw.trim());
-    if (parsed != null) {
-      return parsed.toDouble();
-    }
+
+  if (value == null) {
+    throw FontifyException(
+      "'${configKey(field)}' values must be numbers, got \"$raw\".",
+    );
   }
-  throw FontifyException(
-    "'${configKey(field)}' values must be numbers, got \"$raw\".",
-  );
+
+  // num.tryParse accepts "NaN" and "Infinity", and YAML's .nan/.inf arrive
+  // as non-finite doubles directly. StrokeWidthRange's own min <= 0 / max <=
+  // min guards do not catch every non-finite case (NaN <= 0 is false, and
+  // Infinity as the low endpoint slips past both), so a non-finite value
+  // must be rejected here to keep it a config error rather than an internal
+  // one surfacing later, mid-font-generation.
+  if (!value.isFinite) {
+    throw FontifyException(
+      "'${configKey(field)}' values must be finite numbers, got $value.",
+    );
+  }
+
+  return value;
 }
 
 /// Builds a resolved [FontJob] from merged layers.

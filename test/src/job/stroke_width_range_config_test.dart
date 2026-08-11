@@ -144,6 +144,66 @@ void main() {
         ),
       );
     });
+
+    // NaN and Infinity both parse as `num` (from YAML's .nan/.inf, or from
+    // num.tryParse("NaN") / num.tryParse("Infinity") on a CLI string), so
+    // neither is caught by the "must be a number" check. StrokeWidthRange's
+    // own min <= 0 / max <= min guards do not catch every case either
+    // (NaN <= 0 is false, and Infinity as the low endpoint is not <= a
+    // finite max), so without an explicit finiteness check a non-finite
+    // range would reach font generation instead of failing here as a
+    // config error.
+    test('a NaN low endpoint is rejected as non-finite', () {
+      expect(
+        () => _coerce(JobField.strokeWidthRange, [double.nan, 2]),
+        throwsA(
+          isA<FontifyException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('stroke_width_range'), contains('NaN')),
+          ),
+        ),
+      );
+    });
+
+    test('a NaN high endpoint is rejected as non-finite', () {
+      expect(
+        () => _coerce(JobField.strokeWidthRange, [1.33, double.nan]),
+        throwsA(
+          isA<FontifyException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('stroke_width_range'), contains('NaN')),
+          ),
+        ),
+      );
+    });
+
+    test('an infinite low endpoint is rejected as non-finite', () {
+      expect(
+        () => _coerce(JobField.strokeWidthRange, [double.infinity, 2]),
+        throwsA(
+          isA<FontifyException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('stroke_width_range'), contains('Infinity')),
+          ),
+        ),
+      );
+    });
+
+    test('an infinite high endpoint is rejected as non-finite', () {
+      expect(
+        () => _coerce(JobField.strokeWidthRange, [1.33, double.infinity]),
+        throwsA(
+          isA<FontifyException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('stroke_width_range'), contains('Infinity')),
+          ),
+        ),
+      );
+    });
   });
 
   group('stroke_width_range resolution', () {

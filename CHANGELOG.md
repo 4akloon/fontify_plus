@@ -169,10 +169,12 @@
   same two numbers as one comma-separated string. There is no built-in
   default — the range sets both the variation's magnitude and how deeply
   every glyph is subdivided, so guessing one would mean guessing both. A
-  malformed range (wrong count, non-numeric, or `min`/`max` out of order)
-  fails as a `FontifyException` naming `stroke_width_range` and what was
-  found, rather than an uncaught `ArgumentError` from deep inside
-  `StrokeWidthRange`. Pairing `stroke_width_range` with `outline_strokes:
+  malformed range (wrong count, non-numeric, non-finite — `NaN`/`Infinity`,
+  including YAML's `.nan`/`.inf` — or `min`/`max` out of order) fails as a
+  `FontifyException` naming `stroke_width_range` and what was found, rather
+  than an uncaught `ArgumentError` from deep inside `StrokeWidthRange` or,
+  for a non-finite value, an unrelated internal error surfacing once font
+  generation is already under way. Pairing `stroke_width_range` with `outline_strokes:
   false` or `opentype: false` fails the same way, naming both config keys,
   before font generation starts.
 * Fonts generated from icons with an exact-90° round join
