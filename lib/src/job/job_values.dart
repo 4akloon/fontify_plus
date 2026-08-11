@@ -1,3 +1,4 @@
+import '../common/stroke_width_range.dart';
 import '../utils/logger.dart';
 import 'font_job.dart';
 import 'fontify_exception.dart';
@@ -23,6 +24,11 @@ extension JobValueReaders on Map<JobField, Object?> {
 
   /// The string at [field], or null when the config does not set it.
   String? readString(JobField field) => _read<String>(field, 'a string');
+
+  /// The [StrokeWidthRange] at [field], or null when the config does not set
+  /// it.
+  StrokeWidthRange? readStrokeWidthRange(JobField field) =>
+      _read<StrokeWidthRange>(field, 'a stroke width range');
 
   /// The boolean at [field], or a failure naming the config key.
   bool requireBool(JobField field) => readBool(field) ?? _missing(field);
@@ -139,7 +145,69 @@ Object? _coerceField(JobField field, Object? value) {
         );
       }
       return value;
+    case JobField.strokeWidthRange:
+      return _coerceStrokeWidthRange(field, value);
   }
+}
+
+/// Coerces a YAML list of two numbers, or a CLI `"min,max"` string, into a
+/// [StrokeWidthRange].
+///
+/// [StrokeWidthRange]'s own constructor already rejects `min <= 0` and
+/// `max <= min`, naming the offending value in an [ArgumentError]. That is
+/// caught here and rethrown as a [FontifyException] naming the config key —
+/// so a bad range in YAML reads like a config mistake, not a stack trace
+/// surfacing from deep inside font generation.
+StrokeWidthRange _coerceStrokeWidthRange(JobField field, Object value) {
+  final List<Object?> rawValues;
+  if (value is List) {
+    rawValues = value;
+  } else if (value is String) {
+    rawValues = value.split(',');
+  } else {
+    throw FontifyException(
+      "'${configKey(field)}' must be a two-element list (YAML) or a "
+      "comma-separated 'min,max' pair (CLI), got ${value.runtimeType}.",
+    );
+  }
+
+  if (rawValues.length != 2) {
+    throw FontifyException(
+      "'${configKey(field)}' must have exactly two values, got "
+      '${rawValues.length}.',
+    );
+  }
+
+  final endpoints = [
+    for (final raw in rawValues) _coerceStrokeWidthEndpoint(field, raw),
+  ];
+
+  try {
+    return StrokeWidthRange(endpoints[0], endpoints[1]);
+    // StrokeWidthRange signals an invalid endpoint with ArgumentError, which
+    // is an Error. Letting it escape would crash with a stack trace instead
+    // of naming the config key a YAML mistake actually belongs to.
+    // ignore: avoid_catching_errors
+  } on ArgumentError catch (e) {
+    throw FontifyException(
+      "'${configKey(field)}': ${e.message} (was ${e.invalidValue}).",
+    );
+  }
+}
+
+double _coerceStrokeWidthEndpoint(JobField field, Object? raw) {
+  if (raw is num) {
+    return raw.toDouble();
+  }
+  if (raw is String) {
+    final parsed = num.tryParse(raw.trim());
+    if (parsed != null) {
+      return parsed.toDouble();
+    }
+  }
+  throw FontifyException(
+    "'${configKey(field)}' values must be numbers, got \"$raw\".",
+  );
 }
 
 /// Builds a resolved [FontJob] from merged layers.
@@ -158,6 +226,39 @@ FontJob resolveFontJob({
     );
   }
 
+  // Hoisted so the conflict checks below and the FontJob constructor read
+  // the same resolved value instead of resolving each field twice.
+  final outlineStrokes =
+      merged.readBool(JobField.outlineStrokes) ??
+      kJobBuiltInDefaults.requireBool(JobField.outlineStrokes);
+  final useOpenType =
+      merged.readBool(JobField.useOpenType) ??
+      kJobBuiltInDefaults.requireBool(JobField.useOpenType);
+
+  final strokeWidthRange = merged.readStrokeWidthRange(
+    JobField.strokeWidthRange,
+  );
+
+  if (strokeWidthRange != null) {
+    // Checked here rather than relying solely on svgToOtf's own validation
+    // so the message can name the YAML keys the user actually wrote
+    // ('stroke_width_range', 'outline_strokes', 'opentype') instead of
+    // svgToOtf's parameter names.
+    if (!outlineStrokes) {
+      throw FontifyException(
+        "'stroke_width_range' varies the stroke outline, but "
+        "'outline_strokes' is false so there is no stroke outline to vary.",
+      );
+    }
+
+    if (!useOpenType) {
+      throw FontifyException(
+        "'stroke_width_range' requires OpenType (CFF2) outlines, but "
+        "'opentype' is false.",
+      );
+    }
+  }
+
   return FontJob(
     name: name,
     inputSvgDir: merged.requireString(JobField.inputSvgDir),
@@ -173,12 +274,9 @@ FontJob resolveFontJob({
     normalize:
         merged.readBool(JobField.normalize) ??
         kJobBuiltInDefaults.requireBool(JobField.normalize),
-    outlineStrokes:
-        merged.readBool(JobField.outlineStrokes) ??
-        kJobBuiltInDefaults.requireBool(JobField.outlineStrokes),
-    useOpenType:
-        merged.readBool(JobField.useOpenType) ??
-        kJobBuiltInDefaults.requireBool(JobField.useOpenType),
+    outlineStrokes: outlineStrokes,
+    useOpenType: useOpenType,
+    strokeWidthRange: strokeWidthRange,
   );
 }
 

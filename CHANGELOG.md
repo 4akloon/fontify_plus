@@ -161,6 +161,20 @@
   naming the file and every width found — the axis overrides them all with
   one value, and that loss used to be silent. Omitting `strokeWidthRange`
   leaves output unchanged, down to the byte.
+* `svgToOtf`'s `strokeWidthRange` is now reachable from the YAML config and
+  the CLI, not just the Dart API: `stroke_width_range: [1.33, 2]` in a font
+  set (or in `defaults:`, since one config usually shares an icon library and
+  range across its font sets) or `--stroke-width-range=1.33,2` on the
+  command line. YAML takes a two-element list of numbers; the CLI takes the
+  same two numbers as one comma-separated string. There is no built-in
+  default — the range sets both the variation's magnitude and how deeply
+  every glyph is subdivided, so guessing one would mean guessing both. A
+  malformed range (wrong count, non-numeric, or `min`/`max` out of order)
+  fails as a `FontifyException` naming `stroke_width_range` and what was
+  found, rather than an uncaught `ArgumentError` from deep inside
+  `StrokeWidthRange`. Pairing `stroke_width_range` with `outline_strokes:
+  false` or `opentype: false` fails the same way, naming both config keys,
+  before font generation starts.
 * Fonts generated from icons with an exact-90° round join
   (`stroke-linejoin="round"`) may differ slightly from those produced by
   0.5.2. The join's arc is now segmented using the source path's tangents

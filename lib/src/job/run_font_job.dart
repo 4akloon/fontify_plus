@@ -65,6 +65,7 @@ FontJobResult runFontJob(FontJob job) {
     normalize: job.normalize,
     useOpenType: job.useOpenType,
     fontName: job.fontName,
+    strokeWidthRange: job.strokeWidthRange,
   );
 
   writeToFile(job.outputFontFile, otfResult.font);
