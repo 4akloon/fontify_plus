@@ -149,37 +149,37 @@ void main() {
       expect(table, isNotNull);
 
       expect(table.version, 1);
-      expect(table.xAvgCharWidth, 862);
-      expect(table.usWeightClass, 400);
-      expect(table.usWidthClass, 5);
-      expect(table.fsType, 0);
-      expect(table.ySubscriptXSize, 634);
-      expect(table.ySubscriptYSize, 700);
-      expect(table.ySubscriptXOffset, 0);
-      expect(table.ySubscriptYOffset, 140);
-      expect(table.ySuperscriptXSize, 634);
-      expect(table.ySuperscriptYSize, 700);
-      expect(table.ySuperscriptXOffset, 0);
-      expect(table.ySuperscriptYOffset, 480);
-      expect(table.yStrikeoutSize, 49);
-      expect(table.yStrikeoutPosition, 258);
-      expect(table.sFamilyClass, 0);
-      expect(table.panose, [2, 0, 5, 3, 0, 0, 0, 0, 0, 0]);
-      expect(table.ulUnicodeRange1, 0);
-      expect(table.ulUnicodeRange2, 0);
-      expect(table.ulUnicodeRange3, 0);
-      expect(table.ulUnicodeRange4, 0);
-      expect(table.achVendID, 'PfEd');
-      expect(table.fsSelection, 64);
-      expect(table.usFirstCharIndex, 59414);
-      expect(table.usLastCharIndex, 62368);
-      expect(table.sTypoAscender, 850);
-      expect(table.sTypoDescender, -150);
-      expect(table.sTypoLineGap, 90);
-      expect(table.usWinAscent, 853);
-      expect(table.usWinDescent, 153);
-      expect(table.ulCodePageRange1, 1);
-      expect(table.ulCodePageRange2, 0);
+      expect(table.version0.xAvgCharWidth, 862);
+      expect(table.version0.usWeightClass, 400);
+      expect(table.version0.usWidthClass, 5);
+      expect(table.version0.fsType, 0);
+      expect(table.version0.ySubscriptXSize, 634);
+      expect(table.version0.ySubscriptYSize, 700);
+      expect(table.version0.ySubscriptXOffset, 0);
+      expect(table.version0.ySubscriptYOffset, 140);
+      expect(table.version0.ySuperscriptXSize, 634);
+      expect(table.version0.ySuperscriptYSize, 700);
+      expect(table.version0.ySuperscriptXOffset, 0);
+      expect(table.version0.ySuperscriptYOffset, 480);
+      expect(table.version0.yStrikeoutSize, 49);
+      expect(table.version0.yStrikeoutPosition, 258);
+      expect(table.version0.sFamilyClass, 0);
+      expect(table.version0.panose, [2, 0, 5, 3, 0, 0, 0, 0, 0, 0]);
+      expect(table.version0.ulUnicodeRange1, 0);
+      expect(table.version0.ulUnicodeRange2, 0);
+      expect(table.version0.ulUnicodeRange3, 0);
+      expect(table.version0.ulUnicodeRange4, 0);
+      expect(table.version0.achVendID, 'PfEd');
+      expect(table.version0.fsSelection, 64);
+      expect(table.version0.usFirstCharIndex, 59414);
+      expect(table.version0.usLastCharIndex, 62368);
+      expect(table.version0.sTypoAscender, 850);
+      expect(table.version0.sTypoDescender, -150);
+      expect(table.version0.sTypoLineGap, 90);
+      expect(table.version0.usWinAscent, 853);
+      expect(table.version0.usWinDescent, 153);
+      expect(table.version1?.ulCodePageRange1, 1);
+      expect(table.version1?.ulCodePageRange2, 0);
     });
 
     test('PostScript table', () {
@@ -438,7 +438,7 @@ void main() {
 
       // Was 675 while normalization scaled glyphs to ascender + descender
       // (700 units) instead of the 1000-unit span between them.
-      expect(table.xAvgCharWidth, 953);
+      expect(table.version0.xAvgCharWidth, 953);
     });
   });
 

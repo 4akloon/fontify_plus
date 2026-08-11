@@ -3,11 +3,10 @@ import 'dart:typed_data';
 import 'package:fontify_plus/src/otf/table/os2/os2_encoder.dart';
 import 'package:fontify_plus/src/otf/table/os2/os2_table.dart';
 import 'package:fontify_plus/src/otf/table/os2/os2_version.dart';
+import 'package:fontify_plus/src/otf/table/os2/os2_version_fields.dart';
 import 'package:test/test.dart';
 
-OS2Table _table(int version) => OS2Table(
-  null,
-  version: version,
+const _version0 = OS2Version0Fields(
   xAvgCharWidth: 500,
   usWeightClass: 400,
   usWidthClass: 5,
@@ -37,15 +36,30 @@ OS2Table _table(int version) => OS2Table(
   sTypoLineGap: 0,
   usWinAscent: 800,
   usWinDescent: 200,
-  ulCodePageRange1: version >= kOS2Version1 ? 1 : null,
-  ulCodePageRange2: version >= kOS2Version1 ? 0 : null,
-  sxHeight: version >= kOS2Version4 ? 500 : null,
-  sCapHeight: version >= kOS2Version4 ? 700 : null,
-  usDefaultChar: version >= kOS2Version4 ? 32 : null,
-  usBreakChar: version >= kOS2Version4 ? 32 : null,
-  usMaxContext: version >= kOS2Version4 ? 1 : null,
-  usLowerOpticalPointSize: version >= kOS2Version5 ? 0 : null,
-  usUpperOpticalPointSize: version >= kOS2Version5 ? 0xFFFE : null,
+);
+
+OS2Table _table(int version) => OS2Table(
+  null,
+  version: version,
+  version0: _version0,
+  version1: version < kOS2Version1
+      ? null
+      : const OS2Version1Fields(ulCodePageRange1: 1, ulCodePageRange2: 0),
+  version4: version < kOS2Version4
+      ? null
+      : const OS2Version4Fields(
+          sxHeight: 500,
+          sCapHeight: 700,
+          usDefaultChar: 32,
+          usBreakChar: 32,
+          usMaxContext: 1,
+        ),
+  version5: version < kOS2Version5
+      ? null
+      : const OS2Version5Fields(
+          usLowerOpticalPointSize: 0,
+          usUpperOpticalPointSize: 0xFFFE,
+        ),
 );
 
 void main() {

@@ -43,7 +43,7 @@ void main() {
         expect(font.name.familyName, 'Test');
         expect(font.cmap.data, isNotEmpty);
         expect(font.gsub.lookupListTable.lookupTables, isNotEmpty);
-        expect(font.os2.achVendID, isNotEmpty);
+        expect(font.os2.version0.achVendID, isNotEmpty);
         expect(font.post.header.version.major, isNonNegative);
         expect(font.cff?.charStringsData.data, isNotEmpty);
       },

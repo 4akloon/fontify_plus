@@ -67,7 +67,7 @@ void main() {
 
   group('OS2Table.create', () {
     test('delegates to buildOS2Table', () {
-      expect(_built().achVendID, 'PfPl');
+      expect(_built().version0.achVendID, 'PfPl');
     });
   });
 
@@ -84,7 +84,7 @@ void main() {
       );
 
       expect(decoded.version, table.version);
-      expect(decoded.achVendID, table.achVendID);
+      expect(decoded.version0.achVendID, table.version0.achVendID);
     });
   });
 }

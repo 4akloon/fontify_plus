@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+* **Breaking:** `OS2Table`'s 39 positional parameters are gone. The
+  constructor now takes named parameters, and the fields live in one object
+  per version that introduced them: `version0` (`OS2Version0Fields`, always
+  present) and the nullable `version1`, `version4`, `version5`
+  (`OS2Version1Fields`, `OS2Version4Fields`, `OS2Version5Fields`). Roughly
+  thirty of those positional parameters were adjacent `int`s —
+  `ySubscriptXSize` next to `ySubscriptYSize`, the four `ulUnicodeRange`s,
+  the two `ulCodePageRange`s, the `sTypo*`/`usWin*` runs — so transposing a
+  neighbouring pair compiled, analyzed clean and shipped a font that was
+  wrong only in the rendering. Grouping settles the second half: a null
+  group means the table ends there, which is the rule the format already
+  has, so `sxHeight` set while `ulCodePageRange1` is null — constructible
+  before, unrepresentable in OpenType — no longer type-checks. Reading a
+  field moves one level down: `table.achVendID` becomes
+  `table.version0.achVendID`, `table.sxHeight` becomes
+  `table.version4?.sxHeight`, and the `?` is the reminder that a
+  version-1 table genuinely has no `sxHeight`. `version` is still a stored
+  `int` and still reports what the font declares, including the versions 2
+  and 3 that add no fields this package models; `size` is now counted from
+  the groups present rather than from `version`, which produces the same
+  number for every table the reader can build. The encoded byte order is
+  untouched.
 * **Breaking:** `OpenTypeFont.glyf`, `.loca`, `.cff` and `.cff2` are now
   nullable (`GlyphDataTable?`, `IndexToLocationTable?`, `CFF1Table?`,
   `CFF2Table?`). They previously returned a non-nullable type by casting the

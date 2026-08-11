@@ -68,7 +68,7 @@ void main() {
         version: kOS2Version1,
       );
 
-      expect(table.achVendID, 'PfPl');
+      expect(table.version0.achVendID, 'PfPl');
       expect(table.version, kOS2Version1);
     });
 
@@ -84,8 +84,8 @@ void main() {
         'PfPl',
       );
 
-      expect(table.usFirstCharIndex, 0xE001);
-      expect(table.usLastCharIndex, 0xE001);
+      expect(table.version0.usFirstCharIndex, 0xE001);
+      expect(table.version0.usLastCharIndex, 0xE001);
     });
 
     test('carries the ascender/descender/lineGap through from hhea', () {
@@ -101,12 +101,12 @@ void main() {
         'PfPl',
       );
 
-      expect(table.sTypoAscender, hhea.ascender);
-      expect(table.sTypoDescender, hhea.descender);
-      expect(table.sTypoLineGap, hhea.lineGap);
+      expect(table.version0.sTypoAscender, hhea.ascender);
+      expect(table.version0.sTypoDescender, hhea.descender);
+      expect(table.version0.sTypoLineGap, hhea.lineGap);
     });
 
-    test('leaves version-1+ fields null below version 1', () {
+    test('leaves the version-1+ groups null below version 1', () {
       final hmtx = _hmtx();
 
       final table = buildOS2Table(
@@ -119,9 +119,9 @@ void main() {
         version: kOS2Version0,
       );
 
-      expect(table.ulCodePageRange1, isNull);
-      expect(table.sxHeight, isNull);
-      expect(table.usLowerOpticalPointSize, isNull);
+      expect(table.version1, isNull);
+      expect(table.version4, isNull);
+      expect(table.version5, isNull);
     });
 
     test('fills version-5 fields by default', () {
@@ -137,8 +137,8 @@ void main() {
       );
 
       expect(table.version, kOS2Version5);
-      expect(table.usLowerOpticalPointSize, 0);
-      expect(table.usUpperOpticalPointSize, 0xFFFE);
+      expect(table.version5?.usLowerOpticalPointSize, 0);
+      expect(table.version5?.usUpperOpticalPointSize, 0xFFFE);
     });
 
     test('pins usWeightClass to 400 (Regular)', () {
@@ -164,7 +164,7 @@ void main() {
         'PfPl',
       );
 
-      expect(table.usWeightClass, 400);
+      expect(table.version0.usWeightClass, 400);
     });
   });
 }

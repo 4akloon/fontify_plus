@@ -11,55 +11,40 @@ import 'os2_builder.dart';
 import 'os2_encoder.dart';
 import 'os2_reader.dart';
 import 'os2_version.dart';
+import 'os2_version_fields.dart';
 
 /// The `OS/2` table: metrics and classification Windows and layout engines
 /// read.
 ///
-/// Fields are grouped by the version that introduced them; everything past
-/// version 0 is nullable because a lower-version table simply ends early.
+/// Fields live in the group of the version that introduced them, and every
+/// group past version 0 is nullable because a lower-version table simply ends
+/// early. A null group means the table stops there: `sxHeight` present while
+/// `ulCodePageRange1` is absent is unrepresentable in the format, so it is
+/// unrepresentable here too.
 class OS2Table extends FontTable {
+  /// Creates an `OS/2` table from its per-version field groups.
+  ///
+  /// [version] is stored rather than derived from the groups because it
+  /// carries information they cannot: OpenType versions 2 and 3 add no fields
+  /// this package models, so a version-3 table is read with the version-1
+  /// group and nothing above it, and deriving would rewrite its version to 1.
+  /// The assertion below is what keeps the two consistent in the direction
+  /// that matters — a version that promises more than the groups hold.
   OS2Table(
     super.entry, {
     required this.version,
-    required this.xAvgCharWidth,
-    required this.usWeightClass,
-    required this.usWidthClass,
-    required this.fsType,
-    required this.ySubscriptXSize,
-    required this.ySubscriptYSize,
-    required this.ySubscriptXOffset,
-    required this.ySubscriptYOffset,
-    required this.ySuperscriptXSize,
-    required this.ySuperscriptYSize,
-    required this.ySuperscriptXOffset,
-    required this.ySuperscriptYOffset,
-    required this.yStrikeoutSize,
-    required this.yStrikeoutPosition,
-    required this.sFamilyClass,
-    required this.panose,
-    required this.ulUnicodeRange1,
-    required this.ulUnicodeRange2,
-    required this.ulUnicodeRange3,
-    required this.ulUnicodeRange4,
-    required this.achVendID,
-    required this.fsSelection,
-    required this.usFirstCharIndex,
-    required this.usLastCharIndex,
-    required this.sTypoAscender,
-    required this.sTypoDescender,
-    required this.sTypoLineGap,
-    required this.usWinAscent,
-    required this.usWinDescent,
-    this.ulCodePageRange1,
-    this.ulCodePageRange2,
-    this.sxHeight,
-    this.sCapHeight,
-    this.usDefaultChar,
-    this.usBreakChar,
-    this.usMaxContext,
-    this.usLowerOpticalPointSize,
-    this.usUpperOpticalPointSize,
-  }) : super.fromTableRecordEntry();
+    required this.version0,
+    this.version1,
+    this.version4,
+    this.version5,
+  }) : assert(
+         (version >= kOS2Version1) == (version1 != null) &&
+             (version >= kOS2Version4) == (version4 != null) &&
+             (version >= kOS2Version5) == (version5 != null),
+         'OS/2 version $version does not match the groups given: a table '
+         'carries exactly the groups introduced at or below its version',
+       ),
+       super.fromTableRecordEntry();
 
   factory OS2Table.fromByteData(ByteData byteData, TableRecordEntry entry) =>
       readOS2Table(byteData, entry);
@@ -82,60 +67,32 @@ class OS2Table extends FontTable {
     version: version,
   );
 
+  /// The version this table declares, as written to the font.
+  ///
+  /// Not always recoverable from [version1]/[version4]/[version5]: see the
+  /// constructor.
   final int version;
 
-  // Version 0
-  final int xAvgCharWidth;
-  final int usWeightClass;
-  final int usWidthClass;
-  final int fsType;
-  final int ySubscriptXSize;
-  final int ySubscriptYSize;
-  final int ySubscriptXOffset;
-  final int ySubscriptYOffset;
-  final int ySuperscriptXSize;
-  final int ySuperscriptYSize;
-  final int ySuperscriptXOffset;
-  final int ySuperscriptYOffset;
-  final int yStrikeoutSize;
-  final int yStrikeoutPosition;
-  final int sFamilyClass;
-  final List<int> panose;
-  final int ulUnicodeRange1;
-  final int ulUnicodeRange2;
-  final int ulUnicodeRange3;
-  final int ulUnicodeRange4;
-  final String achVendID;
-  final int fsSelection;
-  final int usFirstCharIndex;
-  final int usLastCharIndex;
-  final int sTypoAscender;
-  final int sTypoDescender;
-  final int sTypoLineGap;
-  final int usWinAscent;
-  final int usWinDescent;
+  /// The fields every `OS/2` table carries.
+  final OS2Version0Fields version0;
 
-  // Version 1
-  final int? ulCodePageRange1;
-  final int? ulCodePageRange2;
+  /// The code page coverage, or null below version 1.
+  final OS2Version1Fields? version1;
 
-  // Version 4
-  final int? sxHeight;
-  final int? sCapHeight;
-  final int? usDefaultChar;
-  final int? usBreakChar;
-  final int? usMaxContext;
+  /// The extra metrics, or null below version 4.
+  final OS2Version4Fields? version4;
 
-  // Version 5
-  final int? usLowerOpticalPointSize;
-  final int? usUpperOpticalPointSize;
+  /// The optical size range, or null below version 5.
+  final OS2Version5Fields? version5;
 
   @override
   int get size {
+    // Counted from the groups present rather than from `version`, so it
+    // always describes exactly what the encoder is about to write.
     var size = 0;
 
     for (final e in kOS2VersionDataSize.entries) {
-      if (e.key > version) {
+      if (!_carries(e.key)) {
         break;
       }
 
@@ -144,6 +101,17 @@ class OS2Table extends FontTable {
 
     return size;
   }
+
+  /// Whether this table carries the group the given version introduced.
+  ///
+  /// Version 0's group is never absent, and no other version in
+  /// `kOS2VersionDataSize` introduces one.
+  bool _carries(int version) => switch (version) {
+    kOS2Version1 => version1 != null,
+    kOS2Version4 => version4 != null,
+    kOS2Version5 => version5 != null,
+    _ => true,
+  };
 
   @override
   void encodeToBinary(ByteData byteData) => encodeOS2Table(this, byteData);
