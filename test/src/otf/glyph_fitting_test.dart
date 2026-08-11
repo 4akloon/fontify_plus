@@ -125,10 +125,9 @@ void main() {
     });
 
     test('one placement keeps two masters on the same centreline', () {
-      final masters = glyphMastersFromSvg(
+      final masters = GlyphMasterBuilder(StrokeWidthRange(1.33, 2)).fromSvg(
         'icon',
         _curved,
-        StrokeWidthRange(1.33, 2),
       );
 
       final placement = _fitting.placementFor(masters.max);

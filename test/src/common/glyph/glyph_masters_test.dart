@@ -53,10 +53,10 @@ const _filled =
 final _range = StrokeWidthRange(1.33, 2);
 
 void main() {
-  group('glyphMastersFromSvg', () {
+  group('GlyphMasterBuilder', () {
     test('gives both masters the same point count', () {
       for (final source in [_plus, _curved]) {
-        final masters = glyphMastersFromSvg('icon', source, _range);
+        final masters = GlyphMasterBuilder(_range).fromSvg('icon', source);
 
         expect(
           masters.min.pointList.length,
@@ -68,7 +68,7 @@ void main() {
     });
 
     test('the thick master really is thicker', () {
-      final masters = glyphMastersFromSvg('icon', _curved, _range);
+      final masters = GlyphMasterBuilder(_range).fromSvg('icon', _curved);
 
       // Same centreline, more ink: the wider master's box is at least as wide
       // and its points are not all identical.
@@ -76,7 +76,7 @@ void main() {
     });
 
     test('a fill is identical in both masters', () {
-      final masters = glyphMastersFromSvg('icon', _filled, _range);
+      final masters = GlyphMasterBuilder(_range).fromSvg('icon', _filled);
 
       expect(masters.min.pointList, masters.max.pointList);
     });
@@ -92,7 +92,7 @@ void main() {
       // detail at 1 and its main strokes at 1.5 loses that hierarchy. Losing
       // it silently is what this prevents.
       final records = capturePrints(
-        () => glyphMastersFromSvg('mixed', _mixedWidthSvg, _range),
+        () => GlyphMasterBuilder(_range).fromSvg('mixed', _mixedWidthSvg),
       );
 
       expect(records.join('\n'), contains('mixed'));
@@ -102,7 +102,7 @@ void main() {
 
     test('a single authored width warns about nothing', () {
       final records = capturePrints(
-        () => glyphMastersFromSvg('plain', _strokedSvg, _range),
+        () => GlyphMasterBuilder(_range).fromSvg('plain', _strokedSvg),
       );
 
       expect(records, isEmpty);
@@ -116,8 +116,8 @@ void main() {
       // property the CHANGELOG describes: building an icon set must not
       // lose either file's warning.
       final records = capturePrints(() {
-        glyphMastersFromSvg('first', _mixedWidthSvg, _range);
-        glyphMastersFromSvg('second', _mixedWidthSvg, _range);
+        GlyphMasterBuilder(_range).fromSvg('first', _mixedWidthSvg);
+        GlyphMasterBuilder(_range).fromSvg('second', _mixedWidthSvg);
       });
 
       final joined = records.join('\n');
@@ -133,8 +133,8 @@ void main() {
       // used (see the test above), so only two calls that would produce the
       // exact same message can tell them apart.
       final records = capturePrints(() {
-        glyphMastersFromSvg('same', _mixedWidthSvg, _range);
-        glyphMastersFromSvg('same', _mixedWidthSvg, _range);
+        GlyphMasterBuilder(_range).fromSvg('same', _mixedWidthSvg);
+        GlyphMasterBuilder(_range).fromSvg('same', _mixedWidthSvg);
       });
 
       expect(records, hasLength(2));

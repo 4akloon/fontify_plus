@@ -94,7 +94,7 @@ void main() {
         svgMap: {'a': _strokedSvg},
         strokeWidthRange: range,
       );
-      final direct = glyphMastersFromSvg('a', _strokedSvg, range);
+      final direct = GlyphMasterBuilder(range).fromSvg('a', _strokedSvg);
 
       expect(result.glyphList.single.pointList, direct.max.pointList);
       expect(

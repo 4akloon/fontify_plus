@@ -45,7 +45,7 @@ class SvgToOtfResult {
 /// and `max` are literal stroke widths in the SVG's own units — the same
 /// units as its authored `stroke-width` — and [StrokeWidthRange.max] is the
 /// font's default instance, the one every metric is computed from. Each
-/// icon is built twice, once per end of the range, via [glyphMastersFromSvg].
+/// icon is built twice, once per end of the range, via [GlyphMasterBuilder].
 /// Requires stroke outlining and OpenType: passing `outlineStrokes: false`
 /// alongside it throws, because a fill does not depend on stroke width and
 /// there would be nothing left to vary; passing `useOpenType: false`
@@ -91,7 +91,7 @@ SvgToOtfResult svgToOtf({
   if (strokeWidthRange != null) {
     final masters = [
       for (final e in svgMap.entries)
-        glyphMastersFromSvg(e.key, e.value, strokeWidthRange),
+        GlyphMasterBuilder(strokeWidthRange).fromSvg(e.key, e.value),
     ];
 
     // `glyphList` — the default master — carries the *maximum* width: it is

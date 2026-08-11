@@ -8,7 +8,7 @@ import 'generic_glyph_base.dart';
 /// Encodes every master of one glyph into structurally identical command
 /// streams — same operators, same operand counts, in the same order.
 ///
-/// The masters must already be point-compatible; `checkMastersCompatible`
+/// The masters must already be point-compatible; `GlyphMasterBuilder.checkCompatible`
 /// is what establishes that. What this adds is that the *encoding* of those
 /// compatible points is also common: every operator choice below is made
 /// from all masters at once rather than from each master's own coordinates,

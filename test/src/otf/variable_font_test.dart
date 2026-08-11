@@ -40,7 +40,7 @@ OpenTypeFont _variableFontFromAll(
 }) {
   final masters = [
     for (final entry in svgMap.entries)
-      glyphMastersFromSvg(entry.key, entry.value, _range),
+      GlyphMasterBuilder(_range).fromSvg(entry.key, entry.value),
   ];
 
   return OpenTypeFont.createFromGlyphs(
@@ -427,7 +427,9 @@ void main() {
       // longest side fills the em band, so the thinner master — whose ink
       // box starts smaller — is scaled by more, and ends up at least as
       // large as the thicker one rather than nested inside it.
-      final masters = glyphMastersFromSvg('check', _svg('check'), _range);
+      final masters = GlyphMasterBuilder(
+        _range,
+      ).fromSvg('check', _svg('check'));
       const fitting = NormalizedFitting(
         ascender: kDefaultOpenTypeUnitsPerEm - kDefaultBaselineExtension,
         descender: -kDefaultBaselineExtension,
