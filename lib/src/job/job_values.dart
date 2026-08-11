@@ -6,6 +6,53 @@ import 'job_field.dart';
 /// Raw config: field → value before coercion.
 typedef JobValues = Map<JobField, Object?>;
 
+/// Typed reads over [JobValues].
+///
+/// [coerceJobValues] has already checked these types, but that check happens
+/// through a `Map<JobField, Object?>`, so the compiler cannot carry it to the
+/// reads — which is why every read used to end in `as bool?`. Re-checking
+/// costs nothing at config sizes and buys the difference between a bare
+/// `_TypeError` naming nothing and the same `FontifyException`, naming the
+/// config key, that every other config mistake produces.
+extension JobValueReaders on Map<JobField, Object?> {
+  /// The boolean at [field], or null when the config does not set it.
+  bool? readBool(JobField field) => _read<bool>(field, 'a boolean');
+
+  /// The integer at [field], or null when the config does not set it.
+  int? readInt(JobField field) => _read<int>(field, 'an integer');
+
+  /// The string at [field], or null when the config does not set it.
+  String? readString(JobField field) => _read<String>(field, 'a string');
+
+  /// The boolean at [field], or a failure naming the config key.
+  bool requireBool(JobField field) => readBool(field) ?? _missing(field);
+
+  /// The integer at [field], or a failure naming the config key.
+  int requireInt(JobField field) => readInt(field) ?? _missing(field);
+
+  /// The string at [field], or a failure naming the config key.
+  String requireString(JobField field) => readString(field) ?? _missing(field);
+
+  T? _read<T>(JobField field, String expected) {
+    final value = this[field];
+
+    if (value == null) {
+      return null;
+    }
+
+    if (value case final T typed) {
+      return typed;
+    }
+
+    throw FontifyException(
+      "'${configKey(field)}' must be $expected, got ${value.runtimeType}.",
+    );
+  }
+
+  Never _missing(JobField field) =>
+      throw FontifyException("'${configKey(field)}' is required.");
+}
+
 /// Merges [layers] left-to-right; later layers override earlier ones.
 JobValues mergeJobValues(Iterable<JobValues> layers) {
   final merged = <JobField, Object?>{};
@@ -102,17 +149,9 @@ FontJob resolveFontJob({
 }) {
   final merged = coerceJobValues(mergeJobValues(layers));
 
-  String requireString(JobField field) {
-    final v = merged[field];
-    if (v == null) {
-      throw FontifyException("'${configKey(field)}' is required.");
-    }
-    return v as String;
-  }
-
   final indent =
-      merged[JobField.indent] as int? ??
-      kJobBuiltInDefaults[JobField.indent]! as int;
+      merged.readInt(JobField.indent) ??
+      kJobBuiltInDefaults.requireInt(JobField.indent);
   if (indent < 0) {
     throw FontifyException(
       'indent must be a non-negative integer, was $indent.',
@@ -121,30 +160,30 @@ FontJob resolveFontJob({
 
   return FontJob(
     name: name,
-    inputSvgDir: requireString(JobField.inputSvgDir),
-    outputFontFile: requireString(JobField.outputFontFile),
-    outputClassFile: merged[JobField.outputClassFile] as String?,
-    className: merged[JobField.className] as String?,
-    fontName: merged[JobField.fontName] as String?,
-    package: merged[JobField.package] as String?,
+    inputSvgDir: merged.requireString(JobField.inputSvgDir),
+    outputFontFile: merged.requireString(JobField.outputFontFile),
+    outputClassFile: merged.readString(JobField.outputClassFile),
+    className: merged.readString(JobField.className),
+    fontName: merged.readString(JobField.fontName),
+    package: merged.readString(JobField.package),
     indent: indent,
     recursive:
-        merged[JobField.recursive] as bool? ??
-        kJobBuiltInDefaults[JobField.recursive]! as bool,
+        merged.readBool(JobField.recursive) ??
+        kJobBuiltInDefaults.requireBool(JobField.recursive),
     normalize:
-        merged[JobField.normalize] as bool? ??
-        kJobBuiltInDefaults[JobField.normalize]! as bool,
+        merged.readBool(JobField.normalize) ??
+        kJobBuiltInDefaults.requireBool(JobField.normalize),
     outlineStrokes:
-        merged[JobField.outlineStrokes] as bool? ??
-        kJobBuiltInDefaults[JobField.outlineStrokes]! as bool,
+        merged.readBool(JobField.outlineStrokes) ??
+        kJobBuiltInDefaults.requireBool(JobField.outlineStrokes),
     useOpenType:
-        merged[JobField.useOpenType] as bool? ??
-        kJobBuiltInDefaults[JobField.useOpenType]! as bool,
+        merged.readBool(JobField.useOpenType) ??
+        kJobBuiltInDefaults.requireBool(JobField.useOpenType),
   );
 }
 
 bool resolveVerboseFromLayers(Iterable<JobValues> layers) {
   final merged = coerceJobValues(mergeJobValues(layers));
-  return merged[JobField.verbose] as bool? ??
-      kJobBuiltInDefaults[JobField.verbose]! as bool;
+  return merged.readBool(JobField.verbose) ??
+      kJobBuiltInDefaults.requireBool(JobField.verbose);
 }

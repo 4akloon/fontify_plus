@@ -36,13 +36,17 @@ CliRunRequest parseArgsAndConfig(ArgParser argParser, List<String> args) {
     throw CliArgumentException(err.message);
   }
 
-  if (argResults[kCliHelpOption] as bool) {
+  // `flag` and `option` are typed accessors over the same values
+  // `argResults[...]` returns as `dynamic`; they check the option's kind
+  // against how it was declared instead of asserting the type at the call
+  // site.
+  if (argResults.flag(kCliHelpOption)) {
     throw CliHelpException();
   }
 
   final cliOverrides = _cliOverridesFrom(argResults);
-  final fontFilter = argResults[kCliFontOption] as String?;
-  final configFilePath = argResults[kCliConfigFileOption] as String?;
+  final fontFilter = argResults.option(kCliFontOption);
+  final configFilePath = argResults.option(kCliConfigFileOption);
 
   final positionalCount = math.min(
     kPositionalJobFields.length,
