@@ -1,5 +1,6 @@
 import 'package:fontify_plus/src/svg/geometry/cubic.dart';
 import 'package:fontify_plus/src/svg/geometry/cubic_offset.dart';
+import 'package:fontify_plus/src/svg/geometry/offset_approximation.dart';
 import 'package:fontify_plus/src/svg/geometry/tolerances.dart';
 import 'package:test/test.dart';
 import 'package:vector_math/vector_math.dart';
@@ -68,5 +69,68 @@ void main() {
         expect(mid[i].p1.distanceTo(expected), lessThan(1e-5));
       }
     });
+
+    test(
+      'built at the range maximum, evaluation tracks the true offset '
+      'across the whole range — built at the minimum, it does not',
+      () {
+        // Piece count is fixed by the distance a plan is built at, so every
+        // structural check above — count, affine interpolation — passes
+        // identically whichever end of a range a plan is built at. Only
+        // geometric fidelity tells the two apart, and only over a range wide
+        // enough to separate them: at this package's shipped stroke-width
+        // range (1.33-2.0, i.e. distance 0.665-1.0) building at either end
+        // gives the same worst-case deviation on this fixture, ~6.6e-3.
+        // Phase 4 is what makes a wider range configurable, so the discipline
+        // has to be pinned — and tested — before it does.
+        const minDistance = 0.25;
+        const maxDistance = 3.0;
+
+        // Worst deviation from the true offset, replaying a plan built at
+        // [planDistance] across every distance in [minDistance, maxDistance].
+        double worstDeviationOver(double planDistance) {
+          final plan = _offsetter(planDistance).plan(_curve);
+          var worst = 0.0;
+
+          const samples = 200;
+          for (var i = 0; i <= samples; i++) {
+            final distance =
+                minDistance + (maxDistance - minDistance) * i / samples;
+            final pieces = plan.evaluate(distance);
+
+            for (var j = 0; j < pieces.length; j++) {
+              final deviation = maxOffsetDeviation(
+                plan.pieces[j].curve,
+                pieces[j],
+                distance,
+              );
+
+              if (deviation > worst) {
+                worst = deviation;
+              }
+            }
+          }
+
+          return worst;
+        }
+
+        // Built at the maximum: every shallower distance in range replays
+        // the same subdivision at less demanding curvature, so it stays
+        // close to the true offset throughout.
+        expect(
+          worstDeviationOver(maxDistance),
+          lessThanOrEqualTo(kCurveTolerance),
+        );
+
+        // Built at the minimum: the same subdivision, sized for the
+        // shallowest offset in range, is far too coarse once evaluated at
+        // the far end — measured at ~4.8x over tolerance here, not a
+        // rounding-sized miss.
+        expect(
+          worstDeviationOver(minDistance),
+          greaterThan(kCurveTolerance * 4),
+        );
+      },
+    );
   });
 }

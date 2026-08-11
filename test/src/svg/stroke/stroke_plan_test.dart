@@ -66,15 +66,22 @@ void main() {
       // only diverge for specific shapes (an exact quarter-turn corner, and
       // a near-collinear one), so a single fixed path and join would not
       // have exercised them.
+      //
+      // Built at `_widths.last` — the maximum — not the minimum: topology
+      // (point counts) is fixed by the width the plan was built at regardless
+      // of which end that is, so this alone cannot tell min-built from
+      // max-built plans apart. The geometric-fidelity test in
+      // offset_plan_test.dart is what actually requires building at the
+      // maximum; this one just has to stop contradicting that discipline.
       for (final path in _paths) {
         final pathCommands = vg.parseSvgPathData(path).commands;
 
         for (final cap in LineCap.values) {
           for (final join in LineJoin.values) {
             final plan = StrokeOutliner(
-              StrokeProperties(width: _widths.first, cap: cap, join: join),
+              StrokeProperties(width: _widths.last, cap: cap, join: join),
             ).plan(pathCommands);
-            final reference = _segmentCounts(plan.evaluate(_widths.first));
+            final reference = _segmentCounts(plan.evaluate(_widths.last));
 
             for (final width in _widths) {
               expect(
