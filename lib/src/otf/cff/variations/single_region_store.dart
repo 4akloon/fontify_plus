@@ -4,10 +4,6 @@ import 'region_axis_coordinates.dart';
 import 'variation_region_list.dart';
 import 'variation_store_data.dart';
 
-/// F2Dot14 for -1.0 and 0.0, the two normalized coordinates this axis uses.
-const _kNormalizedMinimum = 0xC000;
-const _kNormalizedDefault = 0x0000;
-
 /// The variation store a single-axis, two-master CFF2 font needs.
 ///
 /// This is not a general-purpose variation store builder — it is specific to
@@ -29,12 +25,16 @@ class SingleRegionVariationStore {
   SingleRegionVariationStore({int regionCount = 1}) {
     if (regionCount != 1) {
       throw ArgumentError(
-        'singleRegionVariationStore only encodes a single region (two '
+        'SingleRegionVariationStore only encodes a single region (two '
         'masters per glyph); got $regionCount regions from '
         '${regionCount + 1} masters per glyph',
       );
     }
   }
+
+  /// F2Dot14 for -1.0 and 0.0, the two normalized coordinates this axis uses.
+  static const _normalizedMinimum = 0xC000;
+  static const _normalizedDefault = 0x0000;
 
   /// Builds the store.
   ///
@@ -58,9 +58,9 @@ class SingleRegionVariationStore {
         regionCount: 1,
         regions: [
           RegionAxisCoordinates(
-            startCoord: _kNormalizedMinimum,
-            peakCoord: _kNormalizedMinimum,
-            endCoord: _kNormalizedDefault,
+            startCoord: _normalizedMinimum,
+            peakCoord: _normalizedMinimum,
+            endCoord: _normalizedDefault,
           ),
         ],
       ),
