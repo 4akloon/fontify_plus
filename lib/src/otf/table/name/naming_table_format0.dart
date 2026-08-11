@@ -15,10 +15,18 @@ import 'naming_table_format0_header.dart';
 /// finds it.
 const _kNameRecordTemplateList = [
   /// Macintosh English with Roman encoding
-  NameRecord.template(kPlatformMacintosh, 0, 0),
+  NameRecord.template(
+    platformID: kPlatformMacintosh,
+    encodingID: 0,
+    languageID: 0,
+  ),
 
   /// Windows English (US) with UTF-16BE encoding
-  NameRecord.template(kPlatformWindows, 1, 0x0409),
+  NameRecord.template(
+    platformID: kPlatformWindows,
+    encodingID: 1,
+    languageID: 0x0409,
+  ),
 ];
 
 class NamingTableFormat0 extends NamingTable {

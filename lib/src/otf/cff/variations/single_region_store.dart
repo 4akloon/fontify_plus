@@ -31,11 +31,12 @@ const _kNormalizedDefault = 0x0000;
 VariationStoreData singleRegionVariationStore() => VariationStoreData(
   0,
   ItemVariationStore(
-    1, // format
-    0,
-    1, // itemVariationDataCount — real, not a placeholder; see doc above
-    <int>[0],
-    VariationRegionList(1, 1, [
+    format: 1,
+    variationRegionListOffset: 0,
+    // Real, not a placeholder; see doc above.
+    itemVariationDataCount: 1,
+    itemVariationDataOffsets: <int>[0],
+    variationRegionList: VariationRegionList(1, 1, [
       RegionAxisCoordinates(
         _kNormalizedMinimum,
         _kNormalizedMinimum,
@@ -45,7 +46,7 @@ VariationStoreData singleRegionVariationStore() => VariationStoreData(
     // No delta sets: a CFF2 charstring carries its own deltas inline, and
     // this subtable's only job is to tell `blend` at vsindex 0 how many
     // regions — and therefore how many deltas per value — to expect.
-    [
+    itemVariationDataList: [
       ItemVariationData(0, 0, 1, const [0]),
     ],
   ),

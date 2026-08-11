@@ -10,22 +10,22 @@ const _kHheaTableSize = 36;
 
 class HorizontalHeaderTable extends FontTable {
   HorizontalHeaderTable(
-    super.entry,
-    this.majorVersion,
-    this.minorVersion,
-    this.ascender,
-    this.descender,
-    this.lineGap,
-    this.advanceWidthMax,
-    this.minLeftSideBearing,
-    this.minRightSideBearing,
-    this.xMaxExtent,
-    this.caretSlopeRise,
-    this.caretSlopeRun,
-    this.caretOffset,
-    this.metricDataFormat,
-    this.numberOfHMetrics,
-  ) : super.fromTableRecordEntry();
+    super.entry, {
+    required this.majorVersion,
+    required this.minorVersion,
+    required this.ascender,
+    required this.descender,
+    required this.lineGap,
+    required this.advanceWidthMax,
+    required this.minLeftSideBearing,
+    required this.minRightSideBearing,
+    required this.xMaxExtent,
+    required this.caretSlopeRise,
+    required this.caretSlopeRun,
+    required this.caretOffset,
+    required this.metricDataFormat,
+    required this.numberOfHMetrics,
+  }) : super.fromTableRecordEntry();
 
   factory HorizontalHeaderTable.fromByteData(
     ByteData byteData,
@@ -33,20 +33,20 @@ class HorizontalHeaderTable extends FontTable {
   ) {
     return HorizontalHeaderTable(
       entry,
-      byteData.getUint16(entry.offset),
-      byteData.getUint16(entry.offset + 2),
-      byteData.getFWord(entry.offset + 4),
-      byteData.getFWord(entry.offset + 6),
-      byteData.getFWord(entry.offset + 8),
-      byteData.getUFWord(entry.offset + 10),
-      byteData.getFWord(entry.offset + 12),
-      byteData.getFWord(entry.offset + 14),
-      byteData.getFWord(entry.offset + 16),
-      byteData.getInt16(entry.offset + 18),
-      byteData.getInt16(entry.offset + 20),
-      byteData.getInt16(entry.offset + 22),
-      byteData.getInt16(entry.offset + 32),
-      byteData.getUint16(entry.offset + 34),
+      majorVersion: byteData.getUint16(entry.offset),
+      minorVersion: byteData.getUint16(entry.offset + 2),
+      ascender: byteData.getFWord(entry.offset + 4),
+      descender: byteData.getFWord(entry.offset + 6),
+      lineGap: byteData.getFWord(entry.offset + 8),
+      advanceWidthMax: byteData.getUFWord(entry.offset + 10),
+      minLeftSideBearing: byteData.getFWord(entry.offset + 12),
+      minRightSideBearing: byteData.getFWord(entry.offset + 14),
+      xMaxExtent: byteData.getFWord(entry.offset + 16),
+      caretSlopeRise: byteData.getInt16(entry.offset + 18),
+      caretSlopeRun: byteData.getInt16(entry.offset + 20),
+      caretOffset: byteData.getInt16(entry.offset + 22),
+      metricDataFormat: byteData.getInt16(entry.offset + 32),
+      numberOfHMetrics: byteData.getUint16(entry.offset + 34),
     );
   }
 
@@ -58,20 +58,20 @@ class HorizontalHeaderTable extends FontTable {
   ) {
     return HorizontalHeaderTable(
       null,
-      1, // major version 1
-      0, // minor version 0
-      ascender,
-      descender, // descender must be negative
-      0, // 0 line gap
-      hmtx.advanceWidthMax,
-      hmtx.minLeftSideBearing,
-      hmtx.getMinRightSideBearing(glyphMetricsList),
-      hmtx.getMaxExtent(glyphMetricsList),
-      1, // caretSlopeRise - vertical
-      0, // caretSlopeRun - vertical
-      0, // non-slanted font - no offset
-      0, // 0 for current metric format
-      glyphMetricsList.length,
+      majorVersion: 1,
+      minorVersion: 0,
+      ascender: ascender,
+      descender: descender, // descender must be negative
+      lineGap: 0,
+      advanceWidthMax: hmtx.advanceWidthMax,
+      minLeftSideBearing: hmtx.minLeftSideBearing,
+      minRightSideBearing: hmtx.getMinRightSideBearing(glyphMetricsList),
+      xMaxExtent: hmtx.getMaxExtent(glyphMetricsList),
+      caretSlopeRise: 1, // vertical
+      caretSlopeRun: 0, // vertical
+      caretOffset: 0, // non-slanted font - no offset
+      metricDataFormat: 0, // 0 for current metric format
+      numberOfHMetrics: glyphMetricsList.length,
     );
   }
 

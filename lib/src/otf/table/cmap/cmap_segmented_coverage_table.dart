@@ -12,13 +12,13 @@ import 'sequential_map_group.dart';
 /// mapped into the private use area beyond U+FFFF need it.
 class CmapSegmentedCoverageTable extends CmapData {
   CmapSegmentedCoverageTable(
-    super.format,
-    this.reserved,
-    this.length,
-    this.language,
-    this.numGroups,
-    this.groups,
-  );
+    super.format, {
+    required this.reserved,
+    required this.length,
+    required this.language,
+    required this.numGroups,
+    required this.groups,
+  });
 
   factory CmapSegmentedCoverageTable.fromByteData(
     ByteData byteData,
@@ -28,11 +28,11 @@ class CmapSegmentedCoverageTable extends CmapData {
 
     return CmapSegmentedCoverageTable(
       byteData.getUint16(offset),
-      byteData.getUint16(offset + 2),
-      byteData.getUint32(offset + 4),
-      byteData.getUint32(offset + 8),
-      numGroups,
-      List.generate(
+      reserved: byteData.getUint16(offset + 2),
+      length: byteData.getUint32(offset + 4),
+      language: byteData.getUint32(offset + 8),
+      numGroups: numGroups,
+      groups: List.generate(
         numGroups,
         (i) => SequentialMapGroup.fromByteData(
           byteData,
@@ -59,11 +59,11 @@ class CmapSegmentedCoverageTable extends CmapData {
 
     return CmapSegmentedCoverageTable(
       kCmapFormat12,
-      0,
-      length,
-      0, // Roman language
-      groups.length,
-      groups,
+      reserved: 0,
+      length: length,
+      language: 0, // Roman language
+      numGroups: groups.length,
+      groups: groups,
     );
   }
 

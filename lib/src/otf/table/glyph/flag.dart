@@ -13,27 +13,27 @@ const _kOverlapSimpleValue = 0x40;
 const _kReservedValue = 0x80;
 
 class SimpleGlyphFlag implements BinaryCodable {
-  SimpleGlyphFlag(
-    this.onCurvePoint,
-    this.xShortVector,
-    this.yShortVector,
-    this.repeat,
-    this.xIsSameOrPositive,
-    this.yIsSameOrPositive,
-    this.overlapSimple,
-    this.reserved,
-  );
+  SimpleGlyphFlag({
+    required this.onCurvePoint,
+    required this.xShortVector,
+    required this.yShortVector,
+    required this.repeat,
+    required this.xIsSameOrPositive,
+    required this.yIsSameOrPositive,
+    required this.overlapSimple,
+    required this.reserved,
+  });
 
   factory SimpleGlyphFlag.fromIntValue(int flag, [int? repeatTimes]) {
     return SimpleGlyphFlag(
-      checkBitMask(flag, _kOnCurvePointValue),
-      checkBitMask(flag, _kXshortVectorValue),
-      checkBitMask(flag, _kYshortVectorValue),
-      repeatTimes,
-      checkBitMask(flag, _kXisSameValue),
-      checkBitMask(flag, _kYisSameValue),
-      checkBitMask(flag, _kOverlapSimpleValue),
-      checkBitMask(flag, _kReservedValue),
+      onCurvePoint: checkBitMask(flag, _kOnCurvePointValue),
+      xShortVector: checkBitMask(flag, _kXshortVectorValue),
+      yShortVector: checkBitMask(flag, _kYshortVectorValue),
+      repeat: repeatTimes,
+      xIsSameOrPositive: checkBitMask(flag, _kXisSameValue),
+      yIsSameOrPositive: checkBitMask(flag, _kYisSameValue),
+      overlapSimple: checkBitMask(flag, _kOverlapSimpleValue),
+      reserved: checkBitMask(flag, _kReservedValue),
     );
   }
 
@@ -50,14 +50,15 @@ class SimpleGlyphFlag implements BinaryCodable {
     final yIsShort = isShortInteger(y);
 
     return SimpleGlyphFlag(
-      isOnCurve,
-      xIsShort,
-      yIsShort,
-      null,
-      xIsShort && !x.isNegative, // 1 if short and positive, 0 otherwise
-      yIsShort && !y.isNegative, // 1 if short and positive, 0 otherwise
-      false,
-      false,
+      onCurvePoint: isOnCurve,
+      xShortVector: xIsShort,
+      yShortVector: yIsShort,
+      repeat: null,
+      // 1 if short and positive, 0 otherwise
+      xIsSameOrPositive: xIsShort && !x.isNegative,
+      yIsSameOrPositive: yIsShort && !y.isNegative,
+      overlapSimple: false,
+      reserved: false,
     );
   }
 
@@ -93,14 +94,14 @@ class SimpleGlyphFlag implements BinaryCodable {
 
   /// This flag, standing for itself and [times] further points.
   SimpleGlyphFlag repeated(int times) => SimpleGlyphFlag(
-    onCurvePoint,
-    xShortVector,
-    yShortVector,
-    times,
-    xIsSameOrPositive,
-    yIsSameOrPositive,
-    overlapSimple,
-    reserved,
+    onCurvePoint: onCurvePoint,
+    xShortVector: xShortVector,
+    yShortVector: yShortVector,
+    repeat: times,
+    xIsSameOrPositive: xIsSameOrPositive,
+    yIsSameOrPositive: yIsSameOrPositive,
+    overlapSimple: overlapSimple,
+    reserved: reserved,
   );
 
   int get intValue {

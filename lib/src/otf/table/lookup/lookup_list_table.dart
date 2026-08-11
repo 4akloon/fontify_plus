@@ -13,7 +13,14 @@ const _kDefaultSubtableList = [
 ];
 
 const _kDefaultLookupTableList = [
-  LookupTable(4, 0, 1, [8], null, _kDefaultSubtableList),
+  LookupTable(
+    lookupType: 4,
+    lookupFlag: 0,
+    subTableCount: 1,
+    subtableOffsets: [8],
+    markFilteringSet: null,
+    subtables: _kDefaultSubtableList,
+  ),
 ];
 
 /// Every lookup in the font, in application order.

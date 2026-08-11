@@ -6,32 +6,32 @@ const kNameRecordSize = 12;
 
 /// Where one name string lives, and which platform and name ID it is for.
 class NameRecord implements BinaryCodable {
-  NameRecord(
-    this.platformID,
-    this.encodingID,
-    this.languageID,
-    this.nameID,
-    this.length,
-    this.offset,
-  );
+  NameRecord({
+    required this.platformID,
+    required this.encodingID,
+    required this.languageID,
+    required this.nameID,
+    required this.length,
+    required this.offset,
+  });
 
   /// A record with the platform fields filled in and the rest left for
   /// [copyWith] once the string is known.
-  const NameRecord.template(
-    this.platformID,
-    this.encodingID,
-    this.languageID,
-  ) : nameID = -1,
-      length = -1,
-      offset = -1;
+  const NameRecord.template({
+    required this.platformID,
+    required this.encodingID,
+    required this.languageID,
+  }) : nameID = -1,
+       length = -1,
+       offset = -1;
 
   factory NameRecord.fromByteData(ByteData byteData, int offset) => NameRecord(
-    byteData.getUint16(offset),
-    byteData.getUint16(offset + 2),
-    byteData.getUint16(offset + 4),
-    byteData.getUint16(offset + 6),
-    byteData.getUint16(offset + 8),
-    byteData.getUint16(offset + 10),
+    platformID: byteData.getUint16(offset),
+    encodingID: byteData.getUint16(offset + 2),
+    languageID: byteData.getUint16(offset + 4),
+    nameID: byteData.getUint16(offset + 6),
+    length: byteData.getUint16(offset + 8),
+    offset: byteData.getUint16(offset + 10),
   );
 
   final int platformID;
@@ -52,12 +52,12 @@ class NameRecord implements BinaryCodable {
     int? length,
     int? offset,
   }) => NameRecord(
-    platformID ?? this.platformID,
-    encodingID ?? this.encodingID,
-    languageID ?? this.languageID,
-    nameID ?? this.nameID,
-    length ?? this.length,
-    offset ?? this.offset,
+    platformID: platformID ?? this.platformID,
+    encodingID: encodingID ?? this.encodingID,
+    languageID: languageID ?? this.languageID,
+    nameID: nameID ?? this.nameID,
+    length: length ?? this.length,
+    offset: offset ?? this.offset,
   );
 
   @override

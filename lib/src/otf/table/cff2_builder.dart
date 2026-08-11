@@ -69,20 +69,23 @@ CFF2Table _buildCFF2Table(List<List<GenericGlyph>> glyphMasterList) {
 
   final table = CFF2Table(
     null,
-    CFF2TableHeader.create(),
-    CFFDict.empty(),
-    CFFIndexWithData<Uint8List>.create([], false),
-    CFFIndexWithData<Uint8List>.create(charStringRawList, false),
-    regionCount == 0 ? null : singleRegionVariationStore(),
-    CFFIndexWithData<CFFDict>.create(
+    header: CFF2TableHeader.create(),
+    topDict: CFFDict.empty(),
+    globalSubrsData: CFFIndexWithData<Uint8List>.create([], false),
+    charStringsData: CFFIndexWithData<Uint8List>.create(
+      charStringRawList,
+      false,
+    ),
+    vstoreData: regionCount == 0 ? null : singleRegionVariationStore(),
+    fontDictList: CFFIndexWithData<CFFDict>.create(
       [
         CFFDict([CFFDictEntry([], op.private)]),
       ],
       false,
     ),
     // A Private DICT is required, but can be empty
-    [CFFDict([])],
-    <CFFIndexWithData<Uint8List>>[],
+    privateDictList: [CFFDict([])],
+    localSubrsDataList: <CFFIndexWithData<Uint8List>>[],
   );
 
   // The first pass fills each Font DICT's Private entry in with its real

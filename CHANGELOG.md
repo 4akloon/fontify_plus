@@ -23,7 +23,25 @@
   and 3 that add no fields this package models; `size` is now counted from
   the groups present rather than from `version`, which produces the same
   number for every table the reader can build. The encoded byte order is
-  untouched.
+  untouched. (`OS2Table` itself is not exported from
+  `package:fontify_plus/fontify_plus.dart`, but every one of its fields is
+  reachable through `OpenTypeFont.os2`, so reading code breaks even without
+  a `src/` import.)
+* **Breaking for `src/` importers:** the other wide positional constructors
+  the `OS2Table` audit turned up now take named parameters too —
+  `HeaderTable` (and `HeaderTable._`), `HorizontalHeaderTable`,
+  `MaximumProfileTable.v1`, `CmapSegmentMappingToDeltaValuesTable`,
+  `CmapSegmentedCoverageTable`, `CFF1Table`, `CFF2Table`,
+  `PostScriptTableHeader`, `SimpleGlyphFlag`, `NameRecord` (both
+  constructors), `NamingTableFormat0Header`, `LookupTable`,
+  `GlyphSubstitutionTableHeader` and `ItemVariationStore`. Each had at least
+  one run of adjacent same-typed parameters — `SimpleGlyphFlag` took seven
+  bools in a row — where a transposition compiled and analyzed clean. The
+  table record entry stays positional where a constructor takes one; no
+  field, name, type or encoded offset changed, and none of these classes are
+  exported from the main library, so only code importing `src/` directly is
+  affected. Constructors of five parameters or fewer were audited and left
+  as they are.
 * **Breaking:** `OpenTypeFont.glyf`, `.loca`, `.cff` and `.cff2` are now
   nullable (`GlyphDataTable?`, `IndexToLocationTable?`, `CFF1Table?`,
   `CFF2Table?`). They previously returned a non-nullable type by casting the

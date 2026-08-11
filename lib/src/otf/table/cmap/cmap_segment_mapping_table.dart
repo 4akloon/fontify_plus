@@ -11,20 +11,20 @@ import 'cmap_segment.dart';
 /// format 12 already covers the same glyphs.
 class CmapSegmentMappingToDeltaValuesTable extends CmapData {
   CmapSegmentMappingToDeltaValuesTable(
-    super.format,
-    this.length,
-    this.language,
-    this.segCount,
-    this.searchRange,
-    this.entrySelector,
-    this.rangeShift,
-    this.endCode,
-    this.reservedPad,
-    this.startCode,
-    this.idDelta,
-    this.idRangeOffset,
-    this.glyphIdArray,
-  );
+    super.format, {
+    required this.length,
+    required this.language,
+    required this.segCount,
+    required this.searchRange,
+    required this.entrySelector,
+    required this.rangeShift,
+    required this.endCode,
+    required this.reservedPad,
+    required this.startCode,
+    required this.idDelta,
+    required this.idRangeOffset,
+    required this.glyphIdArray,
+  });
 
   factory CmapSegmentMappingToDeltaValuesTable.fromByteData(
     ByteData byteData,
@@ -60,18 +60,18 @@ class CmapSegmentMappingToDeltaValuesTable extends CmapData {
 
     return CmapSegmentMappingToDeltaValuesTable(
       byteData.getUint16(startOffset),
-      length,
-      byteData.getUint16(startOffset + 4),
-      segCount,
-      byteData.getUint16(startOffset + 8),
-      byteData.getUint16(startOffset + 10),
-      byteData.getUint16(startOffset + 12),
-      endCode,
-      reservedPad,
-      startCode,
-      idDelta,
-      idRangeOffset,
-      glyphIdArray,
+      length: length,
+      language: byteData.getUint16(startOffset + 4),
+      segCount: segCount,
+      searchRange: byteData.getUint16(startOffset + 8),
+      entrySelector: byteData.getUint16(startOffset + 10),
+      rangeShift: byteData.getUint16(startOffset + 12),
+      endCode: endCode,
+      reservedPad: reservedPad,
+      startCode: startCode,
+      idDelta: idDelta,
+      idRangeOffset: idRangeOffset,
+      glyphIdArray: glyphIdArray,
     );
   }
 
@@ -89,18 +89,18 @@ class CmapSegmentMappingToDeltaValuesTable extends CmapData {
       /// Eight 2-byte variable
       /// Four 2-byte arrays of [segCount] length
       /// glyphIdArray is zero length
-      16 + 4 * 2 * segCount,
-      0, // Roman language
-      segCount,
-      searchRange,
-      entrySelector,
-      2 * segCount - searchRange,
-      [for (final segment in segmentList) segment.endCode],
-      0, // Reserved
-      [for (final segment in segmentList) segment.startCode],
-      [for (final segment in segmentList) segment.idDelta],
-      List.filled(segCount, 0),
-      const [], // Ignoring glyphIdArray
+      length: 16 + 4 * 2 * segCount,
+      language: 0, // Roman language
+      segCount: segCount,
+      searchRange: searchRange,
+      entrySelector: entrySelector,
+      rangeShift: 2 * segCount - searchRange,
+      endCode: [for (final segment in segmentList) segment.endCode],
+      reservedPad: 0,
+      startCode: [for (final segment in segmentList) segment.startCode],
+      idDelta: [for (final segment in segmentList) segment.idDelta],
+      idRangeOffset: List.filled(segCount, 0),
+      glyphIdArray: const [], // Ignoring glyphIdArray
     );
   }
 
