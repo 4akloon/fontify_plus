@@ -23,16 +23,16 @@ class _Candidate {
   String get thick => '${staticPrefix}200';
 }
 
-    # gvar was a candidate through Phase 0 but lost the format decision (Task 5):
-    # glyf's cubic-to-quadratic conversion is width-dependent and the package
-    // does not yet plan it once across masters, so `ring` (uniE002) comes out
-    // point-incompatible and varLib drops its variation entirely — reconfirmed
-    // against fonts freshly rebuilt by tool/variable_prototype/, not just
-    // historically. See tool/variable_prototype/README.md ("Decision: CFF2 +
-    // blend"). Keeping a candidate here that fails by design would make this
-    // standing gate red on every run, so only the winning format is exercised.
-    // Proto families are rebuilt by tool/build_proto_fonts.py (package CLI,
-    // not varLib).
+// gvar was a candidate through Phase 0 but lost the format decision (Task 5):
+// glyf's cubic-to-quadratic conversion is width-dependent and the package
+// does not yet plan it once across masters, so `ring` (uniE002) comes out
+// point-incompatible and varLib drops its variation entirely — reconfirmed
+// against fonts freshly rebuilt by tool/variable_prototype/, not just
+// historically. See tool/variable_prototype/README.md ("Decision: CFF2 +
+// blend"). Keeping a candidate here that fails by design would make this
+// standing gate red on every run, so only the winning format is exercised.
+// Proto families are rebuilt by tool/build_proto_fonts.py (package CLI,
+// not varLib).
 const _candidates = [_Candidate('CFF2', 'ProtoCff2', 'ProtoCff')];
 
 void main() {
