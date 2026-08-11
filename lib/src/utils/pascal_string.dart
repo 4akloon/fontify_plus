@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import '../common/codable/binary.dart';
 
 class PascalString implements BinaryCodable {
-  PascalString(this.string, this.length);
+  const PascalString(this.string, this.length);
 
   factory PascalString.fromByteData(ByteData byteData, int offset) {
     final length = byteData.getUint8(offset++);

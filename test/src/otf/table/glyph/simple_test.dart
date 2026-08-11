@@ -14,7 +14,7 @@ SimpleGlyph _triangle() {
   ];
 
   return SimpleGlyph(
-    header: GlyphHeader(
+    header: const GlyphHeader(
       numberOfContours: 1,
       xMin: 0,
       yMin: 0,
@@ -77,7 +77,7 @@ void main() {
         isOnCurve: true,
       ).repeated(4);
       final glyph = SimpleGlyph(
-        header: GlyphHeader(
+        header: const GlyphHeader(
           numberOfContours: 1,
           xMin: 0,
           yMin: 0,
@@ -100,7 +100,7 @@ void main() {
 
     test('round-trips non-empty instructions', () {
       final glyph = SimpleGlyph(
-        header: GlyphHeader(
+        header: const GlyphHeader(
           numberOfContours: 1,
           xMin: 0,
           yMin: 0,

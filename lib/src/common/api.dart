@@ -10,7 +10,7 @@ import 'stroke_width_range.dart';
 ///
 /// Contains list of generated glyphs and created font.
 class SvgToOtfResult {
-  SvgToOtfResult._(this.glyphList, this.font);
+  const SvgToOtfResult._(this.glyphList, this.font);
 
   final List<GenericGlyph> glyphList;
   final OpenTypeFont font;
@@ -65,14 +65,14 @@ SvgToOtfResult svgToOtf({
 }) {
   if (strokeWidthRange != null) {
     if (outlineStrokes == false) {
-      throw FontifyException(
+      throw const FontifyException(
         'strokeWidthRange needs stroked paths to vary, but outlineStrokes is '
         'false, which treats path data as fill geometry.',
       );
     }
 
     if (useOpenType == false) {
-      throw FontifyException(
+      throw const FontifyException(
         'strokeWidthRange requires OpenType (CFF2) outlines; the TrueType '
         'path has no variable form. Remove useOpenType: false.',
       );

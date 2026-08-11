@@ -259,14 +259,14 @@ FontJob resolveFontJob({
     // ('stroke_width_range', 'outline_strokes', 'opentype') instead of
     // svgToOtf's parameter names.
     if (!outlineStrokes) {
-      throw FontifyException(
+      throw const FontifyException(
         "'stroke_width_range' varies the stroke outline, but "
         "'outline_strokes' is false so there is no stroke outline to vary.",
       );
     }
 
     if (!useOpenType) {
-      throw FontifyException(
+      throw const FontifyException(
         "'stroke_width_range' requires OpenType (CFF2) outlines, but "
         "'opentype' is false.",
       );

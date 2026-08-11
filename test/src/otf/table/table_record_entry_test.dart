@@ -6,13 +6,13 @@ import 'package:test/test.dart';
 void main() {
   group('TableRecordEntry', () {
     test('size is fixed at 16 bytes', () {
-      final entry = TableRecordEntry('glyf', checkSum: 0, offset: 0, length: 0);
+      const entry = TableRecordEntry('glyf', checkSum: 0, offset: 0, length: 0);
 
       expect(entry.size, 16);
     });
 
     test('round-trips through encodeToBinary and fromByteData', () {
-      final entry = TableRecordEntry(
+      const entry = TableRecordEntry(
         'glyf',
         checkSum: 123456,
         offset: 40,

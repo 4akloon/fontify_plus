@@ -14,17 +14,17 @@ ByteData encode(CFFIndex index) {
 void main() {
   group('CFFIndex.empty', () {
     test('has a count of zero', () {
-      expect(CFFIndex.empty(true).count, 0);
-      expect(CFFIndex.empty(true).isEmpty, isTrue);
+      expect(const CFFIndex.empty(true).count, 0);
+      expect(const CFFIndex.empty(true).isEmpty, isTrue);
     });
 
     test('size is just the count field, for both CFF1 and CFF2', () {
-      expect(CFFIndex.empty(true).size, 2);
-      expect(CFFIndex.empty(false).size, 4);
+      expect(const CFFIndex.empty(true).size, 2);
+      expect(const CFFIndex.empty(false).size, 4);
     });
 
     test('encodes as just the zero count, with no offSize or offsets', () {
-      final bytes = encode(CFFIndex.empty(true));
+      final bytes = encode(const CFFIndex.empty(true));
 
       expect(bytes.lengthInBytes, 2);
       expect(bytes.getUint16(0), 0);
@@ -44,7 +44,7 @@ void main() {
   group('CFFIndex construction and size', () {
     test('size accounts for the offset array and the offSize byte', () {
       // 2 elements -> 3 offsets, each offSize=1 byte, plus 1 offSize byte.
-      final index = CFFIndex(
+      const index = CFFIndex(
         count: 2,
         offSize: 1,
         offsetList: [1, 2, 3],
@@ -55,7 +55,7 @@ void main() {
     });
 
     test('encodeToBinary throws for an offSize outside 1..4', () {
-      final index = CFFIndex(
+      const index = CFFIndex(
         count: 1,
         offSize: 5,
         offsetList: [1, 2],
@@ -68,7 +68,7 @@ void main() {
 
   group('CFFIndex.fromByteData / encodeToBinary round trip', () {
     test('round-trips a non-empty CFF1 index', () {
-      final original = CFFIndex(
+      const original = CFFIndex(
         count: 2,
         offSize: 1,
         offsetList: [1, 5, 10],
@@ -84,7 +84,7 @@ void main() {
     });
 
     test('round-trips a non-empty CFF2 index', () {
-      final original = CFFIndex(
+      const original = CFFIndex(
         count: 2,
         offSize: 1,
         offsetList: [1, 5, 10],
@@ -98,7 +98,7 @@ void main() {
     });
 
     test('round-trips an empty index', () {
-      final bytes = encode(CFFIndex.empty(true));
+      final bytes = encode(const CFFIndex.empty(true));
       final decoded = CFFIndex.fromByteData(bytes, true);
 
       expect(decoded.isEmpty, isTrue);
@@ -106,7 +106,7 @@ void main() {
 
     test('round-trips a multi-byte offSize', () {
       // A large offset that needs 2 bytes per entry.
-      final original = CFFIndex(
+      const original = CFFIndex(
         count: 1,
         offSize: 2,
         offsetList: [1, 1000],

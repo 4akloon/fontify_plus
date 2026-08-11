@@ -16,7 +16,7 @@ const _kUnitsPerEm = 1000;
 
 List<GenericGlyphMetrics> _metricsList() => [
   GenericGlyphMetrics.empty(),
-  GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
+  const GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
 ];
 
 List<GenericGlyph> _fullGlyphList() => [

@@ -16,7 +16,7 @@ ItemVariationStore _store() => ItemVariationStore(
   variationRegionListOffset: 12,
   itemVariationDataCount: 1,
   itemVariationDataOffsets: [0], // overwritten by encodeToBinary
-  variationRegionList: VariationRegionList(
+  variationRegionList: const VariationRegionList(
     axisCount: 1,
     regionCount: 1,
     regions: [
@@ -24,7 +24,7 @@ ItemVariationStore _store() => ItemVariationStore(
     ],
   ),
   itemVariationDataList: [
-    ItemVariationData(
+    const ItemVariationData(
       itemCount: 2,
       shortDeltaCount: 1,
       regionIndexCount: 1,
@@ -77,7 +77,7 @@ void main() {
         variationRegionListOffset: 16,
         itemVariationDataCount: 2,
         itemVariationDataOffsets: [0, 0], // overwritten by encodeToBinary
-        variationRegionList: VariationRegionList(
+        variationRegionList: const VariationRegionList(
           axisCount: 1,
           regionCount: 1,
           regions: [
@@ -89,13 +89,13 @@ void main() {
           ],
         ),
         itemVariationDataList: [
-          ItemVariationData(
+          const ItemVariationData(
             itemCount: 2,
             shortDeltaCount: 1,
             regionIndexCount: 1,
             regionIndexes: [0],
           ),
-          ItemVariationData(
+          const ItemVariationData(
             itemCount: 3,
             shortDeltaCount: 1,
             regionIndexCount: 1,

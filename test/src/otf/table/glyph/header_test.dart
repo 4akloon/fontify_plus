@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 void main() {
   group('GlyphHeader.isComposite', () {
     test('is false for a non-negative contour count', () {
-      final header = GlyphHeader(
+      const header = GlyphHeader(
         numberOfContours: 1,
         xMin: 0,
         yMin: 0,
@@ -18,7 +18,7 @@ void main() {
     });
 
     test('is true for a negative contour count', () {
-      final header = GlyphHeader(
+      const header = GlyphHeader(
         numberOfContours: -1,
         xMin: 0,
         yMin: 0,
@@ -32,7 +32,7 @@ void main() {
 
   group('GlyphHeader', () {
     test('size is fixed at 10 bytes', () {
-      final header = GlyphHeader(
+      const header = GlyphHeader(
         numberOfContours: 1,
         xMin: 0,
         yMin: 0,
@@ -44,7 +44,7 @@ void main() {
     });
 
     test('round-trips through encodeToBinary and fromByteData', () {
-      final header = GlyphHeader(
+      const header = GlyphHeader(
         numberOfContours: 2,
         xMin: -5,
         yMin: -6,

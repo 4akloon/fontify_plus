@@ -9,7 +9,7 @@ import 'package:test/test.dart';
 
 /// A single triangular contour, all on-curve.
 SimpleGlyph triangleGlyph() => SimpleGlyph(
-  header: GlyphHeader(
+  header: const GlyphHeader(
     numberOfContours: 1,
     xMin: 0,
     yMin: 0,
@@ -61,7 +61,7 @@ void main() {
 
     test('splits multiple contours at their end points', () {
       final glyph = SimpleGlyph(
-        header: GlyphHeader(
+        header: const GlyphHeader(
           numberOfContours: 2,
           xMin: 0,
           yMin: 0,
@@ -195,7 +195,7 @@ void main() {
 
     test('endPoints marks the last index of each contour', () {
       final glyph = SimpleGlyph(
-        header: GlyphHeader(
+        header: const GlyphHeader(
           numberOfContours: 2,
           xMin: 0,
           yMin: 0,

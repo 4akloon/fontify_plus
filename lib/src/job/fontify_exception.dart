@@ -1,5 +1,5 @@
 class FontifyException implements Exception {
-  FontifyException(this.message);
+  const FontifyException(this.message);
 
   final String message;
 

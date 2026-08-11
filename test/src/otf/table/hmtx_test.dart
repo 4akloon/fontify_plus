@@ -20,7 +20,7 @@ void main() {
 
     test('advances a non-empty glyph by its own width', () {
       final metric = LongHorMetric.createForGlyph(
-        GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
+        const GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
         1000,
       );
 
@@ -30,7 +30,7 @@ void main() {
 
   group('LongHorMetric.getRsb', () {
     test('is advanceWidth minus lsb minus glyph width', () {
-      final metric = LongHorMetric(700, 10);
+      const metric = LongHorMetric(700, 10);
 
       expect(metric.getRsb(710, 10), 700 - (10 + (710 - 10)));
     });
@@ -38,7 +38,7 @@ void main() {
 
   group('LongHorMetric round trip', () {
     test('round-trips through encodeToBinary and fromByteData', () {
-      final metric = LongHorMetric(700, -5);
+      const metric = LongHorMetric(700, -5);
       final bytes = ByteData(metric.size);
 
       metric.encodeToBinary(bytes);
@@ -54,7 +54,7 @@ void main() {
       final table = HorizontalMetricsTable.create(
         [
           GenericGlyphMetrics.empty(),
-          GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
+          const GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
         ],
         1000,
       );
@@ -66,8 +66,8 @@ void main() {
     test('advanceWidthMax is the largest advance width', () {
       final table = HorizontalMetricsTable.create(
         [
-          GenericGlyphMetrics(xMin: 0, xMax: 100, yMin: 0, yMax: 100),
-          GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
+          const GenericGlyphMetrics(xMin: 0, xMax: 100, yMin: 0, yMax: 100),
+          const GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
         ],
         1000,
       );
@@ -77,7 +77,7 @@ void main() {
 
     test('minLeftSideBearing is 0 for glyphs created with a zero lsb', () {
       final table = HorizontalMetricsTable.create(
-        [GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800)],
+        [const GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800)],
         1000,
       );
 
@@ -88,7 +88,7 @@ void main() {
       'getMinRightSideBearing and getMaxExtent read against the given metrics',
       () {
         final metricsList = [
-          GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
+          const GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
         ];
         final table = HorizontalMetricsTable.create(metricsList, 1000);
 
@@ -102,7 +102,7 @@ void main() {
     test('round-trips through encodeToBinary and fromByteData', () {
       final metricsList = [
         GenericGlyphMetrics.empty(),
-        GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
+        const GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
       ];
       final table = HorizontalMetricsTable.create(metricsList, 1000);
       final hhea = HorizontalHeaderTable.create(

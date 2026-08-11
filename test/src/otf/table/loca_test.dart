@@ -17,7 +17,7 @@ SimpleGlyph _triangle() {
   ];
 
   return SimpleGlyph(
-    header: GlyphHeader(
+    header: const GlyphHeader(
       numberOfContours: 1,
       xMin: 0,
       yMin: 0,

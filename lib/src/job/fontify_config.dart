@@ -7,7 +7,7 @@ import 'job_values.dart';
 
 /// Parsed multi-font configuration from a `fontify_plus:` YAML section.
 class FontifyConfig {
-  FontifyConfig({required this.defaults, required this.fonts});
+  const FontifyConfig({required this.defaults, required this.fonts});
 
   final JobValues defaults;
   final Map<String, JobValues> fonts;
@@ -46,23 +46,23 @@ FontifyConfig parseFontifyConfig(String yamlSource) {
   final dynamic root = loadYaml(yamlSource);
 
   if (root is! YamlMap) {
-    throw FontifyException('Config root must be a YAML map.');
+    throw const FontifyException('Config root must be a YAML map.');
   }
 
   final dynamic section = root['fontify_plus'];
 
   if (section is! YamlMap) {
-    throw FontifyException("Config must contain a 'fontify_plus' map.");
+    throw const FontifyException("Config must contain a 'fontify_plus' map.");
   }
 
   if (section.containsKey('input_svg_dir') ||
       section.containsKey('output_font_file')) {
-    throw FontifyException(kLegacyConfigMessage);
+    throw const FontifyException(kLegacyConfigMessage);
   }
 
   final dynamic fontsYaml = section['fonts'];
   if (fontsYaml is! YamlMap || fontsYaml.isEmpty) {
-    throw FontifyException(
+    throw const FontifyException(
       'fontify_plus.fonts must be a non-empty map of named font sets.',
     );
   }
@@ -71,7 +71,7 @@ FontifyConfig parseFontifyConfig(String yamlSource) {
   final dynamic defaultsYaml = section['defaults'];
   if (defaultsYaml != null) {
     if (defaultsYaml is! YamlMap) {
-      throw FontifyException('fontify_plus.defaults must be a map.');
+      throw const FontifyException('fontify_plus.defaults must be a map.');
     }
     defaults = jobValuesFromYamlMap(
       defaultsYaml,
@@ -85,7 +85,7 @@ FontifyConfig parseFontifyConfig(String yamlSource) {
     final name = e.key;
     final fontYaml = e.value;
     if (name is! String) {
-      throw FontifyException('fontify_plus.fonts keys must be strings.');
+      throw const FontifyException('fontify_plus.fonts keys must be strings.');
     }
     if (fontYaml is! YamlMap) {
       throw FontifyException('fontify_plus.fonts.$name must be a map.');

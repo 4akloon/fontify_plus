@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 void main() {
   group('ItemVariationData.size', () {
     test('is 6 bytes plus 2 per region index', () {
-      final data = ItemVariationData(
+      const data = ItemVariationData(
         itemCount: 4,
         shortDeltaCount: 2,
         regionIndexCount: 3,
@@ -19,7 +19,7 @@ void main() {
 
   group('ItemVariationData round trip', () {
     test('round-trips through encodeToBinary and fromByteData', () {
-      final data = ItemVariationData(
+      const data = ItemVariationData(
         itemCount: 10,
         shortDeltaCount: 5,
         regionIndexCount: 2,
@@ -37,7 +37,7 @@ void main() {
     });
 
     test('round-trips an empty region index list', () {
-      final data = ItemVariationData(
+      const data = ItemVariationData(
         itemCount: 1,
         shortDeltaCount: 0,
         regionIndexCount: 0,

@@ -71,7 +71,7 @@ void main() {
 
   group('NameRecord round trip', () {
     test('size is fixed at 12 bytes', () {
-      final record = NameRecord(
+      const record = NameRecord(
         platformID: 3,
         encodingID: 1,
         languageID: 0x0409,
@@ -84,7 +84,7 @@ void main() {
     });
 
     test('round-trips through encodeToBinary and fromByteData', () {
-      final record = NameRecord(
+      const record = NameRecord(
         platformID: 3,
         encodingID: 1,
         languageID: 0x0409,

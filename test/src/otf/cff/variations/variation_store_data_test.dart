@@ -14,7 +14,7 @@ ItemVariationStore _store() => ItemVariationStore(
   variationRegionListOffset: 12,
   itemVariationDataCount: 1,
   itemVariationDataOffsets: [0],
-  variationRegionList: VariationRegionList(
+  variationRegionList: const VariationRegionList(
     axisCount: 1,
     regionCount: 1,
     regions: [
@@ -22,7 +22,7 @@ ItemVariationStore _store() => ItemVariationStore(
     ],
   ),
   itemVariationDataList: [
-    ItemVariationData(
+    const ItemVariationData(
       itemCount: 2,
       shortDeltaCount: 1,
       regionIndexCount: 1,

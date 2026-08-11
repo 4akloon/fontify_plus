@@ -1,5 +1,5 @@
 class TableDataFormatException implements Exception {
-  TableDataFormatException(this.message);
+  const TableDataFormatException(this.message);
 
   final String message;
 
@@ -8,9 +8,10 @@ class TableDataFormatException implements Exception {
 }
 
 class ChecksumException implements Exception {
-  ChecksumException(this.entityName);
-  ChecksumException.font() : entityName = 'font';
-  ChecksumException.table(String tableName) : entityName = '$tableName table';
+  const ChecksumException(this.entityName);
+  const ChecksumException.font() : entityName = 'font';
+  const ChecksumException.table(String tableName)
+    : entityName = '$tableName table';
 
   final String entityName;
 
@@ -19,7 +20,7 @@ class ChecksumException implements Exception {
 }
 
 class SvgParserException implements Exception {
-  SvgParserException([this.message]);
+  const SvgParserException([this.message]);
 
   final String? message;
 
@@ -34,7 +35,7 @@ class SvgParserException implements Exception {
 /// decision escaped the stroke plan; failing the build is the only honest
 /// outcome, because the alternative is a font that renders subtly wrong.
 class IncompatibleMastersException implements Exception {
-  IncompatibleMastersException(this.glyphName, this.detail);
+  const IncompatibleMastersException(this.glyphName, this.detail);
 
   final String glyphName;
   final String detail;

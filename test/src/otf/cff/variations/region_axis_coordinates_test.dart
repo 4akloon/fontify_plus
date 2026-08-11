@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 void main() {
   group('RegionAxisCoordinates', () {
     test('size is fixed at 6 bytes', () {
-      final coords = RegionAxisCoordinates(
+      const coords = RegionAxisCoordinates(
         startCoord: 0,
         peakCoord: 0x4000,
         endCoord: 0x8000,
@@ -16,7 +16,7 @@ void main() {
     });
 
     test('round-trips through encodeToBinary and fromByteData', () {
-      final coords = RegionAxisCoordinates(
+      const coords = RegionAxisCoordinates(
         startCoord: 0,
         peakCoord: 0x4000,
         endCoord: 0x8000,

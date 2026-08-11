@@ -5,7 +5,7 @@ void main() {
   group('CmapSegment.idDelta', () {
     test('is the difference between the starting glyph and char codes', () {
       expect(
-        CmapSegment(startCode: 10, endCode: 20, startGlyphID: 3).idDelta,
+        const CmapSegment(startCode: 10, endCode: 20, startGlyphID: 3).idDelta,
         -7,
       );
     });

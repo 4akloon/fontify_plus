@@ -15,7 +15,7 @@ void main() {
 
     test('stringOffset points just past the record list', () {
       final records = [
-        NameRecord(
+        const NameRecord(
           platformID: 1,
           encodingID: 0,
           languageID: 0,
@@ -33,7 +33,7 @@ void main() {
   group('NamingTableFormat0Header round trip', () {
     test('round-trips through encodeToBinary and fromByteData', () {
       final records = [
-        NameRecord(
+        const NameRecord(
           platformID: 1,
           encodingID: 0,
           languageID: 0,

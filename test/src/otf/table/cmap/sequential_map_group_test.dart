@@ -7,7 +7,7 @@ void main() {
   group('SequentialMapGroup', () {
     test('size is fixed at 12 bytes', () {
       expect(
-        SequentialMapGroup(
+        const SequentialMapGroup(
           startCharCode: 1,
           endCharCode: 2,
           startGlyphID: 3,
@@ -17,7 +17,7 @@ void main() {
     });
 
     test('round-trips through encodeToBinary and fromByteData', () {
-      final group = SequentialMapGroup(
+      const group = SequentialMapGroup(
         startCharCode: 0x10000,
         endCharCode: 0x10010,
         startGlyphID: 5,

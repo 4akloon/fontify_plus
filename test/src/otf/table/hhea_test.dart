@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 
 List<GenericGlyphMetrics> _metricsList() => [
   GenericGlyphMetrics.empty(),
-  GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
+  const GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
 ];
 
 void main() {

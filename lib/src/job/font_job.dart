@@ -3,7 +3,7 @@ import '../common/stroke_width_range.dart';
 
 /// One icon-font generation job with fully resolved options.
 class FontJob {
-  FontJob({
+  const FontJob({
     this.name,
     required this.inputSvgDir,
     required this.outputFontFile,
@@ -40,7 +40,7 @@ class FontJob {
 
 /// Result of [runFontJob].
 class FontJobResult {
-  FontJobResult({this.name, required this.otf, this.classSource});
+  const FontJobResult({this.name, required this.otf, this.classSource});
 
   final String? name;
   final SvgToOtfResult otf;

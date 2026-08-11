@@ -14,7 +14,12 @@ const _kUnitsPerEm = 1000;
 
 List<GenericGlyphMetrics> _metricsList() => [
   GenericGlyphMetrics.empty(), // .notdef
-  GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800), // one icon glyph
+  const GenericGlyphMetrics(
+    xMin: 0,
+    xMax: 700,
+    yMin: 0,
+    yMax: 800,
+  ), // one icon glyph
 ];
 
 List<GenericGlyph> _fullGlyphList() => [
