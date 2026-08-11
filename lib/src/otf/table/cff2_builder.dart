@@ -19,7 +19,7 @@ CFF2Table _buildCFF2Table(List<List<GenericGlyph>> glyphMasterList) {
 
   // singleRegionVariationStore hard-codes exactly one region: it is built
   // for this package's single wght axis and two masters, not for a general
-  // k-region store. blendCommands, optimizeMasters and
+  // k-region store. CharStringBlender, optimizeMasters and
   // CharStringInterpreterLimits all genuinely support more regions, so
   // nothing below this line would fail on a third master — the charstrings
   // would encode fine and decode into a store advertising one region while
@@ -59,9 +59,9 @@ CFF2Table _buildCFF2Table(List<List<GenericGlyph>> glyphMasterList) {
     }).toList();
 
     final byteData = charStringWriter.writeCommands(
-      blendCommands(
+      CharStringBlender(
         prepared.first.toCharStringCommandsForMasters(prepared, optimizer),
-      ),
+      ).merge(),
     );
 
     return byteData.buffer.asUint8List();

@@ -13,13 +13,13 @@ CharStringCommand _cmd(CFFOperator op, List<int> operands) => CharStringCommand(
 );
 
 void main() {
-  group('blendCommands', () {
+  group('CharStringBlender', () {
     test('a single master produces no blend at all', () {
-      final out = blendCommands([
+      final out = CharStringBlender([
         [
           _cmd(rlineto, [10, 20]),
         ],
-      ]);
+      ]).merge();
 
       expect(out.map((c) => c.operator), [rlineto]);
       expect(out.single.operandList.map((o) => o.value), [10, 20]);
@@ -28,28 +28,28 @@ void main() {
     test('identical masters produce no blend', () {
       // A fill does not vary with stroke width. Paying for a blend that is
       // all zeros would be pure size on every such command.
-      final out = blendCommands([
+      final out = CharStringBlender([
         [
           _cmd(rlineto, [10, 20]),
         ],
         [
           _cmd(rlineto, [10, 20]),
         ],
-      ]);
+      ]).merge();
 
       expect(out.map((c) => c.operator), [rlineto]);
       expect(out.single.operandList.map((o) => o.value), [10, 20]);
     });
 
     test('a differing command becomes blend followed by the operator', () {
-      final out = blendCommands([
+      final out = CharStringBlender([
         [
           _cmd(rlineto, [10, 20]),
         ],
         [
           _cmd(rlineto, [13, 20]),
         ],
-      ]);
+      ]).merge();
 
       expect(out.map((c) => c.operator), [blend, rlineto]);
       // n base values, then n * k deltas, then n. k == 1 here.
@@ -59,20 +59,20 @@ void main() {
     });
 
     test('deltas are measured from the first master, the default', () {
-      final out = blendCommands([
+      final out = CharStringBlender([
         [
           _cmd(hlineto, [100]),
         ],
         [
           _cmd(hlineto, [90]),
         ],
-      ]);
+      ]).merge();
 
       expect(out[0].operandList.map((o) => o.value), [100, -10, 1]);
     });
 
     test('an empty master list is rejected', () {
-      expect(() => blendCommands([]), throwsArgumentError);
+      expect(() => CharStringBlender([]), throwsArgumentError);
     });
 
     test('divergent structure is rejected', () {
@@ -92,37 +92,37 @@ void main() {
       // but this alone does not exercise the operator comparison, since the
       // operand-count comparison already trips first.
       expect(
-        () => blendCommands([
+        () => CharStringBlender([
           [
             _cmd(rlineto, [10, 20]),
           ],
           [
             _cmd(hlineto, [10]),
           ],
-        ]),
+        ]).merge(),
         throwsDivergence,
       );
 
       // Operand counts agree (one operand each); only the operator differs.
       // This is the case that catches a guard weakened to check only operand
-      // count — with the operator half deleted, blendCommands would emit
+      // count — with the operator half deleted, CharStringBlender would emit
       // blend + hlineto and silently discard vlineto's y-move.
       expect(
-        () => blendCommands([
+        () => CharStringBlender([
           [
             _cmd(hlineto, [10]),
           ],
           [
             _cmd(vlineto, [30]),
           ],
-        ]),
+        ]).merge(),
         throwsDivergence,
       );
 
       // Different command counts is a separate, earlier guard with its own
       // message, so it is checked only for ArgumentError in general.
       expect(
-        () => blendCommands([
+        () => CharStringBlender([
           [
             _cmd(rlineto, [10, 20]),
           ],
@@ -140,7 +140,7 @@ void main() {
       () {
         // A single-operand command. Region 1 (master index 1) matches the
         // default, region 2 (master index 2) does not.
-        final out = blendCommands([
+        final out = CharStringBlender([
           [
             _cmd(hlineto, [10]),
           ],
@@ -150,7 +150,7 @@ void main() {
           [
             _cmd(hlineto, [11]),
           ],
-        ]);
+        ]).merge();
 
         expect(out.map((c) => c.operator), [blend, hlineto]);
         // base, then region 1's delta (0), then region 2's delta (1), then
@@ -164,7 +164,7 @@ void main() {
       'three masters, two operands: region-minor grouping within each '
       'operand',
       () {
-        final out = blendCommands([
+        final out = CharStringBlender([
           [
             _cmd(rlineto, [10, 20]),
           ],
@@ -174,7 +174,7 @@ void main() {
           [
             _cmd(rlineto, [10, 23]),
           ],
-        ]);
+        ]).merge();
 
         expect(out.map((c) => c.operator), [blend, rlineto]);
         // base (10, 20), then operand 0's deltas across both regions
@@ -219,7 +219,7 @@ void main() {
         expect(unconstrained.single.operandList, hasLength(400));
 
         // That single 400-operand command is exactly what must never reach
-        // blendCommands once a region exists: blending it would need
+        // CharStringBlender once a region exists: blending it would need
         // 400 * 2 + 1 = 801 operands, well past the 513 a CFF2 interpreter
         // can hold.
         expect(400 * 2 + 1, greaterThan(513));
@@ -239,7 +239,7 @@ void main() {
         // command differs between masters, so every one of them actually
         // becomes a blend, and its *actual* operand count — not the bound
         // recomputed from the limit constant — must still fit on the stack.
-        final blended = blendCommands(optimized);
+        final blended = CharStringBlender(optimized).merge();
 
         expect(blended, isNotEmpty);
         expect(blended.map((c) => c.operator), contains(blend));
