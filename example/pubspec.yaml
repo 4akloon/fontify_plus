@@ -25,9 +25,10 @@ flutter:
     - family: My Icons
       fonts:
         - asset: fonts/my_icons.otf
-    - family: ProtoGvar
-      fonts:
-        - asset: fonts/proto/variable_gvar.ttf
+    # gvar lost the format decision (Task 5) and was retired from the render
+    # matrix — see the comment in integration_test/variable_stroke_test.dart
+    # and tool/variable_prototype/README.md. Only the winning format's
+    # families remain.
     - family: ProtoCff2
       fonts:
         - asset: fonts/proto/variable_cff2.otf
@@ -40,12 +41,3 @@ flutter:
     - family: ProtoCff200
       fonts:
         - asset: fonts/proto/static_2.0_cff.otf
-    - family: ProtoGlyf133
-      fonts:
-        - asset: fonts/proto/static_1.33_glyf.otf
-    - family: ProtoGlyf150
-      fonts:
-        - asset: fonts/proto/static_1.5_glyf.otf
-    - family: ProtoGlyf200
-      fonts:
-        - asset: fonts/proto/static_2.0_glyf.otf
