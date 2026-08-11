@@ -120,14 +120,16 @@ class OTFReader {
         return CFFTable.fromByteData(_byteData, entry);
       default:
         // `kFvarTag` ('fvar') and `kStatTag` ('STAT') have no case above, so
-        // they fall through to here and are silently dropped rather than
-        // parsed — neither table has a `fromByteData` yet, and this package
-        // has no consumer for a reader nothing calls. This is a known,
-        // deliberate gap, not an oversight: reading a variable font this
-        // package wrote back through `OTFReader` drops both tables, so a
-        // read-modify-write round trip produces a static font. Anything
-        // doing read-modify-write must not route a variable font through
-        // this reader. Tracked in
+        // they fall through to here and are dropped rather than parsed —
+        // neither table has a `fromByteData` yet, and this package has no
+        // consumer for a reader nothing calls. This is a known, deliberate
+        // gap, not an oversight: reading a variable font this package wrote
+        // back through `OTFReader` drops both tables (with a "[WARNING]
+        // Unsupported table" log line below, not silently — unlike the
+        // write-side gap this mirrors in `otf.dart`'s
+        // `_kTableTagsToEncode`), so a read-modify-write round trip produces
+        // a static font. Anything doing read-modify-write must not route a
+        // variable font through this reader. Tracked in
         // https://github.com/4akloon/fontify_plus/issues/12.
         debuggerOTF.debugUnsupportedTable(entry.tag);
         return null;

@@ -141,29 +141,30 @@ void main() {
       expect(table.usUpperOpticalPointSize, 0xFFFE);
     });
 
-    test(
-      'pins usWeightClass to 400 regardless of the wght axis range',
-      () {
-        // An honest usWeightClass for a 1.33-2.0 stroke-width axis would be
-        // 2 ("Extra-thin"), but generic tooling that reads this field
-        // without instancing the font would then call the icon font
-        // thinner than Thin. 400 (Regular) is the deliberate, documented
-        // choice — see the comment in os2_builder.dart. This pins that
-        // choice so a future change can't drift it without updating this
-        // test.
-        final hmtx = _hmtx();
+    test('pins usWeightClass to 400 (Regular)', () {
+      // buildOS2Table takes no axis or range argument, so this only pins
+      // the constant itself, not any claim about behaving consistently
+      // across a wght range — it can't vary here regardless. An honest
+      // usWeightClass for the 1.33-2.0 stroke-width axis this package's
+      // variable font carries would be 2 ("Extra-thin"), but generic
+      // tooling that reads this field without instancing the font would
+      // then treat the icon font as thinner than Thin. 400 is the
+      // deliberate, documented choice — see the comment in
+      // os2_builder.dart. A test that actually varies the axis and checks
+      // usWeightClass stays 400 belongs in Task 19, once a real variable
+      // font exists to build it from.
+      final hmtx = _hmtx();
 
-        final table = buildOS2Table(
-          hmtx,
-          _head(),
-          _hhea(hmtx),
-          _cmap(),
-          GlyphSubstitutionTable.create(),
-          'PfPl',
-        );
+      final table = buildOS2Table(
+        hmtx,
+        _head(),
+        _hhea(hmtx),
+        _cmap(),
+        GlyphSubstitutionTable.create(),
+        'PfPl',
+      );
 
-        expect(table.usWeightClass, 400);
-      },
-    );
+      expect(table.usWeightClass, 400);
+    });
   });
 }

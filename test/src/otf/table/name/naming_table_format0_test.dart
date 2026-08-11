@@ -6,12 +6,13 @@ import 'package:fontify_plus/src/otf/table/table_record_entry.dart';
 import 'package:fontify_plus/src/utils/otf.dart';
 import 'package:test/test.dart';
 
-/// The NameIDs this format's fixed default-string map actually writes.
+/// The NameIDs this format's fixed default-string map always writes.
 ///
-/// `NameID.values` also includes purpose-specific IDs — like
-/// `strokeWidthAxis`, an `fvar` axis name — that other tables contribute once
-/// they're wired in, not this one, so those are excluded here rather than
-/// asserted (incorrectly) to be present.
+/// `NameID.values` also includes `strokeWidthAxis`, an `fvar`/`STAT` axis
+/// name that `NamingTableFormat0.create` writes only when its optional
+/// `axisName` parameter is given (see `naming_table_test.dart` for that
+/// case). None of the calls in this file pass one, so it's excluded here
+/// rather than asserted (incorrectly) to be present.
 const _kStandardNameIds = [
   NameID.copyright,
   NameID.fontFamily,

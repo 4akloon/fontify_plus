@@ -11,11 +11,16 @@ import 'table/all.dart';
 /// Ordered list of table tags for encoding (Optimized Table Ordering)
 ///
 /// Anything in [OpenTypeFont.tableMap] whose tag is not listed here is
-/// silently skipped by [_encodeTables] — no error, no log line. `kFvarTag`
-/// ('fvar') and `kStatTag` ('STAT') are listed (last, so existing fonts'
-/// table order is unchanged): a new table still needs an entry here, and a
-/// matching case in `reader.dart`'s `_createTableFromEntry`, or it will be
-/// dropped on write (this set) or read (that switch) without any error.
+/// silently skipped by [_encodeTables] — no error, no log line. (The read
+/// side is not this quiet: an unhandled tag in `reader.dart`'s
+/// `_createTableFromEntry` does log a warning before dropping the table —
+/// see that file.) `kFvarTag` ('fvar') and `kStatTag` ('STAT') are listed
+/// here; placement within the set doesn't matter, since
+/// [OpenTypeFont.encodeToBinary] sorts the directory entries by tag before
+/// writing them, regardless of this set's iteration order. A new
+/// table still needs an entry here, and a matching case in `reader.dart`,
+/// or it will be silently dropped on write and (audibly, but still
+/// dropped) on read.
 const _kTableTagsToEncode = {
   kHeadTag,
   kHheaTag,
@@ -34,13 +39,18 @@ const _kTableTagsToEncode = {
   kStatTag,
 };
 
-/// Exposes [_kTableTagsToEncode] for `table_registration_test.dart`.
+/// A private-symbol alias for `table_registration_test.dart`, not additional
+/// public API.
 ///
-/// Not annotated `@visibleForTesting`: `meta` is only a transitive
-/// dependency here (via other packages' pubspec, not this package's), and
-/// this task adds no new dependency. This comment is the substitute —
-/// the getter exists solely so the encode-set test can see the constant
-/// without making it public API.
+/// `_kTableTagsToEncode` needs to be reachable from a test without becoming
+/// a public constant. `@visibleForTesting` was avoided because `meta` is
+/// only a transitive dependency of this package (present in `pubspec.lock`
+/// via other packages, absent from `pubspec.yaml`), and this task adds no
+/// new dependency. Instead, `lib/src/otf.dart` hides this name from its
+/// `export 'otf/otf.dart'` directive, so it never reaches
+/// `package:fontify_plus/fontify_plus.dart`; the test imports
+/// `package:fontify_plus/src/otf/otf.dart` directly to reach it, the same
+/// way other tests in this repo reach non-exported internals.
 const debugTableTagsToEncode = _kTableTagsToEncode;
 
 /// {@category api}
