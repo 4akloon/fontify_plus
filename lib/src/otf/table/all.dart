@@ -18,4 +18,5 @@ export 'offset.dart';
 export 'os2.dart';
 export 'post.dart';
 export 'script_list.dart';
+export 'stat.dart';
 export 'table_record_entry.dart';
