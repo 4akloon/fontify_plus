@@ -28,7 +28,7 @@ SimpleGlyph _triangle() {
     instructions: [],
     flags: [
       for (var i = 0; i < points.length; i++)
-        SimpleGlyphFlag.createForPoint(0, 0, true),
+        SimpleGlyphFlag.createForPoint(x: 0, y: 0, isOnCurve: true),
     ],
     pointList: points,
   );

@@ -18,8 +18,8 @@ void main() {
       final table = HorizontalHeaderTable.create(
         _metricsList(),
         hmtx,
-        800,
-        -200,
+        ascender: 800,
+        descender: -200,
       );
 
       expect(table.ascender, 800);
@@ -31,8 +31,8 @@ void main() {
       final table = HorizontalHeaderTable.create(
         _metricsList(),
         hmtx,
-        800,
-        -200,
+        ascender: 800,
+        descender: -200,
       );
 
       expect(table.numberOfHMetrics, 2);
@@ -43,8 +43,8 @@ void main() {
       final table = HorizontalHeaderTable.create(
         _metricsList(),
         hmtx,
-        800,
-        -200,
+        ascender: 800,
+        descender: -200,
       );
 
       expect(table.advanceWidthMax, hmtx.advanceWidthMax);
@@ -58,8 +58,8 @@ void main() {
       final table = HorizontalHeaderTable.create(
         _metricsList(),
         hmtx,
-        800,
-        -200,
+        ascender: 800,
+        descender: -200,
       );
       final bytes = ByteData(table.size);
 

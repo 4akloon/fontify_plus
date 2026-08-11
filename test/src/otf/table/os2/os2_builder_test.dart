@@ -33,7 +33,12 @@ HeaderTable _head() => HeaderTable.create(
 );
 
 HorizontalHeaderTable _hhea(HorizontalMetricsTable hmtx) =>
-    HorizontalHeaderTable.create(_metricsList(), hmtx, 800, -200);
+    HorizontalHeaderTable.create(
+      _metricsList(),
+      hmtx,
+      ascender: 800,
+      descender: -200,
+    );
 
 CharacterToGlyphTable _cmap() => CharacterToGlyphTable.create(_fullGlyphList());
 

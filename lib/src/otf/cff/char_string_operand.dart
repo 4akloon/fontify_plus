@@ -10,15 +10,15 @@ class CharStringOperand extends CFFOperand {
   CharStringOperand(super.value, [super.size]);
 
   factory CharStringOperand.fromByteData(
-    ByteData byteData,
-    int offset,
-    int b0,
-  ) {
+    ByteData byteData, {
+    required int offset,
+    required int b0,
+  }) {
     if (b0 == 255) {
       return CharStringOperand(byteData.getUint32(0) / 0x10000, 5);
     }
 
-    final operand = CFFOperand.fromByteData(byteData, offset, b0);
+    final operand = CFFOperand.fromByteData(byteData, offset: offset, b0: b0);
 
     return CharStringOperand(operand.value, operand.size);
   }

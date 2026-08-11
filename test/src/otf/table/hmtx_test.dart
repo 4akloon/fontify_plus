@@ -105,7 +105,12 @@ void main() {
         GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
       ];
       final table = HorizontalMetricsTable.create(metricsList, 1000);
-      final hhea = HorizontalHeaderTable.create(metricsList, table, 800, -200);
+      final hhea = HorizontalHeaderTable.create(
+        metricsList,
+        table,
+        ascender: 800,
+        descender: -200,
+      );
       final bytes = ByteData(table.size);
 
       table.encodeToBinary(bytes);

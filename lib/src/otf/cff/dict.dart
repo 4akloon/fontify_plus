@@ -33,7 +33,11 @@ class CFFDictEntry extends BinaryCodable {
           CFFOperator(CFFOperatorContext.dict, b0, b1),
         );
       } else {
-        final operand = CFFOperand.fromByteData(byteData, offset, b0);
+        final operand = CFFOperand.fromByteData(
+          byteData,
+          offset: offset,
+          b0: b0,
+        );
         operandList.add(operand);
         offset += operand.size - 1;
       }

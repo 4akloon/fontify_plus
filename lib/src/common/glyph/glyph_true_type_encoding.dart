@@ -69,7 +69,11 @@ extension GlyphTrueTypeEncoding on GenericGlyph {
 
     final flags = _compactRuns([
       for (var i = 0; i < points.length; i++)
-        SimpleGlyphFlag.createForPoint(relX[i], relY[i], isOnCurveList[i]),
+        SimpleGlyphFlag.createForPoint(
+          x: relX[i],
+          y: relY[i],
+          isOnCurve: isOnCurveList[i],
+        ),
     ]);
 
     return SimpleGlyph(

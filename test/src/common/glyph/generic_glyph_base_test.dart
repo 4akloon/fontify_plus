@@ -19,9 +19,9 @@ SimpleGlyph triangleGlyph() => SimpleGlyph(
   endPtsOfContours: [2],
   instructions: [],
   flags: [
-    SimpleGlyphFlag.createForPoint(0, 0, true),
-    SimpleGlyphFlag.createForPoint(10, 0, true),
-    SimpleGlyphFlag.createForPoint(10, 10, true),
+    SimpleGlyphFlag.createForPoint(x: 0, y: 0, isOnCurve: true),
+    SimpleGlyphFlag.createForPoint(x: 10, y: 0, isOnCurve: true),
+    SimpleGlyphFlag.createForPoint(x: 10, y: 10, isOnCurve: true),
   ],
   pointList: [const Point(0, 0), const Point(10, 0), const Point(10, 10)],
 );
@@ -70,7 +70,10 @@ void main() {
         ),
         endPtsOfContours: [1, 3],
         instructions: [],
-        flags: List.filled(4, SimpleGlyphFlag.createForPoint(0, 0, true)),
+        flags: List.filled(
+          4,
+          SimpleGlyphFlag.createForPoint(x: 0, y: 0, isOnCurve: true),
+        ),
         pointList: [
           const Point(0, 0),
           const Point(1, 0),
@@ -201,7 +204,10 @@ void main() {
         ),
         endPtsOfContours: [1, 3],
         instructions: [],
-        flags: List.filled(4, SimpleGlyphFlag.createForPoint(0, 0, true)),
+        flags: List.filled(
+          4,
+          SimpleGlyphFlag.createForPoint(x: 0, y: 0, isOnCurve: true),
+        ),
         pointList: [
           const Point(0, 0),
           const Point(1, 0),

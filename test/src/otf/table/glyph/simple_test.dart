@@ -25,7 +25,7 @@ SimpleGlyph _triangle() {
     instructions: [],
     flags: [
       for (var i = 0; i < points.length; i++)
-        SimpleGlyphFlag.createForPoint(0, 0, true),
+        SimpleGlyphFlag.createForPoint(x: 0, y: 0, isOnCurve: true),
     ],
     pointList: points,
   );
@@ -71,7 +71,11 @@ void main() {
       final points = [
         for (var i = 0; i < 5; i++) math.Point<num>(i * 10, 0),
       ];
-      final flag = SimpleGlyphFlag.createForPoint(0, 0, true).repeated(4);
+      final flag = SimpleGlyphFlag.createForPoint(
+        x: 0,
+        y: 0,
+        isOnCurve: true,
+      ).repeated(4);
       final glyph = SimpleGlyph(
         header: GlyphHeader(
           numberOfContours: 1,
@@ -105,7 +109,7 @@ void main() {
         ),
         endPtsOfContours: [0],
         instructions: [1, 2, 3],
-        flags: [SimpleGlyphFlag.createForPoint(0, 0, true)],
+        flags: [SimpleGlyphFlag.createForPoint(x: 0, y: 0, isOnCurve: true)],
         pointList: [const math.Point<num>(0, 0)],
       );
       final bytes = ByteData(glyph.size);

@@ -135,8 +135,8 @@ class OpenTypeFontBuilder {
     final hhea = HorizontalHeaderTable.create(
       glyphMetricsList,
       hmtx,
-      ascender,
-      descender,
+      ascender: ascender,
+      descender: descender,
     );
 
     final name = NamingTable.create(fontName, description, revision);

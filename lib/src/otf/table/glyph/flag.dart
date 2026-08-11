@@ -45,7 +45,11 @@ class SimpleGlyphFlag implements BinaryCodable {
     return SimpleGlyphFlag.fromIntValue(flag, repeatTimes);
   }
 
-  factory SimpleGlyphFlag.createForPoint(int x, int y, bool isOnCurve) {
+  factory SimpleGlyphFlag.createForPoint({
+    required int x,
+    required int y,
+    required bool isOnCurve,
+  }) {
     final xIsShort = isShortInteger(x);
     final yIsShort = isShortInteger(y);
 

@@ -32,7 +32,12 @@ OS2Table _built({int version = kOS2Version5}) {
     const Revision(1, 0),
     _kUnitsPerEm,
   );
-  final hhea = HorizontalHeaderTable.create(_metricsList(), hmtx, 800, -200);
+  final hhea = HorizontalHeaderTable.create(
+    _metricsList(),
+    hmtx,
+    ascender: 800,
+    descender: -200,
+  );
   final cmap = CharacterToGlyphTable.create(_fullGlyphList());
 
   return OS2Table.create(

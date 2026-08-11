@@ -52,10 +52,10 @@ class HorizontalHeaderTable extends FontTable {
 
   factory HorizontalHeaderTable.create(
     List<GenericGlyphMetrics> glyphMetricsList,
-    HorizontalMetricsTable hmtx,
-    int ascender,
-    int descender,
-  ) {
+    HorizontalMetricsTable hmtx, {
+    required int ascender,
+    required int descender,
+  }) {
     return HorizontalHeaderTable(
       null,
       majorVersion: 1,

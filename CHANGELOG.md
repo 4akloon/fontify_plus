@@ -55,19 +55,30 @@
   `OffsetTable`, `TableRecordEntry`, `NameRecord` (both constructors),
   `NamingTableFormat0Header`, `LookupTable`, `LigatureSubstitutionSubtable`,
   `CoverageTableFormat1`, `FeatureTable`, `LanguageSystemTable`,
-  `ScriptTable` and `GlyphSubstitutionTableHeader`. `SimpleGlyphFlag` took
-  seven bools in a row; `GlyphHeader(numberOfContours, xMin, yMin, xMax,
-  yMax)` and `GenericGlyphMetrics(xMin, xMax, yMin, yMax)` ordered the same
-  four concepts differently, so code moving between them interleaved x and y
-  with a clean analyze.
+  `ScriptTable`, `GlyphSubstitutionTableHeader`,
+  `SimpleGlyphFlag.createForPoint`, `CFFOperand.fromByteData`,
+  `CharStringOperand.fromByteData` and `HorizontalHeaderTable.create`.
+  `SimpleGlyphFlag` took seven bools in a row; `GlyphHeader(numberOfContours,
+  xMin, yMin, xMax, yMax)` and `GenericGlyphMetrics(xMin, xMax, yMin, yMax)`
+  ordered the same four concepts differently, so code moving between them
+  interleaved x and y with a clean analyze; `createForPoint(x, y, isOnCurve)`
+  was called from that same interleaving code as
+  `createForPoint(relX[i], relY[i], …)`.
   A leading parameter of a type none of the others share stays positional —
-  the table record entry, a cmap subtable's format, a table record's tag.
-  Constructors whose parameters are an indexed sequence rather than distinct
-  roles keep their order (`Cubic(p0, p1, p2, p3)`, `CFFOperator(context, b0,
-  b1)`), as do two-parameter constructors and every constructor whose
-  neighbouring parameters already have distinct types. No field, name, type or
-  encoded offset changed, and none of these classes are exported from the main
-  library, so only code importing `src/` directly is affected.
+  the table record entry, a cmap subtable's format, a table record's tag, the
+  `ByteData` an operand is read from.
+  Two constructors in `lib/` still take three or more positional parameters
+  with a same-typed adjacency, and both are deliberate:
+  `Cubic(p0, p1, p2, p3)` takes an indexed sequence rather than distinct
+  roles — the name *is* the index, so `p1:`/`p2:` protects against nothing —
+  and `IndexToLocationTable.fromByteData(byteData, entry, indexToLocFormat,
+  numGlyphs)` has one call site in the library, distinctly-named locals, and a
+  swap that fails loudly rather than silently, since a 0/1 format flag and a
+  glyph count are not plausible substitutes for one another. Everything else
+  either has distinct types at every adjacency or takes two parameters, which
+  is a pair rather than a list. No field, name, type or encoded offset changed,
+  and none of these classes are exported from the main library, so only code
+  importing `src/` directly is affected.
 * **Breaking:** `OpenTypeFont.glyf`, `.loca`, `.cff` and `.cff2` are now
   nullable (`GlyphDataTable?`, `IndexToLocationTable?`, `CFF1Table?`,
   `CFF2Table?`). They previously returned a non-nullable type by casting the
