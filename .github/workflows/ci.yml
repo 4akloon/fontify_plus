@@ -65,6 +65,80 @@ jobs:
             example/fonts/my_icons.otf \
             example/fonts/proto/variable_cff2.otf
 
+  variable-stroke-render-matrix:
+    name: Variable stroke render matrix (web)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter config --enable-web
+
+      - name: Install a chromedriver matching this runner's Chrome
+        run: |
+          set -euo pipefail
+          chrome_version="$(google-chrome --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')"
+          chrome_major="${chrome_version%%.*}"
+          echo "Runner Chrome: $chrome_version (major $chrome_major)"
+          driver_url="$(curl -fsSL https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json \
+            | jq -r --arg major "$chrome_major" \
+              '[.versions[] | select(.version | startswith($major + "."))] | last | .downloads.chromedriver[] | select(.platform=="linux64") | .url')"
+          echo "chromedriver: $driver_url"
+          mkdir -p "$RUNNER_TEMP/chromedriver"
+          curl -fsSL "$driver_url" -o "$RUNNER_TEMP/chromedriver.zip"
+          unzip -j -o "$RUNNER_TEMP/chromedriver.zip" "*/chromedriver" -d "$RUNNER_TEMP/chromedriver"
+          chmod +x "$RUNNER_TEMP/chromedriver/chromedriver"
+          echo "$RUNNER_TEMP/chromedriver" >> "$GITHUB_PATH"
+
+      - name: Start chromedriver
+        run: |
+          chromedriver --port=4444 &
+          for _ in $(seq 1 30); do
+            curl -sf http://localhost:4444/status && exit 0
+            sleep 1
+          done
+          echo "chromedriver never became ready" >&2
+          exit 1
+
+      - name: Install example dependencies
+        working-directory: example
+        run: flutter pub get
+
+      # CanvasKit is what the render matrix runs here. This is the one leg of
+      # the platform matrix that needs no emulator or macOS/iOS runner, so it
+      # is the standing gate; the rest of the matrix is deliberately not
+      # wired into CI — see the comments below for why each is missing.
+      - name: Run the variable stroke render matrix on Chrome (CanvasKit)
+        working-directory: example
+        run: |
+          flutter drive \
+            --driver=test_driver/integration_test.dart \
+            --target=integration_test/variable_stroke_test.dart \
+            -d chrome
+
+      # NOT COVERED by this workflow, and not silently assumed to pass:
+      #   - Chrome/skwasm (`flutter drive ... -d chrome --wasm`): same runner,
+      #     no extra infrastructure, but `flutter drive`'s web output
+      #     aggregates all assertions into one pass/fail block per run and
+      #     was unreliable to parse per-test even locally (task-4-report.md).
+      #     Left out to avoid a gate that can't localize its own failures.
+      #   - macOS desktop / iOS simulator: needs a macOS runner
+      #     (`runs-on: macos-latest`) plus, for iOS, a booted simulator; adds
+      #     real minutes to every push. A future job can add
+      #     `runs-on: macos-latest` and `flutter test ... -d macos` cheaply;
+      #     iOS additionally needs `xcrun simctl boot`.
+      #   - Android emulator: needs `reactivecircus/android-emulator-runner`
+      #     or equivalent, which boots a full AVD (KVM acceleration only
+      #     available on Linux runners, several minutes per boot) — slow
+      #     enough that Task 14 does not add it as a blocking gate.
+      #   - Linux and Windows desktop: Task 4 never ran these either (no
+      #     target existed on the Darwin host that measured the matrix); the
+      #     evidence gap documented in tool/variable_prototype/README.md
+      #     stands.
+
   publish-dry-run:
     name: Publish dry-run
     runs-on: ubuntu-latest
