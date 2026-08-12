@@ -64,7 +64,7 @@ class IconGalleryPage extends StatelessWidget {
                       width: 96,
                       child: Column(
                         children: [
-                          Icon(icon, size: 40, weight: 1),
+                          Icon(icon, size: 40),
                           const SizedBox(height: 8),
                           Text(name, textAlign: TextAlign.center),
                         ],
