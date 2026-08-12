@@ -108,13 +108,17 @@ class OpenTypeFont implements BinaryCodable {
   /// `gvar`, which this package does not write.
   /// * [defaultStrokeWidth] moves the axis's default off the range's maximum
   /// to a width strictly inside it, so a font picker opens on that instance
-  /// and `STAT` names it. Requires [strokeWidthRange].
+  /// and `STAT` names it. Requires [strokeWidthRange] and [maxGlyphList].
   /// * [maxGlyphList] is the same glyphs drawn at the maximum of
   /// [strokeWidthRange]. It is needed exactly when [defaultStrokeWidth] is
-  /// used, because [glyphList] then holds the interior default drawing
-  /// instead of the widest one, and the axis needs a master at each end to
-  /// interpolate towards — which is what makes the `CFF2` variation store
-  /// two-region. Requires [minGlyphList] and [defaultStrokeWidth].
+  /// used, and useless without it, so the two must be given together:
+  /// [glyphList] then holds the interior default drawing instead of the
+  /// widest one, and the axis needs a master at each end to interpolate
+  /// towards — which is what makes the `CFF2` variation store two-region.
+  /// Supplying [defaultStrokeWidth] alone would leave one region, peaking at
+  /// the axis minimum and ending at the default, so every width above the
+  /// default would render identically to it while `fvar` and `STAT` still
+  /// advertised a maximum. Also requires [minGlyphList].
   ///
   /// Throws [ArgumentError] for any of those combinations.
   factory OpenTypeFont.createFromGlyphs({

@@ -132,6 +132,31 @@ class OpenTypeFontBuilder {
       );
     }
 
+    // The converse, and the worse half of the pair: this one produces a font
+    // that encodes, round-trips and sanitizes, and is still broken.
+    //
+    // Moving the default to an interior width without supplying the maximum
+    // master leaves two masters, so the `CFF2` store gets one region — and
+    // that region peaks at the axis *minimum* and ends at the default, so its
+    // scalar is zero for every coordinate above the default. Every width
+    // above defaultStrokeWidth then renders identically to it, while `fvar`
+    // goes on declaring a maximum and `STAT` goes on naming an instance at
+    // it that nothing can reach. The upper part of the axis is simply dead,
+    // silently, at render time.
+    //
+    // That is strictly worse than the endpoint-equality case rejected above,
+    // which merely wastes a region, so it cannot be the one combination this
+    // constructor takes on trust.
+    if (defaultStrokeWidth != null && maxGlyphList == null) {
+      throw ArgumentError(
+        'defaultStrokeWidth requires maxGlyphList; with the default moved to '
+        'an interior width, glyphList holds that interior drawing and the '
+        'range maximum has no master left to interpolate towards, so every '
+        'width above $defaultStrokeWidth would render identically to it; got '
+        'defaultStrokeWidth: $defaultStrokeWidth, maxGlyphList: null',
+      );
+    }
+
     if (minGlyphList != null && minGlyphList.length != glyphList.length) {
       throw ArgumentError(
         'glyphList and minGlyphList are indexed together and must have the '
@@ -193,7 +218,9 @@ class OpenTypeFontBuilder {
   /// far end of it — to vary at all. Supplying this list is what makes the
   /// `CFF2` variation store two-region.
   ///
-  /// Requires [minGlyphList] and [defaultStrokeWidth]; see the constructor.
+  /// Travels with [defaultStrokeWidth] in both directions — neither is any
+  /// use without the other — and additionally requires [minGlyphList]; see
+  /// the constructor.
   final List<GenericGlyph>? maxGlyphList;
 
   /// The stroke widths the font's `wght` axis spans, or null for a static
@@ -203,15 +230,15 @@ class OpenTypeFontBuilder {
   /// The width the axis defaults to, or null to default to
   /// [StrokeWidthRange.max].
   ///
-  /// Must lie strictly between the range's ends, and requires
-  /// [strokeWidthRange]; see the constructor for both rules and why they are
-  /// enforced here rather than downstream.
+  /// Must lie strictly between the range's ends, and requires both
+  /// [strokeWidthRange] and [maxGlyphList]; see the constructor for all three
+  /// rules and why they are enforced here rather than downstream.
   ///
   /// It is written as `fvar`'s default axis coordinate and named by a `STAT`
   /// axis value of its own, and it is the width [glyphList] is expected to be
-  /// drawn at whenever [maxGlyphList] is supplied. This class cannot check
-  /// that last part — one drawing of a glyph looks like any other from here —
-  /// so it is a contract with the caller, not an invariant.
+  /// drawn at. This class cannot check that last part — one drawing of a
+  /// glyph looks like any other from here — so it is a contract with the
+  /// caller, not an invariant.
   final double? defaultStrokeWidth;
 
   /// A power of two is recommended only for TrueType outlines.

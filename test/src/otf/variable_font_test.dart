@@ -131,21 +131,51 @@ class _InkBox {
 /// the two are directly comparable.
 List<_InkBox> _masterInkBoxes(Uint8List charString, int masterCount) {
   final regionCount = masterCount - 1;
+
+  return _instanceInkBoxes(charString, regionCount, [
+    // The default master: every region contributes nothing.
+    List<double>.filled(regionCount, 0),
+    // Master r + 1: region r alone contributes in full.
+    for (var r = 0; r < regionCount; r++)
+      [
+        for (var i = 0; i < regionCount; i++)
+          if (i == r) 1.0 else 0.0,
+      ],
+  ]);
+}
+
+/// The ink box one CFF2 [charString] draws at each of several instances.
+///
+/// Each row of [regionScalars] is one instance, given as the scalar every
+/// region contributes at it — which is exactly what a rasterizer computes from
+/// the variation store's region list and then multiplies each delta by. So
+/// this measures instances *between* the masters, not only the masters
+/// themselves, which is the only way to tell an axis that interpolates from
+/// one that has quietly stopped varying.
+///
+/// See [_masterInkBoxes] for the measurement convention.
+List<_InkBox> _instanceInkBoxes(
+  Uint8List charString,
+  int regionCount,
+  List<List<double>> regionScalars,
+) {
+  final instanceCount = regionScalars.length;
   final view = ByteData.sublistView(charString);
 
-  final x = List<double>.filled(masterCount, 0);
-  final y = List<double>.filled(masterCount, 0);
-  final xMin = List<double>.filled(masterCount, double.infinity);
-  final yMin = List<double>.filled(masterCount, double.infinity);
-  final xMax = List<double>.filled(masterCount, double.negativeInfinity);
-  final yMax = List<double>.filled(masterCount, double.negativeInfinity);
+  final x = List<double>.filled(instanceCount, 0);
+  final y = List<double>.filled(instanceCount, 0);
+  final xMin = List<double>.filled(instanceCount, double.infinity);
+  final yMin = List<double>.filled(instanceCount, double.infinity);
+  final xMax = List<double>.filled(instanceCount, double.negativeInfinity);
+  final yMax = List<double>.filled(instanceCount, double.negativeInfinity);
 
-  // One entry per operand on the argument stack; one value per master. A
-  // literal pushes the same value for every master, a `blend` replaces the
-  // literals it consumes with per-master values.
+  // One entry per operand on the argument stack; one value per instance. A
+  // literal pushes the same value for every instance, a `blend` replaces the
+  // literals it consumes with per-instance values.
   var stack = <List<double>>[];
 
-  void push(double value) => stack.add(List<double>.filled(masterCount, value));
+  void push(double value) =>
+      stack.add(List<double>.filled(instanceCount, value));
 
   void step(int m, double dx, double dy) {
     x[m] += dx;
@@ -163,7 +193,7 @@ List<_InkBox> _masterInkBoxes(Uint8List charString, int masterCount) {
   }
 
   void draw(int operator) {
-    for (var m = 0; m < masterCount; m++) {
+    for (var m = 0; m < instanceCount; m++) {
       final a = [for (final operand in stack) operand[m]];
 
       switch (operator) {
@@ -229,7 +259,7 @@ List<_InkBox> _masterInkBoxes(Uint8List charString, int masterCount) {
   }
 
   /// Replaces the `n` default values and their `n * regionCount` deltas with
-  /// `n` per-master operands.
+  /// `n` per-instance operands.
   void resolveBlend() {
     final n = stack.removeLast().first.toInt();
     final consumed = n * (1 + regionCount);
@@ -240,11 +270,13 @@ List<_InkBox> _masterInkBoxes(Uint8List charString, int masterCount) {
       final base = operands[o].first;
 
       stack.add([
-        base,
-        // Deltas are grouped by operand, region-minor — the order
-        // `CharStringBlender` documents and writes.
-        for (var r = 0; r < regionCount; r++)
-          base + operands[n + o * regionCount + r].first,
+        for (final scalars in regionScalars)
+          [
+            // Deltas are grouped by operand, region-minor — the order
+            // `CharStringBlender` documents and writes.
+            for (var r = 0; r < regionCount; r++)
+              scalars[r] * operands[n + o * regionCount + r].first,
+          ].fold(base, (sum, delta) => sum + delta),
       ]);
     }
   }
@@ -282,9 +314,26 @@ List<_InkBox> _masterInkBoxes(Uint8List charString, int masterCount) {
   }
 
   return [
-    for (var m = 0; m < masterCount; m++)
+    for (var m = 0; m < instanceCount; m++)
       _InkBox(xMin: xMin[m], xMax: xMax[m], yMin: yMin[m], yMax: yMax[m]),
   ];
+}
+
+/// The scalar each region of a three-master font contributes at stroke [width].
+///
+/// Reproduces what a rasterizer does with the region list this package writes
+/// for an interior default: region 0 runs from the axis minimum (peak) to the
+/// default, region 1 from the default to the maximum (peak). Normalized
+/// coordinates put the minimum at -1, the default at 0 and the maximum at +1,
+/// and a region's scalar falls linearly from 1 at its peak to 0 at the far end
+/// of its span — and is 0 outside it entirely, which is the whole reason an
+/// interior default needs two regions rather than one.
+List<double> _regionScalarsAt(double width) {
+  if (width <= _defaultWidth) {
+    return [(_defaultWidth - width) / (_defaultWidth - _range.min), 0];
+  }
+
+  return [0, (width - _defaultWidth) / (_range.max - _defaultWidth)];
 }
 
 void main() {
@@ -656,6 +705,33 @@ void main() {
       expect(font.stat!.range.max, font.fvar!.range.max);
     });
 
+    test('every width the axis declares renders distinctly', () {
+      // The property the two-region store exists to provide, measured the way
+      // a rasterizer would: resolve each blend at the region scalars that
+      // coordinate produces, rather than only looking at the masters.
+      //
+      // A one-region store — which is what omitting `maxGlyphList` used to
+      // produce — has its only region end at the default, so its scalar is
+      // zero above it and every width in (1.5, 2.0] collapses onto 1.5. That
+      // font encodes, round-trips and sanitizes; monotone widening across the
+      // whole declared range is what actually rules it out.
+      final font = _threeMasterFontFrom('check', _svg('check'));
+      final charString = font.cff2!.charStringsData.data[_firstIconGlyphIndex];
+
+      const widths = [1.33, 1.4, 1.5, 1.75, 2.0];
+      final boxes = _instanceInkBoxes(charString, 2, [
+        for (final width in widths) _regionScalarsAt(width),
+      ]);
+
+      for (var i = 1; i < widths.length; i++) {
+        expect(
+          boxes[i].longestSide,
+          greaterThan(boxes[i - 1].longestSide),
+          reason: 'width ${widths[i]} is no wider than ${widths[i - 1]}',
+        );
+      }
+    });
+
     test('encodes, and reads back with its two-region store intact', () {
       final font = _threeMasterFontFrom('check', _svg('check'));
       final bytes = OTFWriter().write(font);
@@ -945,10 +1021,12 @@ void main() {
     });
 
     test('a maximum master without a minimum master is rejected', () {
-      // The pairing check fires first here — `defaultStrokeWidth` cannot be
-      // supplied without a range, and a range cannot be supplied without a
-      // minimum master — so this combination is unreachable past the first
-      // rule. Pinned anyway: it is rejected, and it names what is missing.
+      // This combination never reaches the maxGlyphList rule: a range without
+      // a minimum master trips the both-or-neither pairing check first, so
+      // what is pinned here is that the *pairing* check catches it and names
+      // the pair. Asserting on that message rather than on the bare word
+      // "minGlyphList" is what keeps this from being a tautology that would
+      // pass on any of the four errors above.
       expect(
         () => OpenTypeFont.createFromGlyphs(
           glyphList: glyphs(),
@@ -960,7 +1038,40 @@ void main() {
           isA<ArgumentError>().having(
             (e) => e.message,
             'message',
-            contains('minGlyphList'),
+            allOf(
+              contains('minGlyphList'),
+              contains('strokeWidthRange'),
+              contains('must both be set'),
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('an interior default without a maximum master is rejected', () {
+      // The converse of the rule above, and the reason it cannot be left to
+      // the caller: this is the one bad combination that produces a font
+      // which encodes, round-trips and sanitizes. With only two masters the
+      // store gets one region, ending at the default, so its scalar is zero
+      // above it: every width in (1.5, 2.0] renders identically to 1.5 —
+      // nearly half the declared axis dead — while `fvar` still declares a
+      // maximum and `STAT` still names an instance at it.
+      expect(
+        () => OpenTypeFont.createFromGlyphs(
+          glyphList: glyphs(),
+          minGlyphList: glyphs(),
+          strokeWidthRange: _range,
+          defaultStrokeWidth: _defaultWidth,
+        ),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            allOf(
+              contains('defaultStrokeWidth'),
+              contains('maxGlyphList'),
+              contains('$_defaultWidth'),
+            ),
           ),
         ),
       );
