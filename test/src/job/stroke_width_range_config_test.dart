@@ -286,4 +286,176 @@ opentype: true
       );
     });
   });
+
+  group('default_stroke_width coercion', () {
+    test('a scalar YAML value becomes a double', () {
+      expect(_coerce(JobField.defaultStrokeWidth, 1.5), 1.5);
+    });
+
+    test('an integer YAML value becomes a double', () {
+      // YAML gives `default_stroke_width: 2` as an int, and readDouble reads
+      // it back as a double - so the coercion has to widen it, or the read
+      // would fail on a perfectly ordinary config.
+      expect(_coerce(JobField.defaultStrokeWidth, 2), 2.0);
+      expect(_coerce(JobField.defaultStrokeWidth, 2), isA<double>());
+    });
+
+    test('a CLI string is parsed the same way', () {
+      expect(_coerce(JobField.defaultStrokeWidth, '1.5'), 1.5);
+    });
+
+    test('a non-numeric value names the value that was not a number', () {
+      expect(
+        () => _coerce(JobField.defaultStrokeWidth, 'wide'),
+        throwsA(
+          isA<FontifyException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('default_stroke_width'), contains('wide')),
+          ),
+        ),
+      );
+    });
+
+    // num.tryParse accepts "Infinity" and "NaN", and YAML's .inf/.nan arrive
+    // as non-finite doubles directly. Neither is caught by the pairing checks
+    // below - NaN loses every ordering test, and Infinity only fails the
+    // upper one - so the coercion has to reject them first, exactly as it
+    // does for the range's own endpoints.
+    test('an infinite value is rejected before reaching validation', () {
+      expect(
+        () => _coerce(JobField.defaultStrokeWidth, 'Infinity'),
+        throwsA(
+          isA<FontifyException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('default_stroke_width'), contains('Infinity')),
+          ),
+        ),
+      );
+    });
+
+    test('a NaN value is rejected before reaching validation', () {
+      expect(
+        () => _coerce(JobField.defaultStrokeWidth, double.nan),
+        throwsA(
+          isA<FontifyException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('default_stroke_width'), contains('NaN')),
+          ),
+        ),
+      );
+    });
+  });
+
+  group('default_stroke_width resolution', () {
+    test('a default inside the range survives to the resolved job', () {
+      final job = _jobFrom('''
+stroke_width_range: [1.33, 2]
+default_stroke_width: 1.5
+''');
+
+      expect(job.strokeWidthRange!.min, 1.33);
+      expect(job.strokeWidthRange!.max, 2);
+      expect(job.defaultStrokeWidth, 1.5);
+    });
+
+    test('an integral default written in YAML survives as a double', () {
+      // The whole point of resolving through YAML rather than coercing in
+      // isolation: an int here has to survive coercion, the typed read, and
+      // the strictly-inside check before it reaches the job.
+      final job = _jobFrom('''
+stroke_width_range: [1, 3]
+default_stroke_width: 2
+''');
+
+      expect(job.defaultStrokeWidth, 2.0);
+    });
+
+    test('no default at all resolves with a null defaultStrokeWidth', () {
+      final job = _jobFrom('stroke_width_range: [1.33, 2]');
+
+      expect(job.defaultStrokeWidth, isNull);
+    });
+
+    test('a default without a range is a config error naming both keys', () {
+      expect(
+        () => _resolve('default_stroke_width: 1.5'),
+        throwsA(
+          isA<FontifyException>().having(
+            (e) => e.message,
+            'message',
+            allOf(
+              contains('default_stroke_width'),
+              contains('stroke_width_range'),
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('a default equal to the range maximum is a config error', () {
+      expect(
+        () => _resolve('''
+stroke_width_range: [1.33, 2]
+default_stroke_width: 2
+'''),
+        throwsA(
+          isA<FontifyException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('default_stroke_width'), contains('2')),
+          ),
+        ),
+      );
+    });
+
+    test('a default equal to the range minimum is a config error', () {
+      expect(
+        () => _resolve('''
+stroke_width_range: [1.33, 2]
+default_stroke_width: 1.33
+'''),
+        throwsA(
+          isA<FontifyException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('default_stroke_width'), contains('1.33')),
+          ),
+        ),
+      );
+    });
+
+    test('a default outside the range is a config error', () {
+      expect(
+        () => _resolve('''
+stroke_width_range: [1.33, 2]
+default_stroke_width: 2.5
+'''),
+        throwsA(
+          isA<FontifyException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('default_stroke_width'), contains('2.5')),
+          ),
+        ),
+      );
+    });
+
+    test('default_stroke_width is allowed in defaults:', () {
+      // Font sets sharing one icon library share the width they open at just
+      // as much as they share the range it sits in.
+      expect(kJobDefaultsFields, contains(JobField.defaultStrokeWidth));
+    });
+
+    test('default_stroke_width has no built-in default', () {
+      // Omitting it means "leave the default instance at the range maximum",
+      // not "fall back to some number this package picked".
+      expect(
+        kJobBuiltInDefaults.containsKey(JobField.defaultStrokeWidth),
+        isFalse,
+      );
+    });
+  });
 }

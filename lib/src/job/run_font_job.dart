@@ -73,6 +73,7 @@ FontJobResult runFontJob(FontJob job) {
     created: timestamps?.created,
     modified: timestamps?.modified,
     strokeWidthRange: job.strokeWidthRange,
+    defaultStrokeWidth: job.defaultStrokeWidth,
   );
 
   writeToFile(job.outputFontFile, otfResult.font);

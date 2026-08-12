@@ -145,6 +145,78 @@ void main() {
       },
     );
 
+    test('--default-stroke-width is parsed into a double', () {
+      const args = [
+        './',
+        'test/fonts/my_font.otf',
+        '--stroke-width-range=1.33,2',
+        '--default-stroke-width=1.5',
+      ];
+
+      final job = parseArgsAndConfig(argParser, args).jobs.single;
+
+      expect(job.defaultStrokeWidth, 1.5);
+    });
+
+    test('--default-stroke-width without a range errors at parse time', () {
+      // The pairing is rejected while arguments resolve, so the run never
+      // starts; svgToOtf would reject it too, but only after the SVGs have
+      // been read.
+      expect(
+        () => parseArgsAndConfig(argParser, [
+          './',
+          'test/fonts/my_font.otf',
+          '--default-stroke-width=1.5',
+        ]),
+        throwsA(
+          isA<CliArgumentException>().having(
+            (e) => e.message,
+            'message',
+            allOf(
+              contains('default_stroke_width'),
+              contains('stroke_width_range'),
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('a --default-stroke-width on the range end errors at parse time', () {
+      expect(
+        () => parseArgsAndConfig(argParser, [
+          './',
+          'test/fonts/my_font.otf',
+          '--stroke-width-range=1.33,2',
+          '--default-stroke-width=2',
+        ]),
+        throwsA(
+          isA<CliArgumentException>().having(
+            (e) => e.message,
+            'message',
+            contains('default_stroke_width'),
+          ),
+        ),
+      );
+    });
+
+    test('an unparsable --default-stroke-width errors naming the option', () {
+      expect(
+        () => parseArgsAndConfig(argParser, [
+          './',
+          'test/fonts/my_font.otf',
+          '--stroke-width-range=1.33,2',
+          '--default-stroke-width=thick',
+        ]),
+        throwsA(
+          isA<CliArgumentException>().having(
+            (e) => e.message,
+            'message',
+            contains('default_stroke_width'),
+          ),
+        ),
+      );
+    });
+
     test('missing positionals without config errors', () {
       expectCliArgumentException([]);
     });

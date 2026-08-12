@@ -77,6 +77,14 @@ void defineOptions(ArgParser argParser) {
           'is the default instance. Omit for a static font.',
       valueHelp: 'min,max',
     )
+    ..addOption(
+      kJobCliOptions[JobField.defaultStrokeWidth]!,
+      help:
+          'The stroke width the variable font opens at, instead of the '
+          'range maximum. Requires --stroke-width-range and must lie '
+          'strictly inside it (for example 1.5 within 1.33,2).',
+      valueHelp: 'width',
+    )
     ..addSeparator('Other options:')
     ..addOption(
       kCliConfigFileOption,
