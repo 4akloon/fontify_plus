@@ -1,11 +1,14 @@
 # Changelog
 
-## 0.7.0
+## 0.6.0
 
+* Variable stroke width: `stroke_width_range` / `--stroke-width-range` /
+  `strokeWidthRange` emits a CFF2 font whose `wght` axis is the SVG stroke
+  width (e.g. `Icon(..., weight: 1.33)`). See `doc/variable_stroke.md`.
 * Configurable default stroke width: `default_stroke_width` /
-  `--default-stroke-width` / `defaultStrokeWidth` moves a variable font's
-  default instance off the range maximum to a width strictly inside the range.
-  The axis then carries a third master and two variation regions, `fvar`'s
+  `--default-stroke-width` / `defaultStrokeWidth` moves that axis's default
+  instance off the range maximum to a width strictly inside the range. The
+  axis then carries a third master and two variation regions, `fvar`'s
   `defaultValue` is the interior width, `STAT` names three stops instead of
   two, and the generated `IconData` class comment states the default
   (`default 1.5`) rather than leaving readers to assume the maximum.
@@ -16,13 +19,8 @@
   the axis maximum overflow the advertised box on both sides (single-digit
   font units at 1000 upem on the example icons). Documented, not fixed —
   leaving the default at the maximum keeps the old one-sided behaviour.
-* Omitting `default_stroke_width` leaves output **byte-identical** to 0.6.0.
-
-## 0.6.0
-
-* Variable stroke width: `stroke_width_range` / `--stroke-width-range` /
-  `strokeWidthRange` emits a CFF2 font whose `wght` axis is the SVG stroke
-  width (e.g. `Icon(..., weight: 1.33)`). See `doc/variable_stroke.md`.
+* Omitting `default_stroke_width` leaves output **byte-identical** to the
+  `stroke_width_range`-only path above.
 * Smaller outlined fonts — less subdivision on near-straight edges and exact
   90° round joins.
 * IDE SVG previews in generated `IconData` dartdoc (`--[no-]preview` /
