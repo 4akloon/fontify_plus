@@ -103,18 +103,31 @@ Future<Uint8List> capture(GlobalKey key, {required double expectedSide}) async {
 /// Worth distinguishing from "drew the wrong thing": two blank captures
 /// compare as identical, which reads as "the axis changed nothing" and can
 /// fail an assertion that is actually measuring an unloaded font.
-bool hasInk(Uint8List pixels) {
+bool hasInk(Uint8List pixels) => inkCount(pixels) > 0;
+
+/// How many colour bytes in [pixels] are dark.
+///
+/// Reported alongside the comparisons below, because the comparisons are
+/// differences and a difference cannot distinguish "both rendered the same
+/// glyph" from "both rendered the same *wrong* thing". A missing font is not
+/// reliably blank: a platform that draws .notdef as a filled box gives two
+/// identical tofu captures, whose difference is 0 — the same answer a
+/// correctly-loaded font gives when the axis is ignored. The ink count tells
+/// those apart, since tofu and a real glyph do not cover the same area.
+int inkCount(Uint8List pixels) {
+  var dark = 0;
+
   for (var i = 0; i < pixels.length; i++) {
     if (i % 4 == 3) {
       continue;
     }
 
     if (pixels[i] < 200) {
-      return true;
+      dark++;
     }
   }
 
-  return false;
+  return dark;
 }
 
 /// Share of colour bytes differing by more than [threshold], as a fraction
