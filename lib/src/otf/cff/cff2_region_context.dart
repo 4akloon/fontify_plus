@@ -26,7 +26,9 @@ class Cff2RegionContext {
 
   Cff2RegionContext._(this.regionCount)
     : optimizer = CharStringOptimizer(false, regionCount: regionCount),
-      // SingleRegionVariationStore rejects regionCount > 1.
+      // SingleRegionVariationStore rejects any count it has no region layout
+      // for; zero is excluded here because a non-variable font has no store
+      // at all, not an empty one.
       vstoreData = regionCount == 0
           ? null
           : SingleRegionVariationStore(regionCount: regionCount).build();
@@ -37,7 +39,8 @@ class Cff2RegionContext {
   /// Optimizer sized for [regionCount]'s blend stack budget.
   final CharStringOptimizer optimizer;
 
-  /// Null when there are no regions; otherwise the single-region store.
+  /// Null when there are no regions; otherwise the store whose region layout
+  /// matches [regionCount].
   final VariationStoreData? vstoreData;
 
   /// Encodes [masters] jointly and merges them into one blended charstring.

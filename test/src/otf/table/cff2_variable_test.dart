@@ -248,15 +248,53 @@ void main() {
     );
 
     test(
-      'more than two masters is rejected — the store this builder attaches '
-      'only ever encodes one region',
+      'three masters attach a two-region store the reader agrees with',
       () {
+        // Three masters means two deltas behind every blended value, so the
+        // store has to advertise two regions. Reading the encoded table back
+        // is what proves the count the charstrings were built for and the
+        // count the store publishes are the same number.
         final varies = _triangle('M0 0 L13 0 L13 12 Z');
         final variesMore = _triangle('M0 0 L16 0 L16 14 Z');
 
+        final table = CFF2Table.create([
+          [_triangle(), varies, variesMore],
+        ]);
+        final bytes = ByteData(table.size);
+        table.encodeToBinary(bytes);
+
+        final decoded = CFF2Table.fromByteData(
+          bytes,
+          TableRecordEntry(
+            kCFF2Tag,
+            checkSum: 0,
+            offset: 0,
+            length: bytes.lengthInBytes,
+          ),
+        );
+        final regions = decoded.vstoreData!.store.variationRegionList.regions;
+
+        expect(regions.map((r) => r.peakCoord), [0xC000, 0x4000]);
+        expect(
+          decoded.vstoreData!.store.itemVariationDataList.single.regionIndexes,
+          [0, 1],
+        );
+        expect(_hasBlendOperator(table.charStringsData.data.single), isTrue);
+      },
+    );
+
+    test(
+      'more than three masters is rejected — the store this builder attaches '
+      'encodes at most two regions',
+      () {
         expect(
           () => CFF2Table.create([
-            [_triangle(), varies, variesMore],
+            [
+              _triangle(),
+              _triangle('M0 0 L13 0 L13 12 Z'),
+              _triangle('M0 0 L16 0 L16 14 Z'),
+              _triangle('M0 0 L19 0 L19 17 Z'),
+            ],
           ]),
           throwsA(
             isA<ArgumentError>().having(
