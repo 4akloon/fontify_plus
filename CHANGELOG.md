@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.7.0
+
+* Configurable default stroke width: `default_stroke_width` /
+  `--default-stroke-width` / `defaultStrokeWidth` moves a variable font's
+  default instance off the range maximum to a width strictly inside the range.
+  The axis then carries a third master and two variation regions, `fvar`'s
+  `defaultValue` is the interior width, `STAT` names three stops instead of
+  two, and the generated `IconData` class comment states the default
+  (`default 1.5`) rather than leaving readers to assume the maximum.
+  Requires `stroke_width_range`; a value outside the range, or on either
+  endpoint, is rejected before generation starts. See
+  `doc/variable_stroke.md`.
+* Metrics come from the default instance, so an interior default makes ink at
+  the axis maximum overflow the advertised box on both sides (single-digit
+  font units at 1000 upem on the example icons). Documented, not fixed —
+  leaving the default at the maximum keeps the old one-sided behaviour.
+* Omitting `default_stroke_width` leaves output **byte-identical** to 0.6.0.
+
 ## 0.6.0
 
 * Variable stroke width: `stroke_width_range` / `--stroke-width-range` /

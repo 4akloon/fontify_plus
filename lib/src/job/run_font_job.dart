@@ -89,6 +89,7 @@ FontJobResult runFontJob(FontJob job) {
       familyName: otfResult.font.familyName,
       package: job.package,
       strokeWidthRange: job.strokeWidthRange,
+      defaultStrokeWidth: job.defaultStrokeWidth,
     );
     classFile.writeAsStringSync(classSource);
   } else {

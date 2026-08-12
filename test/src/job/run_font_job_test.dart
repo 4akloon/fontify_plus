@@ -211,6 +211,34 @@ void main() {
     );
   });
 
+  // The `defaultStrokeWidth:` line on runFontJob's *generateFlutterClass*
+  // call, which is a second, separate hand-off from the svgToOtf one above.
+  // Drop it and the font still opens at the interior width while the class
+  // its users read keeps claiming the maximum — a silent contradiction no
+  // font-level assertion can see.
+  test('runFontJob names the job default width in the generated class', () {
+    final result = runFontJob(
+      FontJob(
+        inputSvgDir: 'example/svg',
+        outputFontFile: '${tempDir.path}/documented.otf',
+        outputClassFile: '${tempDir.path}/documented.dart',
+        className: 'Documented',
+        strokeWidthRange: StrokeWidthRange(1.33, 2),
+        defaultStrokeWidth: 1.5,
+      ),
+    );
+
+    final source = result.classSource!;
+    expect(source, contains('Variable stroke width: 1.33 … 2.0'));
+    expect(source, contains('default 1.5'));
+    // The written file, not just the returned string: the class the user
+    // compiles against is the one on disk.
+    expect(
+      File('${tempDir.path}/documented.dart').readAsStringSync(),
+      contains('default 1.5'),
+    );
+  });
+
   test('runFontJob reuses head timestamps from an existing output font', () {
     final root = Directory('${tempDir.path}/svg_ts')..createSync();
     File('${root.path}/a.svg').writeAsStringSync(

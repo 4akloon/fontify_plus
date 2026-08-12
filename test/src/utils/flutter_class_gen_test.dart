@@ -205,6 +205,63 @@ void main() {
       expect(source, isNot(contains('wght')));
     });
 
+    test('the axis lines are byte-for-byte what they have always been', () {
+      // Pinned verbatim, not by `contains`: Step 4 of this feature adds a
+      // second wording for the interior-default case, and the no-default
+      // wording must come out of that change untouched — generated files are
+      // committed by users, so a stray comma rewrites every one of them.
+      final source = generateFlutterClass(
+        glyphList: _glyphList,
+        className: 'MyIcons',
+        strokeWidthRange: StrokeWidthRange(1.33, 2),
+      );
+
+      expect(
+        source,
+        contains(
+          '/// Variable stroke width: 1.33 … 2.0 (`wght` axis).\n'
+          '/// Set the width explicitly: '
+          'Icon(MyIcons.arrowUp, size: 16, weight: 1.33)\n'
+          '///\n',
+        ),
+      );
+    });
+
+    test('an interior default is named alongside the range', () {
+      final source = generateFlutterClass(
+        glyphList: _glyphList,
+        className: 'MyIcons',
+        strokeWidthRange: StrokeWidthRange(1.33, 2),
+        defaultStrokeWidth: 1.5,
+      );
+
+      expect(
+        source,
+        contains(
+          '/// Variable stroke width: 1.33 … 2.0 (`wght` axis), default 1.5.\n'
+          '/// `Icon` with no `weight` draws 1.5, not the maximum.\n'
+          '/// Set the width explicitly: '
+          'Icon(MyIcons.arrowUp, size: 16, weight: 1.33)\n'
+          '///\n',
+        ),
+      );
+    });
+
+    test('a default width without a range documents no axis at all', () {
+      // `svgToOtf` rejects this pairing, but `generateFlutterClass` is a
+      // separate public entry point that never sees the font: with no range
+      // there is no axis to place the default on, so there is nothing
+      // truthful to say about it.
+      final source = generateFlutterClass(
+        glyphList: _glyphList,
+        className: 'MyIcons',
+        defaultStrokeWidth: 1.5,
+      );
+
+      expect(source, isNot(contains('Variable stroke width')));
+      expect(source, isNot(contains('default 1.5')));
+    });
+
     test('the class shape is unchanged either way', () {
       final variable = generateFlutterClass(
         glyphList: _glyphList,

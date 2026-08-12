@@ -23,6 +23,12 @@ class FlutterClassGenerator {
   /// members. Defaults to 2.
   /// * [strokeWidthRange], when given, documents the variable `wght` axis in the
   /// class comment.
+  /// * [defaultStrokeWidth], when given alongside [strokeWidthRange], names
+  /// the width the axis opens at. Without it a reader has to know the
+  /// convention that the range's maximum is the default; with an interior
+  /// default that convention is wrong and there is nothing in the generated
+  /// file to correct it from. Ignored without [strokeWidthRange], since a
+  /// width with no axis to sit on describes nothing.
   FlutterClassGenerator(
     this.glyphList, {
     String? className,
@@ -31,13 +37,15 @@ class FlutterClassGenerator {
     String? package,
     int? indent,
     StrokeWidthRange? strokeWidthRange,
+    double? defaultStrokeWidth,
   }) : _indent = ' ' * (indent ?? _kDefaultIndent),
        _className = toDartIdentifier(className ?? _kDefaultClassName),
        _familyName = familyName ?? kDefaultFontFamily,
        _fontFileName = fontFileName ?? _kDefaultFontFileName,
        _iconVarNames = _allocateNames(glyphList),
        _package = package?.isEmpty ?? true ? null : package,
-       _strokeWidthRange = strokeWidthRange;
+       _strokeWidthRange = strokeWidthRange,
+       _defaultStrokeWidth = defaultStrokeWidth;
 
   final List<GenericGlyph> glyphList;
   final String _fontFileName;
@@ -47,6 +55,7 @@ class FlutterClassGenerator {
   final String? _package;
   final List<String> _iconVarNames;
   final StrokeWidthRange? _strokeWidthRange;
+  final double? _defaultStrokeWidth;
 
   static List<String> _allocateNames(List<GenericGlyph> glyphList) {
     final allocator = IconNameAllocator();
@@ -115,7 +124,26 @@ import 'package:flutter/widgets.dart';
     final max = _formatAxisValue(range.max);
     final exampleIcon = _iconVarNames.firstOrNull ?? 'icon';
 
-    return '/// Variable stroke width: $min … $max (`wght` axis).\n'
+    // Added to the existing lines rather than replacing them, so that the
+    // no-default wording stays exactly the string it has always been —
+    // generated classes are committed files, and rewording one reruns every
+    // user's diff. The "not the maximum" half earns its line: the maximum is
+    // what this axis defaults to everywhere else, so a reader who knows the
+    // convention would otherwise read the wrong width off the range.
+    final defaultWidth = _defaultStrokeWidth;
+
+    var defaultClause = '';
+    var defaultLine = '';
+    if (defaultWidth != null) {
+      final formatted = _formatAxisValue(defaultWidth);
+      defaultClause = ', default $formatted';
+      defaultLine =
+          '/// `Icon` with no `weight` draws $formatted, not the maximum.\n';
+    }
+
+    return '/// Variable stroke width: $min … $max (`wght` axis)'
+        '$defaultClause.\n'
+        '$defaultLine'
         '/// Set the width explicitly: '
         'Icon($_className.$exampleIcon, '
         'size: 16, weight: $min)\n'

@@ -44,9 +44,14 @@ Future<Uint8List> _pyftsubset(Uint8List fontBytes, List<int> codePoints) async {
   return output.readAsBytes();
 }
 
+/// Midway between the range's ends, so the third master is as far from both
+/// endpoints as it can be — the worst case for the extra region's cost.
+const _interiorDefault = 1.665;
+
 void main() {
   late Uint8List staticBytes;
   late Uint8List variableBytes;
+  late Uint8List interiorDefaultBytes;
   late List<int> iconCodePoints;
 
   setUpAll(() {
@@ -57,9 +62,16 @@ void main() {
       fontName: 'Size Gate Variable',
       strokeWidthRange: StrokeWidthRange(1.33, 2),
     );
+    final interiorDefaultResult = svgToOtf(
+      svgMap: svgs,
+      fontName: 'Size Gate Variable Interior Default',
+      strokeWidthRange: StrokeWidthRange(1.33, 2),
+      defaultStrokeWidth: _interiorDefault,
+    );
 
     staticBytes = _encode(staticResult.font);
     variableBytes = _encode(variableResult.font);
+    interiorDefaultBytes = _encode(interiorDefaultResult.font);
     iconCodePoints = [
       for (final glyph in variableResult.glyphList) glyph.metadata.charCode!,
     ];
@@ -92,6 +104,58 @@ void main() {
         reason:
             'subset variable ${variableSubset.length} B vs static '
             '${staticSubset.length} B (limit ${limit.toStringAsFixed(0)} B)',
+      );
+    },
+    skip: _hasPyftsubset
+        ? null
+        : 'pyftsubset not installed — install fonttools',
+  );
+
+  // An interior default adds a third master and a second variation region, so
+  // it is measured against the two-master font, not the static one: the
+  // static-vs-variable ratio above already covers the cost of having an axis
+  // at all, and what is new here is only the marginal cost of the extra
+  // region. Measured on these four icons with the default at the range's
+  // midpoint: 1.1237x whole-file, 1.1675x subset. The ceiling is 1.3x —
+  // the worst measured ratio rounded up to the next tenth, plus another tenth
+  // of headroom, the same measure-round-up-then-margin rule the 1.5x gates
+  // above were set by. A third master that started costing as much as the
+  // second one did trips this.
+  const interiorDefaultLimitFactor = 1.3;
+
+  test(
+    'interior-default variable font is at most 1.3x the two-master '
+    'whole-file size',
+    () {
+      final limit = variableBytes.length * interiorDefaultLimitFactor;
+      expect(
+        interiorDefaultBytes.length,
+        lessThanOrEqualTo(limit),
+        reason:
+            'interior-default ${interiorDefaultBytes.length} B vs two-master '
+            '${variableBytes.length} B (limit ${limit.toStringAsFixed(0)} B)',
+      );
+    },
+  );
+
+  test(
+    'subset interior-default variable font is at most 1.3x the subset '
+    'two-master whole-file size',
+    () async {
+      final variableSubset = await _pyftsubset(variableBytes, iconCodePoints);
+      final interiorDefaultSubset = await _pyftsubset(
+        interiorDefaultBytes,
+        iconCodePoints,
+      );
+
+      final limit = variableSubset.length * interiorDefaultLimitFactor;
+      expect(
+        interiorDefaultSubset.length,
+        lessThanOrEqualTo(limit),
+        reason:
+            'subset interior-default ${interiorDefaultSubset.length} B vs '
+            'subset two-master ${variableSubset.length} B '
+            '(limit ${limit.toStringAsFixed(0)} B)',
       );
     },
     skip: _hasPyftsubset

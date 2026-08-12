@@ -233,6 +233,15 @@ SvgToOtfResult svgToOtf({
 /// * [fontFileName] is font file's name. Used in generated docs for class.
 /// * [indent] is a number of spaces in leading indentation for class' members. Defaults to 2.
 /// * [strokeWidthRange], when given, documents the variable `wght` axis in the class comment.
+/// * [defaultStrokeWidth], when given alongside [strokeWidthRange], names the
+/// width the axis opens at in that same comment. Pass the same value passed
+/// to [svgToOtf]: the generated class is the only place a reader of the app's
+/// source can learn what `Icon(MyIcons.home)` with no `weight` renders, and
+/// the range alone no longer answers that once the default moved inwards.
+/// Ignored without [strokeWidthRange] — this function never sees the font, so
+/// unlike [svgToOtf] it cannot tell a mistake from a caller who simply
+/// documents no axis, and inventing an axis line for a static class would be
+/// the worse failure.
 ///
 /// Returns content of a class file.
 String generateFlutterClass({
@@ -243,6 +252,7 @@ String generateFlutterClass({
   String? package,
   int? indent,
   StrokeWidthRange? strokeWidthRange,
+  double? defaultStrokeWidth,
 }) {
   final generator = FlutterClassGenerator(
     glyphList,
@@ -252,6 +262,7 @@ String generateFlutterClass({
     familyName: familyName,
     package: package,
     strokeWidthRange: strokeWidthRange,
+    defaultStrokeWidth: defaultStrokeWidth,
   );
 
   return generator.generate();

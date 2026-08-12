@@ -65,6 +65,24 @@ jobs:
             --variable example/fonts/proto/variable_cff2.otf \
             --static-prefix example/fonts/proto/static_
 
+      # Same gate set against a three-master font (interior default). Built to
+      # a temp path rather than example/fonts/proto/ because nothing renders
+      # it — committing it would only add weight to the pub tarball. The
+      # default sits on the oracle's mid stop, so the interpolation check
+      # doubles as proof that the extra master lands where a lerp of the two
+      # endpoints would: an interior default must not bend the axis.
+      - name: Validate a three-master variable font against fonttools
+        if: matrix.sdk == 'stable'
+        run: |
+          dart run bin/fontify_plus.dart \
+            tool/variable_prototype/out/render_matrix_svgs/width_2.0 \
+            "$RUNNER_TEMP/variable_cff2_default.otf" \
+            --font-name=ProtoCff2Default --no-normalize \
+            --stroke-width-range=1.33,2 --default-stroke-width=1.5
+          python3 tool/oracle/validate_font.py \
+            --variable "$RUNNER_TEMP/variable_cff2_default.otf" \
+            --static-prefix example/fonts/proto/static_
+
   variable-stroke-render-matrix:
     name: Variable stroke render matrix (web)
     runs-on: ubuntu-latest
