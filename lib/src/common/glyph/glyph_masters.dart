@@ -14,46 +14,73 @@ import '../stroke_width_range.dart';
 import 'generic_glyph_base.dart';
 import 'generic_glyph_metadata.dart';
 
-/// A glyph drawn at both ends of a [StrokeWidthRange].
+/// A glyph drawn at the ends of a [StrokeWidthRange], and optionally at one
+/// width in between.
 ///
-/// These are the only two drawings a variable font stores: every width
-/// between them is reached by interpolating, point for point, between [min]
-/// and [max] — which is only possible because [GlyphMasterBuilder] built them
-/// to share a topology in the first place.
+/// [min] and [max] are the drawings the axis interpolates between, point for
+/// point — which is only possible because [GlyphMasterBuilder] built them to
+/// share a topology in the first place. [atDefault] is a third drawing of the
+/// same topology, present only when the caller asked for one.
 class GlyphMasters {
-  const GlyphMasters({required this.min, required this.max});
+  const GlyphMasters({required this.min, required this.max, this.atDefault});
 
   /// The glyph stroked at the range's minimum width.
   final GenericGlyph min;
 
   /// The glyph stroked at the range's maximum width.
   final GenericGlyph max;
+
+  /// The glyph stroked at [GlyphMasterBuilder.defaultWidth], or null when no
+  /// default width was supplied.
+  ///
+  /// The interpolated outline at any intermediate width is already exact —
+  /// the offsetter's control points are affine in the stroke width — so this
+  /// master adds no new geometry. It exists so the font can carry a named
+  /// instance, and a `wght` default, at a width other than an axis end
+  /// without moving either end.
+  final GenericGlyph? atDefault;
 }
 
-/// Builds both endpoint masters of a glyph across a fixed [StrokeWidthRange].
+/// Builds both endpoint masters of a glyph across a fixed [StrokeWidthRange],
+/// plus an optional third master at [defaultWidth].
 ///
-/// [range] is configuration reused across every glyph in a font. A path can be
-/// both filled and stroked, and the two are independent: the fill is built
-/// once from the source commands and shared verbatim by both masters, because
-/// a fill's area does not depend on stroke width. Each stroked shape is
-/// planned once, at [StrokeWidthRange.max] — the densest subdivision and the
-/// earliest offset degeneracy both occur at the widest offset, so a plan safe
-/// there stays safe at every narrower width the axis can select — and its
-/// [ContourShape] is recorded from that same evaluation, then applied to both
-/// masters, so the two never make the classification decision independently
-/// and drift apart.
+/// [range] and [defaultWidth] are configuration reused across every glyph in a
+/// font. A path can be both filled and stroked, and the two are independent:
+/// the fill is built once from the source commands and shared verbatim by
+/// every master, because a fill's area does not depend on stroke width. Each
+/// stroked shape is planned once, at [StrokeWidthRange.max] — the densest
+/// subdivision and the earliest offset degeneracy both occur at the widest
+/// offset, so a plan safe there stays safe at every narrower width the axis
+/// can select — and its [ContourShape] is recorded from that same evaluation,
+/// then applied to every master, so no two of them ever make the
+/// classification decision independently and drift apart.
 ///
 /// Throws [SvgParserException] for anything the parser rejects, and
 /// [IncompatibleMastersException] if the resulting masters cannot carry
 /// variation deltas between them — which points at a bug in the geometry
 /// pipeline, not at the input SVG.
 class GlyphMasterBuilder {
-  const GlyphMasterBuilder(this.range);
+  /// Builds masters at the ends of [range], and at [defaultWidth] when one is
+  /// given.
+  ///
+  /// Assumes [defaultWidth], if non-null, is already validated by the caller:
+  /// finite, inside [range], and distinct from both of its ends. Nothing here
+  /// re-checks that. The rules are enforced once, at the boundary the value
+  /// arrives through — the Dart API raising [ArgumentError], the YAML/CLI
+  /// config raising a `FontifyException` that names the offending key — each
+  /// of which can say what went wrong in the vocabulary its own callers
+  /// expect. Repeating the check here would be a third copy of those rules to
+  /// keep in step, in a third vocabulary, reachable only after the other two
+  /// had already let a bad value through.
+  const GlyphMasterBuilder(this.range, {this.defaultWidth});
 
   /// The stroke-width axis ends applied to every glyph this builder produces.
   final StrokeWidthRange range;
 
-  /// Builds both endpoint masters of glyph [name] from [xmlString].
+  /// The width of the third master, or null to build only the two endpoints.
+  final double? defaultWidth;
+
+  /// Builds the masters of glyph [name] from [xmlString].
   GlyphMasters fromSvg(String name, String xmlString) {
     final geometry = parseSvgGeometry(name, xmlString);
     final height = geometry.height;
@@ -78,8 +105,15 @@ class GlyphMasterBuilder {
       );
     }
 
+    // Read once into a local so the null check below promotes it, and so the
+    // "is there a third master" question is asked in exactly one form.
+    final defaultWidth = this.defaultWidth;
+
     final minOutlines = <Outline>[];
     final maxOutlines = <Outline>[];
+
+    // Left empty, and never read, when no default width was supplied.
+    final atDefaultOutlines = <Outline>[];
 
     for (final shape in geometry.shapes) {
       if (shape.filled) {
@@ -97,6 +131,10 @@ class GlyphMasterBuilder {
         // one bleed into the other.
         minOutlines.addAll(fill.map((outline) => outline.copy()));
         maxOutlines.addAll(fill.map((outline) => outline.copy()));
+
+        if (defaultWidth != null) {
+          atDefaultOutlines.addAll(fill.map((outline) => outline.copy()));
+        }
       }
 
       final stroke = shape.stroke;
@@ -132,6 +170,24 @@ class GlyphMasterBuilder {
       minOutlines.addAll(
         outlinesFromContours(minContours, height: height, shape: shapeAtMax),
       );
+
+      if (defaultWidth != null) {
+        // Evaluated from the same plan, and replayed against the same
+        // recorded shape, as the two endpoints: a third master is only
+        // interpolatable with them if it was never allowed to classify its
+        // own geometry.
+        final defaultContours = plan.evaluate(defaultWidth);
+
+        _checkContoursReplayShape(name, maxContours, defaultContours);
+
+        atDefaultOutlines.addAll(
+          outlinesFromContours(
+            defaultContours,
+            height: height,
+            shape: shapeAtMax,
+          ),
+        );
+      }
     }
 
     final bounds = math.Rectangle<num>(0, 0, geometry.width, geometry.height);
@@ -147,9 +203,25 @@ class GlyphMasterBuilder {
       GenericGlyphMetadata(name: name),
     );
 
+    final atDefaultGlyph = defaultWidth == null
+        ? null
+        : GenericGlyph(
+            atDefaultOutlines,
+            bounds,
+            GenericGlyphMetadata(name: name),
+          );
+
     checkCompatible(name, minGlyph, maxGlyph);
 
-    return GlyphMasters(min: minGlyph, max: maxGlyph);
+    if (atDefaultGlyph != null) {
+      checkCompatible(name, atDefaultGlyph, maxGlyph);
+    }
+
+    return GlyphMasters(
+      min: minGlyph,
+      max: maxGlyph,
+      atDefault: atDefaultGlyph,
+    );
   }
 
   /// Throws unless [a] and [b] can carry variation deltas between them.
