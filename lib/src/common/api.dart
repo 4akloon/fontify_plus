@@ -170,6 +170,9 @@ SvgToOtfResult svgToOtf({
 /// * [fontFileName] is font file's name. Used in generated docs for class.
 /// * [indent] is a number of spaces in leading indentation for class' members. Defaults to 2.
 /// * [strokeWidthRange], when given, documents the variable `wght` axis in the class comment.
+/// * [preview] — when false, dartdoc previews are omitted; when true, always
+/// emitted; when null (default), emitted unless the generated file would
+/// exceed 2 MiB, in which case they are dropped with a warning.
 ///
 /// Returns content of a class file.
 String generateFlutterClass({
@@ -180,6 +183,7 @@ String generateFlutterClass({
   String? package,
   int? indent,
   StrokeWidthRange? strokeWidthRange,
+  bool? preview,
 }) {
   final generator = FlutterClassGenerator(
     glyphList,
@@ -189,6 +193,7 @@ String generateFlutterClass({
     familyName: familyName,
     package: package,
     strokeWidthRange: strokeWidthRange,
+    preview: preview,
   );
 
   return generator.generate();

@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:fontify_plus/src/common/api.dart';
 import 'package:fontify_plus/src/common/generic_glyph.dart';
 import 'package:fontify_plus/src/common/stroke_width_range.dart';
 import 'package:fontify_plus/src/otf/defaults.dart';
 import 'package:fontify_plus/src/utils/flutter_class_gen.dart';
+import 'package:fontify_plus/src/utils/logger.dart';
 import 'package:test/test.dart';
 
 GenericGlyph _glyph(String name, int charCode, {String? preview}) =>
@@ -150,25 +153,102 @@ void main() {
       expect(source, contains('/// arrow_up'));
     });
 
-    test('emits an img dartdoc line when preview is set', () {
+    test('emits a markdown preview line when preview is set', () {
       final source = FlutterClassGenerator([
-        _glyph('arrow_up', 0xE001, preview: 'cHJldmlldw=='),
+        _glyph('arrow_up', 0xE001, preview: "<svg width='32'/>"),
       ]).generate();
 
       expect(
         source,
         contains(
-          '/// <img src="data:image/svg+xml;base64,cHJldmlldw==" width="32"/>',
+          "/// ![arrow_up](data:image/svg+xml,%3Csvg%20width='32'/%3E)",
         ),
       );
     });
 
-    test('omits img dartdoc when preview is null', () {
+    test('omits the preview line when preview is null', () {
       final source = FlutterClassGenerator([
         _glyph('arrow_up', 0xE001),
       ]).generate();
 
-      expect(source, isNot(contains('<img src=')));
+      expect(source, isNot(contains('![')));
+    });
+  });
+
+  group('FlutterClassGenerator preview budget', () {
+    late List<String> printed;
+    late Level previousLevel;
+
+    setUp(() {
+      previousLevel = logger.level;
+      logger.level = Level.trace;
+      printed = [];
+    });
+
+    tearDown(() => logger.level = previousLevel);
+
+    /// Runs [body] capturing everything the logger prints.
+    void capturingPrints(void Function() body) => runZoned(
+      body,
+      zoneSpecification: ZoneSpecification(
+        print: (_, _, _, line) => printed.add(line),
+      ),
+    );
+
+    final oversized = 'x' * (2 * 1024 * 1024 + 1);
+
+    test('drops previews over budget and warns when preview is unset', () {
+      late String source;
+
+      capturingPrints(() {
+        source = FlutterClassGenerator([
+          _glyph('arrow_up', 0xE001, preview: oversized),
+        ]).generate();
+      });
+
+      expect(source, isNot(contains('![')));
+      expect(printed.join('\n'), contains('Dropped dartdoc previews'));
+    });
+
+    test('keeps previews under budget without warning when unset', () {
+      late String source;
+
+      capturingPrints(() {
+        source = FlutterClassGenerator([
+          _glyph('arrow_up', 0xE001, preview: "<svg width='32'/>"),
+        ]).generate();
+      });
+
+      expect(source, contains('!['));
+      expect(printed, isEmpty);
+    });
+
+    test('explicit preview: true keeps previews over budget silently', () {
+      late String source;
+
+      capturingPrints(() {
+        source = FlutterClassGenerator(
+          [_glyph('arrow_up', 0xE001, preview: oversized)],
+          preview: true,
+        ).generate();
+      });
+
+      expect(source, contains('!['));
+      expect(printed, isEmpty);
+    });
+
+    test('explicit preview: false omits previews without warning', () {
+      late String source;
+
+      capturingPrints(() {
+        source = FlutterClassGenerator(
+          [_glyph('arrow_up', 0xE001, preview: "<svg width='32'/>")],
+          preview: false,
+        ).generate();
+      });
+
+      expect(source, isNot(contains('![')));
+      expect(printed, isEmpty);
     });
   });
 
