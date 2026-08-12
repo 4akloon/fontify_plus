@@ -279,6 +279,54 @@ void main() {
       expect(source, contains('weight: 1.005)'));
     });
 
+    test('a default above the range maximum throws', () {
+      expect(
+        () => generateFlutterClass(
+          glyphList: _glyphList,
+          className: 'MyIcons',
+          strokeWidthRange: StrokeWidthRange(1.33, 2),
+          defaultStrokeWidth: 5.0,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('a default below the range minimum throws', () {
+      expect(
+        () => generateFlutterClass(
+          glyphList: _glyphList,
+          className: 'MyIcons',
+          strokeWidthRange: StrokeWidthRange(1.33, 2),
+          defaultStrokeWidth: 1.0,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('a default equal to the range minimum throws', () {
+      expect(
+        () => generateFlutterClass(
+          glyphList: _glyphList,
+          className: 'MyIcons',
+          strokeWidthRange: StrokeWidthRange(1.33, 2),
+          defaultStrokeWidth: 1.33,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('a default equal to the range maximum throws', () {
+      expect(
+        () => generateFlutterClass(
+          glyphList: _glyphList,
+          className: 'MyIcons',
+          strokeWidthRange: StrokeWidthRange(1.33, 2),
+          defaultStrokeWidth: 2.0,
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('a default width without a range documents no axis at all', () {
       // `svgToOtf` rejects this pairing, but `generateFlutterClass` is a
       // separate public entry point that never sees the font: with no range

@@ -28,7 +28,10 @@ class FlutterClassGenerator {
   /// convention that the range's maximum is the default; with an interior
   /// default that convention is wrong and there is nothing in the generated
   /// file to correct it from. Ignored without [strokeWidthRange], since a
-  /// width with no axis to sit on describes nothing.
+  /// width with no axis to sit on describes nothing. When both are given,
+  /// throws [ArgumentError] unless [defaultStrokeWidth] lies strictly
+  /// between [StrokeWidthRange.min] and [StrokeWidthRange.max] — otherwise
+  /// the generated comment would name a default the font never opens at.
   FlutterClassGenerator(
     this.glyphList, {
     String? className,
@@ -45,7 +48,26 @@ class FlutterClassGenerator {
        _iconVarNames = _allocateNames(glyphList),
        _package = package?.isEmpty ?? true ? null : package,
        _strokeWidthRange = strokeWidthRange,
-       _defaultStrokeWidth = defaultStrokeWidth;
+       _defaultStrokeWidth = defaultStrokeWidth {
+    // Mirrors `OpenTypeFontBuilder`'s own check (`lib/src/otf/otf_builder.dart`):
+    // this constructor is likewise a Dart-API surface, not a CLI/YAML surface,
+    // so a bad pairing is an `ArgumentError` here too. Without this,
+    // `_axisDocComment` would render a default the font never opens at — a
+    // reader could copy it straight into `weight:` and get silently clamped
+    // to something else. `strokeWidthRange == null` is left alone: that carve
+    // out belongs to `_axisDocComment` (a width with no axis to sit on
+    // describes nothing), not to this check.
+    if (strokeWidthRange != null &&
+        defaultStrokeWidth != null &&
+        !(strokeWidthRange.min < defaultStrokeWidth &&
+            defaultStrokeWidth < strokeWidthRange.max)) {
+      throw ArgumentError(
+        'defaultStrokeWidth must lie strictly between the ends of '
+        'strokeWidthRange; got defaultStrokeWidth: $defaultStrokeWidth, '
+        'strokeWidthRange: $strokeWidthRange',
+      );
+    }
+  }
 
   final List<GenericGlyph> glyphList;
   final String _fontFileName;

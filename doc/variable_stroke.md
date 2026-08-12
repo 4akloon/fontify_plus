@@ -115,10 +115,12 @@ by `OpenTypeFontBuilder`.
 **What changes in the font.** Each icon is built three times rather than
 twice, and the axis gets a second variation region (min→default and
 default→max) instead of one. `fvar`'s `defaultValue` becomes the interior
-width, and `STAT` names **three** stops on the axis rather than two, so a font
-tool can label the interior default and not only the two ends. (`fvar` named
+width, and `STAT` names **three** stops on the axis rather than two — though
+all three share the one axis name (`Stroke Width`); the interior default gets
+its own axis-value record, not a distinguishing name. (`fvar` named
 instances are still not written — see below.) On this package's
-four example icons the third master costs about **9%** more bytes whole-file
+four example icons, measured at `[1.33, 2]` with the default at 1.665 (the
+range's midpoint), the third master costs about **9%** more bytes whole-file
 and about **15%** more after `pyftsubset` than the same font with the default
 left at the maximum — 240 B either way, on files of 2.7 kB and 1.6 kB. Gated
 in `test/integration/variable_size_gate_test.dart`.
@@ -133,8 +135,10 @@ four example icons at `[1.33, 2]` with the default at the midpoint, every icon
 crosses its advance box horizontally at the maximum and two of the four dip
 below the font-wide `head.yMin` — single-digit font units at 1000 upem, so
 sub-pixel at icon sizes, but it is real clipping if your renderer trusts
-`head`. Leave the default at the maximum if you need the advertised box to
-contain every reachable width.
+`head`. This is not a general bound: the overflow scales with how far the
+default sits from the maximum, so a default placed near the minimum of a wide
+range overflows by proportionally more. Leave the default at the maximum if
+you need the advertised box to contain every reachable width.
 
 ## Use in Flutter
 

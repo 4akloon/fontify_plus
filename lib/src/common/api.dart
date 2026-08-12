@@ -51,8 +51,10 @@ class SvgToOtfResult {
 /// axis is the icon's stroke width instead of one fixed width. Its `min`
 /// and `max` are literal stroke widths in the SVG's own units — the same
 /// units as its authored `stroke-width` — and [StrokeWidthRange.max] is the
-/// font's default instance, the one every metric is computed from. Each
-/// icon is built twice, once per end of the range, via [GlyphMasterBuilder].
+/// font's default instance, the one every metric is computed from, unless
+/// [defaultStrokeWidth] names another width. Each icon is built twice, once
+/// per end of the range, via [GlyphMasterBuilder] — three times when
+/// [defaultStrokeWidth] is also given.
 /// Requires stroke outlining and OpenType: passing `outlineStrokes: false`
 /// alongside it throws, because a fill does not depend on stroke width and
 /// there would be nothing left to vary; passing `useOpenType: false`
@@ -62,10 +64,12 @@ class SvgToOtfResult {
 /// byte.
 /// * [defaultStrokeWidth] moves the axis's default off
 /// [StrokeWidthRange.max] to a width strictly inside the range, so that a
-/// font picker opens on that width and `STAT` gives it a name. Requires
-/// [strokeWidthRange] — a width names a point *on* an axis, and with no
-/// axis it would simply be dropped — and must not equal either end: at an
-/// end it would describe a width the font already has, paying for a whole
+/// font picker opens on that width. `STAT` gains a third axis-value record
+/// for it, but that record shares its name with the two endpoints — none of
+/// the three widths this axis records has a distinguishing name of its own.
+/// Requires [strokeWidthRange] — a width names a point *on* an axis, and
+/// with no axis it would simply be dropped — and must not equal either end:
+/// at an end it would describe a width the font already has, paying for a whole
 /// extra variation region and telling a font picker two names for one
 /// instance. Each icon is then built three times rather than twice, and
 /// [SvgToOtfResult.glyphList] holds the *interior* drawing, since that is
