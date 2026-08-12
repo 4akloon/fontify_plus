@@ -16,21 +16,19 @@ import 'package:test/test.dart';
 /// test happens to run on (this checkout's local disk, or CI's).
 const _glyphOrder = ['arrow_right', 'plus', 'check', 'menu'];
 
+/// Matches `example/fontify_plus.yaml` — the shipped example is a variable
+/// font so the gallery can show `Icon(..., weight: …)`.
+final _exampleRange = StrokeWidthRange(1, 2);
+
 /// The example font is checked in, so it doubles as a fixture: whatever the
 /// pipeline produces for `example/svg` must still be exactly what shipped.
-///
-/// This is the gate for the plan/evaluate refactor. It touches the hot path of
-/// every existing user, not only those who enable a stroke axis, so "the tests
-/// still pass" is not enough — the bytes have to be the same.
 void main() {
   test('regenerating the example font reproduces it byte for byte', () {
     const fontPath = 'example/fonts/my_icons.otf';
     final expected = File(fontPath).readAsBytesSync();
 
-    // `head` stamps created/modified into every font. Reuse the fixture's
-    // timestamps so regeneration is byte-identical (same path as runFontJob
-    // when rewriting an existing .otf).
-    final fixtureFont = readFromFile(fontPath);
+    // head only — full readFromFile warns on unread fvar/STAT (#12).
+    final timestamps = tryReadHeadTimestamps(fontPath)!;
 
     final result = svgToOtf(
       svgMap: {
@@ -38,8 +36,9 @@ void main() {
           name: File('example/svg/$name.svg').readAsStringSync(),
       },
       fontName: 'My Icons',
-      created: fixtureFont.head.created,
-      modified: fixtureFont.head.modified,
+      strokeWidthRange: _exampleRange,
+      created: timestamps.created,
+      modified: timestamps.modified,
     );
 
     final actual = OTFWriter().write(result.font).buffer.asUint8List();

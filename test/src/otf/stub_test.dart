@@ -8,6 +8,13 @@ void main() {
       expect(() => readFromFile('anything.otf'), throwsUnsupportedError);
     });
 
+    test('tryReadHeadTimestamps throws UnsupportedError', () {
+      expect(
+        () => tryReadHeadTimestamps('anything.otf'),
+        throwsUnsupportedError,
+      );
+    });
+
     test('writeToFile throws UnsupportedError', () {
       expect(
         () => writeToFile(

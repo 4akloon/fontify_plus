@@ -60,17 +60,8 @@ FontJobResult runFontJob(FontJob job) {
       _svgKey(svgDir.path, f.path): File(f.path).readAsStringSync(),
   };
 
-  DateTime? created;
-  DateTime? modified;
-  if (fontFile.existsSync()) {
-    try {
-      final existing = readFromFile(fontFile.path);
-      created = existing.head.created;
-      modified = existing.head.modified;
-    } on Object {
-      // Unreadable existing font — fall back to defaults.
-    }
-  }
+  // head only — full readFromFile warns on unread fvar/STAT (#12).
+  final timestamps = tryReadHeadTimestamps(fontFile.path);
 
   final otfResult = svgToOtf(
     svgMap: svgMap,
@@ -79,8 +70,8 @@ FontJobResult runFontJob(FontJob job) {
     normalize: job.normalize,
     useOpenType: job.useOpenType,
     fontName: job.fontName,
-    created: created,
-    modified: modified,
+    created: timestamps?.created,
+    modified: timestamps?.modified,
     strokeWidthRange: job.strokeWidthRange,
   );
 

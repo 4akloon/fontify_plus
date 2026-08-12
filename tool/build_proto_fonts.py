@@ -15,7 +15,15 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUT = ROOT / "example" / "fonts" / "proto"
 TMP = ROOT / "tool" / "variable_prototype" / "out" / "render_matrix_svgs"
-WIDTHS = [1.33, 1.5, 2.0]
+# Font names must match example/pubspec.yaml families. Sharing one internal
+# name ("Proto") across assets confuses CanvasKit's font manager so every
+# ProtoCff* family resolves to the same face and the render matrix sees no
+# width change between static masters.
+WIDTHS = {
+    1.33: "ProtoCff133",
+    1.5: "ProtoCff150",
+    2.0: "ProtoCff200",
+}
 
 _spec = importlib.util.spec_from_file_location(
     "glyphs",
@@ -33,14 +41,14 @@ def write_svgs(width):
     return directory
 
 
-def run_fontify(svg_dir, font_path, *extra):
+def run_fontify(svg_dir, font_path, font_name, *extra):
     command = [
         "dart",
         "run",
         "bin/fontify_plus.dart",
         str(svg_dir),
         str(font_path),
-        "--font-name=Proto",
+        f"--font-name={font_name}",
         "--no-normalize",
         *extra,
     ]
@@ -50,10 +58,10 @@ def run_fontify(svg_dir, font_path, *extra):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
 
-    for width in WIDTHS:
+    for width, font_name in WIDTHS.items():
         svg_dir = write_svgs(width)
         static = OUT / f"static_{width}_cff.otf"
-        run_fontify(svg_dir, static)
+        run_fontify(svg_dir, static, font_name)
         print("built", static, file=sys.stderr)
 
     variable_svgs = write_svgs(2.0)
@@ -61,6 +69,7 @@ def main():
     run_fontify(
         variable_svgs,
         variable,
+        "ProtoCff2",
         "--stroke-width-range=1.33,2",
     )
     print("built", variable, file=sys.stderr)
