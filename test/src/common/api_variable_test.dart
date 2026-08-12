@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:fontify_plus/src/common/api.dart';
-import 'package:fontify_plus/src/common/glyph/glyph_masters.dart';
+import 'package:fontify_plus/src/common/generic_glyph.dart';
 import 'package:fontify_plus/src/common/stroke_width_range.dart';
 import 'package:fontify_plus/src/job/fontify_exception.dart';
 import 'package:fontify_plus/src/otf/otf.dart';
@@ -49,11 +49,29 @@ Map<String, ByteData> _tablesOf(ByteData font) {
   return tables;
 }
 
+/// One table's encoded bytes, taken from a font written all the way out.
+///
+/// Used to compare geometry between two fonts without needing a charstring
+/// interpreter: the blend deltas that say what each variation region varies
+/// *toward* live inside `CFF2`'s charstrings, so two fonts whose upper region
+/// reaches a different master differ in these bytes and in nothing else.
+Uint8List _tableBytes(OpenTypeFont font, String tag) {
+  final table = _tablesOf(OTFWriter().write(font))[tag];
+
+  expect(table, isNotNull, reason: 'font has no $tag table');
+
+  return Uint8List.sublistView(table!);
+}
+
 /// `fvar`'s three axis coordinates — minimum, default, maximum — in the raw
 /// 16.16 fixed point the table stores, undivided so that a comparison against
 /// `STAT` is exact rather than merely close.
 ({int min, int fixedDefault, int max}) _fvarAxis(ByteData fvar) {
-  const axesArray = 16;
+  // Followed through the table's own `axesArrayOffset` field rather than
+  // assumed to sit right after the header, the same way `_statAxisValues`
+  // follows `STAT`'s offset array: a hardcoded 16 reads the right bytes only
+  // for as long as `fvar`'s header stays exactly this size.
+  final axesArray = fvar.getUint16(4);
 
   expect(fvar.getUint16(8), 1, reason: 'expected exactly one axis');
 
@@ -370,6 +388,63 @@ void main() {
       expect(
         result.glyphList.single.pointList,
         isNot(equals(direct.min.pointList)),
+      );
+    });
+
+    test('the maximum master is what the upper region varies toward', () {
+      // The mirror image of the test above, on the other list, and the one
+      // failure `regionCount == 2` cannot see. Routing anything but `m.max`
+      // into `maxGlyphList` — the interior master, say — still produces a
+      // two-region store, a font that encodes, round-trips and sanitizes, and
+      // an `fvar`/`STAT` pair declaring a maximum of 2.0. The upper region's
+      // deltas just come out zero, so every width in (1.5, 2.0] renders
+      // identically to 1.5: the top half of the declared axis is silently
+      // dead, which is precisely what `maxGlyphList` exists to prevent.
+      //
+      // Only `svgToOtf` *chooses* which master goes where — the builder-level
+      // tests are handed the three lists already sorted — so this is the only
+      // layer that can check the choice.
+      //
+      // Compared through `CFF2`'s encoded bytes rather than by instancing the
+      // charstrings: the deltas are the only place the non-default masters'
+      // geometry survives into the font, and a reference built by naming
+      // `m.max` explicitly pins them without this file needing a charstring
+      // interpreter of its own.
+      final range = StrokeWidthRange(1.33, 2);
+      final result = svgToOtf(
+        svgMap: {'a': _strokedSvg},
+        strokeWidthRange: range,
+        defaultStrokeWidth: _defaultWidth,
+      );
+
+      final masters = GlyphMasterBuilder(
+        range,
+        defaultWidth: _defaultWidth,
+      ).fromSvg('a', _strokedSvg);
+
+      OpenTypeFont referenceWithMax(GenericGlyph atMax) =>
+          OpenTypeFont.createFromGlyphs(
+            glyphList: [masters.atDefault!],
+            minGlyphList: [masters.min],
+            maxGlyphList: [atMax],
+            strokeWidthRange: range,
+            defaultStrokeWidth: _defaultWidth,
+          );
+
+      expect(
+        _tableBytes(result.font, kCFF2Tag),
+        _tableBytes(referenceWithMax(masters.max), kCFF2Tag),
+      );
+
+      // States that the assertion above has teeth, in the test itself rather
+      // than in a reviewer's notes: the same font built with the interior
+      // master standing in for the maximum is a different font, so the
+      // equality is discriminating rather than trivially satisfied.
+      expect(
+        _tableBytes(result.font, kCFF2Tag),
+        isNot(
+          equals(_tableBytes(referenceWithMax(masters.atDefault!), kCFF2Tag)),
+        ),
       );
     });
 
