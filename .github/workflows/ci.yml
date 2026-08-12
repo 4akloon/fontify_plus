@@ -67,10 +67,20 @@ jobs:
 
       # Same gate set against a three-master font (interior default). Built to
       # a temp path rather than example/fonts/proto/ because nothing renders
-      # it — committing it would only add weight to the pub tarball. The
-      # default sits on the oracle's mid stop, so the interpolation check
-      # doubles as proof that the extra master lands where a lerp of the two
-      # endpoints would: an interior default must not bend the axis.
+      # it — committing it would only add weight to the pub tarball.
+      #
+      # Must stay after "Rebuild package-built proto fonts", and not only for
+      # the static references: the SVG input directory below is gitignored
+      # build output that exists solely as a side effect of that step. Reorder
+      # these and the CLI exits 65 with "input directory is not a directory or
+      # it doesn't exist".
+      #
+      # --default-stroke-width is 1.5 to match the oracle's hard-coded mid
+      # stop. That is what turns validate_interpolation's lerp check into a
+      # real test of the third master: it asserts the interior master lands
+      # where interpolating the two endpoints to 1.5 would, i.e. that an
+      # interior default does not bend the axis. Change one of the two numbers
+      # without the other and the check quietly stops proving that.
       - name: Validate a three-master variable font against fonttools
         if: matrix.sdk == 'stable'
         run: |

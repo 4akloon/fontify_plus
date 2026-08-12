@@ -118,9 +118,10 @@ default→max) instead of one. `fvar`'s `defaultValue` becomes the interior
 width, and `STAT` names **three** stops on the axis rather than two, so a font
 tool can label the interior default and not only the two ends. (`fvar` named
 instances are still not written — see below.) On this package's
-four example icons the third master costs about **12%** more bytes whole-file
-and about **17%** more after `pyftsubset` than the same font with the default
-left at the maximum — gated in `test/integration/variable_size_gate_test.dart`.
+four example icons the third master costs about **9%** more bytes whole-file
+and about **15%** more after `pyftsubset` than the same font with the default
+left at the maximum — 240 B either way, on files of 2.7 kB and 1.6 kB. Gated
+in `test/integration/variable_size_gate_test.dart`.
 
 **Metrics are computed from the default instance**, which is now an interior
 width rather than the widest one. The consequence is that ink at the *maximum*

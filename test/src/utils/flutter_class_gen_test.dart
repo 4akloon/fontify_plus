@@ -247,6 +247,38 @@ void main() {
       );
     });
 
+    test('a default two decimals cannot represent is named in full', () {
+      // 1.665 is the midpoint of [1.33, 2] and what the size gate builds, so
+      // this is not a contrived value. Rounded to 1.67 the comment would name
+      // a width the font does not default to: a reader who copies it into
+      // `weight:` gets a different instance from the one the comment calls
+      // the default. The axis value has to survive the round trip.
+      final source = generateFlutterClass(
+        glyphList: _glyphList,
+        className: 'MyIcons',
+        strokeWidthRange: StrokeWidthRange(1.33, 2),
+        defaultStrokeWidth: 1.665,
+      );
+
+      expect(source, contains('default 1.665.'));
+      expect(source, contains('draws 1.665, not the maximum'));
+      expect(source, isNot(contains('1.67')));
+    });
+
+    test('a range endpoint two decimals cannot represent is named in full', () {
+      // The same rounding reaches the endpoints, where it is worse: rounded
+      // to 1.0 the copy-paste line would hand the reader a `weight:` *below*
+      // the axis minimum, which the renderer silently clamps.
+      final source = generateFlutterClass(
+        glyphList: _glyphList,
+        className: 'MyIcons',
+        strokeWidthRange: StrokeWidthRange(1.005, 2),
+      );
+
+      expect(source, contains('Variable stroke width: 1.005 … 2.0'));
+      expect(source, contains('weight: 1.005)'));
+    });
+
     test('a default width without a range documents no axis at all', () {
       // `svgToOtf` rejects this pairing, but `generateFlutterClass` is a
       // separate public entry point that never sees the font: with no range

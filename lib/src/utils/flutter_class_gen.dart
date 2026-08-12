@@ -151,8 +151,23 @@ import 'package:flutter/widgets.dart';
   }
 
   /// Formats axis values for generated docs: `2` reads as `2.0`, `1.33` as `1.33`.
+  ///
+  /// Every value this prints is meant to be copied into `weight:`, so it may
+  /// never name a width the font does not have. Two decimals are enough for
+  /// the widths icon sets are actually drawn at and read better than a raw
+  /// `toString`, but they cannot be *rounded* to: at three decimals — the
+  /// midpoint of `[1.33, 2]` is 1.665, which the size gate builds — 1.67 is a
+  /// different instance from the default it would be labelling, and a range
+  /// starting at 1.005 would print a minimum of 1.0 that sits below the axis
+  /// and gets silently clamped. So two decimals are used only when they are
+  /// lossless, and anything else falls back to the shortest decimal that
+  /// round-trips.
   static String _formatAxisValue(double value) {
     final rounded = (value * 100).roundToDouble() / 100;
+
+    if (rounded != value) {
+      return value.toString();
+    }
 
     if (rounded == rounded.roundToDouble()) {
       return rounded.toStringAsFixed(1);
