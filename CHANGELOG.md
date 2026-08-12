@@ -8,7 +8,10 @@
 * Smaller outlined fonts — less subdivision on near-straight edges and exact
   90° round joins.
 * IDE SVG previews in generated `IconData` dartdoc (`--[no-]preview` /
-  YAML `preview:`, default on).
+  YAML `preview:`, default on): markdown images carrying URL-encoded
+  minified SVG (black recolored grey for dark themes), auto-dropped with
+  a warning when the class file would exceed 2 MiB — explicit `--preview`
+  forces them.
 * CLI `--watch` (debounced SVG regen + config reload); negatable
   `--[no-]recursive` / `--[no-]verbose`; empty SVG dirs fail; recursive icon
   names use the path relative to the input dir.

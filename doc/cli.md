@@ -21,7 +21,7 @@ fontify_plus assets/svg/ fonts/my_icons_font.otf \
 | `-f`, `--font-name=<name>` | PostScript / family name for the generated font. |
 | `--[no-]normalize` | Scale each glyph so its longest side fills the em square (default on). |
 | `--[no-]outline-strokes` | Convert stroked paths to filled regions (default on). |
-| `--[no-]preview` | Embed SVG previews in generated IconData dartdoc (default on). |
+| `--[no-]preview` | Embed SVG previews in generated IconData dartdoc (default on; dropped with a warning when the class file would exceed 2 MiB — explicit `--preview` forces them). |
 | `--[no-]opentype` | Emit CFF outlines (default on). |
 | `--stroke-width-range=<min,max>` | Build a variable font whose `wght` axis is the stroke width, in the SVG's own units (e.g. `1.33,2`). The maximum is the default instance. Omit for a static font. See [Variable stroke width](variable_stroke.md). |
 | `-r`, `--[no-]recursive` | Recursively search for `.svg` files (default off). Icon names are derived from each file's path relative to the input directory (e.g. `icons/nav/arrow.svg` → `iconsNavArrow`). An empty SVG directory fails the job. Use `--no-recursive` to override YAML `recursive: true`. |

@@ -56,7 +56,7 @@ Converts a map of SVG strings into an OpenType font.
 |-----------|------|---------|-------------|
 | `svgMap` | `Map<String, String>` | *(required)* | Glyph name to SVG source. Keys become glyph identifiers. |
 | `outlineStrokes` | `bool?` | `true` | Convert stroked paths into the filled region the stroke covers. |
-| `preview` | `bool?` | `true` | Store base64-encoded SVG on each glyph for dartdoc previews in the generated `IconData` class. |
+| `preview` | `bool?` | `true` | Store a minified copy of the input SVG on each glyph for dartdoc previews in the generated `IconData` class. |
 | `normalize` | `bool?` | `true` | Scale each glyph so its longest side fills the em square, then centre it. |
 | `useOpenType` | `bool?` | `true` | Emit CFF (OpenType) outlines. When `false`, TrueType outlines are generated with cubic-to-quadratic approximation. |
 | `fontName` | `String?` | `null` | PostScript / family name for the generated font. |
@@ -80,6 +80,7 @@ Emits Dart source for a class of `IconData` constants.
 | `fontFileName` | `String?` | `null` | Font file name referenced in generated docs. |
 | `indent` | `int?` | `2` | Leading spaces for class members. |
 | `strokeWidthRange` | `StrokeWidthRange?` | `null` | When set, documents the variable `wght` axis in the class comment. |
+| `preview` | `bool?` | `null` | `false` omits previews, `true` always emits them, `null` emits them unless the file would exceed 2 MiB (dropped with a warning). |
 
 Returns the class file contents as a `String`.
 
