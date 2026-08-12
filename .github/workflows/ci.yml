@@ -151,21 +151,30 @@ jobs:
       # runner's exact Chrome, chromedriver and Flutter. This says whether the
       # build even shipped the fonts, which a test cannot: `flutter drive`
       # aggregates a web run and swallows `print`.
-      - name: Diagnose the built asset bundle
-        working-directory: example
+      - name: Diagnose the proto fonts
         run: |
-          set -x
-          google-chrome --version
-          ls -la fonts/proto/
-          md5sum fonts/proto/*.otf
-          flutter build web --debug
-          echo '--- FontManifest.json ---'
-          cat build/web/assets/FontManifest.json
-          echo '--- bundled font assets ---'
-          ls -la build/web/assets/fonts/proto/ || echo 'NO fonts/proto IN BUNDLE'
-          md5sum build/web/assets/fonts/proto/*.otf || true
-          echo '--- AssetManifest keys mentioning proto ---'
-          cat build/web/assets/AssetManifest.json 2>/dev/null | tr ',' '\n' | grep -i proto || true
+          echo '--- generated SVG inputs (do these differ per width?) ---'
+          md5sum tool/variable_prototype/out/render_matrix_svgs/*/*.svg | sort
+          echo '--- one SVG, verbatim ---'
+          cat tool/variable_prototype/out/render_matrix_svgs/width_1.33/ring.svg
+          cat tool/variable_prototype/out/render_matrix_svgs/width_2.0/ring.svg
+          echo '--- built fonts ---'
+          md5sum example/fonts/proto/*.otf
+          echo '--- do the three statics differ from each other? ---'
+          cmp example/fonts/proto/static_1.33_cff.otf \
+              example/fonts/proto/static_2.0_cff.otf && echo 'IDENTICAL' \
+              || echo 'differ (expected)'
+          python3 -c "
+          import sys
+          sys.path.insert(0, 'tool')
+          print('python', sys.version)
+          "
+
+      - name: Upload the CI-built proto fonts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-proto-fonts
+          path: example/fonts/proto/*.otf
 
       # `-d chrome` treats Chrome as the running device and connects to it
       # through DWDS's own debug-service handshake — verified against a real
