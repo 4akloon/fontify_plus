@@ -74,5 +74,67 @@ void main() {
       expect(data.getUint16(50), 256, reason: 'valueNameID');
       expect(data.getInt32(52) / 65536, closeTo(range.max, 1 / 65536));
     });
+
+    test('a defaultWidth gets its own named axis value', () {
+      final table = StyleAttributesTable.create(
+        range,
+        defaultWidth: 1.5,
+        axisNameID: 256,
+      );
+      final data = ByteData(table.size);
+      table.encodeToBinary(data);
+
+      // 20 header + 8 axis record + 3 offsets + 3 * 12 format 1 values.
+      expect(table.size, 70);
+      expect(data.getUint16(12), 3, reason: 'axisValueCount');
+      // Everything downstream of the offsets array shifts by the one extra
+      // Offset16, so the array's own position is the one thing that must not.
+      expect(data.getUint32(14), 28, reason: 'offsetToAxisValueOffsets');
+
+      const axisValuesStart = 28 + 3 * 2;
+      for (var i = 0; i < 3; i++) {
+        expect(
+          data.getUint16(28 + i * 2),
+          axisValuesStart - 28 + i * 12,
+          reason: 'offset to AxisValue $i, relative to its own array',
+        );
+      }
+
+      // All three resolve to the axis's own name: the interior default has no
+      // more of a name of its own than the endpoints do.
+      final expected = <double>[range.min, 1.5, range.max];
+
+      for (var i = 0; i < expected.length; i++) {
+        final at = axisValuesStart + i * 12;
+
+        expect(data.getUint16(at), 1, reason: 'format at $at');
+        expect(data.getUint16(at + 2), 0, reason: 'axisIndex at $at');
+        expect(data.getUint16(at + 4), 0, reason: 'flags at $at');
+        expect(data.getUint16(at + 6), 256, reason: 'valueNameID at $at');
+        expect(
+          data.getInt32(at + 8) / 65536,
+          closeTo(expected[i], 1 / 65536),
+          reason: 'value at $at',
+        );
+      }
+    });
+
+    test('no defaultWidth still writes exactly two axis values', () {
+      final data = ByteData(table.size);
+      table.encodeToBinary(data);
+
+      // Captured by running the pre-defaultWidth encoder, so this compares
+      // against bytes that predate the parameter rather than against a fresh
+      // reading of the same code it is meant to pin down.
+      expect(data.buffer.asUint8List(), <int>[
+        0x00, 0x01, 0x00, 0x02, 0x00, 0x08, 0x00, 0x01, //
+        0x00, 0x00, 0x00, 0x14, 0x00, 0x02, 0x00, 0x00, //
+        0x00, 0x1c, 0x00, 0x02, 0x77, 0x67, 0x68, 0x74, //
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x10, //
+        0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, //
+        0x00, 0x01, 0x54, 0x7b, 0x00, 0x01, 0x00, 0x00, //
+        0x00, 0x00, 0x01, 0x00, 0x00, 0x02, 0x00, 0x00, //
+      ]);
+    });
   });
 }

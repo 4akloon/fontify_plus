@@ -10,9 +10,6 @@ const _kAxisValueSize = 12;
 /// This table always writes exactly one axis, `wght`.
 const _kAxisCount = 1;
 
-/// ...and two axis values for it: the range's minimum and maximum.
-const _kAxisValueCount = 2;
-
 /// Offset, from the start of the table, to the design axes array.
 ///
 /// The array immediately follows the header, so this is just its size.
@@ -20,11 +17,10 @@ const _kDesignAxesOffset = _kHeaderSize;
 
 /// Offset, from the start of the table, to the axis value offsets array.
 ///
-/// The array immediately follows the design axes array.
+/// The array immediately follows the design axes array. Everything after it
+/// moves with the axis value count, but this offset does not — which is why
+/// it stays a constant while the rest are computed.
 const _kOffsetToAxisValueOffsets = _kDesignAxesOffset + _kAxisRecordSize;
-
-/// Size, in bytes, of the axis value offsets array itself.
-const _kAxisValueOffsetsArraySize = _kAxisValueCount * 2;
 
 /// Converts to the 16.16 fixed point `STAT` axis values are stored in.
 ///
@@ -37,31 +33,72 @@ int _fixed(double value) => (value * 65536).round();
 /// carry per the OpenType spec. FreeType tolerates its absence, but OTS and
 /// CoreText do not, so it is not optional in practice.
 ///
-/// Declares the same `wght` axis `fvar` does, plus format 1 axis value
-/// records naming its two endpoints — the only values this font actually
-/// distinguishes, since every width between them is reached by
-/// interpolation rather than by a named stop.
+/// Declares the same `wght` axis `fvar` does, plus one format 1 axis value
+/// record per width this font actually distinguishes: its two endpoints, and
+/// the [defaultWidth] between them when there is one. Every other width is
+/// reached by interpolation rather than by a named stop, so it gets no
+/// record.
 class StyleAttributesTable extends FontTable {
-  StyleAttributesTable(super.entry, this.range, this.axisNameID)
-    : super.fromTableRecordEntry();
+  StyleAttributesTable(
+    super.entry,
+    this.range,
+    this.defaultWidth,
+    this.axisNameID,
+  ) : super.fromTableRecordEntry();
 
+  /// Builds the table for [range], naming [defaultWidth] as a third axis
+  /// value when one is given.
+  ///
+  /// Assumes [defaultWidth], if non-null, is already validated by the caller:
+  /// finite, inside [range], and distinct from both of its ends. Nothing here
+  /// re-checks that. A table encoder is not a boundary the value arrives
+  /// through — it is handed an already-decided font description — and the
+  /// rules are enforced once, where a caller can be told what went wrong in
+  /// its own vocabulary. Repeating them here would be one more copy to keep in
+  /// step, reachable only after those checks had already let a bad value
+  /// through. A default equal to an endpoint would encode two axis values at
+  /// the same coordinate, which parses but tells a font picker two names for
+  /// one instance.
   factory StyleAttributesTable.create(
     StrokeWidthRange range, {
+    double? defaultWidth,
     required int axisNameID,
-  }) => StyleAttributesTable(null, range, axisNameID);
+  }) => StyleAttributesTable(null, range, defaultWidth, axisNameID);
 
   final StrokeWidthRange range;
+
+  /// The width `fvar` defaults the axis to, when that is not [range]'s
+  /// maximum — see `FontVariationsTable.defaultWidth` for why it is threaded
+  /// separately from the range rather than folded into it.
+  ///
+  /// It earns an axis value record of its own because it is the instance a
+  /// font picker opens on: without a record, the one width users see first is
+  /// the one width `STAT` does not describe.
+  final double? defaultWidth;
+
   final int axisNameID;
+
+  /// The widths that get a format 1 axis value record, in ascending order.
+  ///
+  /// The offsets array, the table size and the records themselves are all
+  /// derived from this one list, so there is no second place that has to be
+  /// told the count changed.
+  List<double> get _axisValues => [range.min, ?defaultWidth, range.max];
+
+  /// Size, in bytes, of the axis value offsets array itself.
+  int get _axisValueOffsetsArraySize => _axisValues.length * 2;
 
   @override
   int get size =>
       _kHeaderSize +
       _kAxisRecordSize +
-      _kAxisValueOffsetsArraySize +
-      _kAxisValueCount * _kAxisValueSize;
+      _axisValueOffsetsArraySize +
+      _axisValues.length * _kAxisValueSize;
 
   @override
   void encodeToBinary(ByteData byteData) {
+    final axisValues = _axisValues;
+
     byteData
       ..setUint16(0, 1) // majorVersion
       ..setUint16(2, 2) // minorVersion
@@ -73,7 +110,7 @@ class StyleAttributesTable extends FontTable {
       ..setUint16(4, _kAxisRecordSize) // designAxisSize
       ..setUint16(6, _kAxisCount) // designAxisCount
       ..setUint32(8, _kDesignAxesOffset) // designAxesOffset
-      ..setUint16(12, _kAxisValueCount) // axisValueCount
+      ..setUint16(12, axisValues.length) // axisValueCount
       ..setUint32(14, _kOffsetToAxisValueOffsets) // offsetToAxisValueOffsets
       // The fallback name used if every axis value's own name is elided.
       // Name ID 2 (Font Subfamily) is unconditionally written as "Regular"
@@ -91,22 +128,30 @@ class StyleAttributesTable extends FontTable {
       // No preferred ordering among axes: there is only the one.
       ..setUint16(_kDesignAxesOffset + 6, 0); // axisOrdering
 
-    // The Offset16 entries below are relative to the start of this array
-    // (offsetToAxisValueOffsets itself), not to the start of the table --
-    // getting that base wrong produces a table that still parses, but with
-    // every AxisValue pointer landing on the wrong bytes.
-    const firstAxisValueOffset = _kAxisValueOffsetsArraySize;
-    const secondAxisValueOffset = firstAxisValueOffset + _kAxisValueSize;
+    // The Offset16 entries written below are relative to the start of their
+    // own array (offsetToAxisValueOffsets itself), not to the start of the
+    // table -- getting that base wrong produces a table that still parses,
+    // but with every AxisValue pointer landing on the wrong bytes. The
+    // records follow the array immediately and in the same order, so the
+    // first one begins at the array's own size.
+    //
+    // An odd axis value count makes that array an odd number of Offset16s
+    // wide, so the records land on a 2-byte but not 4-byte boundary. `STAT`
+    // imposes no alignment on them -- they are reached only through these
+    // offsets -- and the table as a whole is padded to four bytes when it is
+    // written into the font, so the Fixed values inside stay readable.
+    final offsetsArraySize = _axisValueOffsetsArraySize;
+    final axisValuesStart = _kOffsetToAxisValueOffsets + offsetsArraySize;
 
-    byteData
-      ..setUint16(_kOffsetToAxisValueOffsets, firstAxisValueOffset)
-      ..setUint16(_kOffsetToAxisValueOffsets + 2, secondAxisValueOffset);
+    for (var i = 0; i < axisValues.length; i++) {
+      final recordStart = axisValuesStart + i * _kAxisValueSize;
 
-    const axisValuesStart =
-        _kOffsetToAxisValueOffsets + _kAxisValueOffsetsArraySize;
-
-    _encodeAxisValue(byteData, axisValuesStart, range.min);
-    _encodeAxisValue(byteData, axisValuesStart + _kAxisValueSize, range.max);
+      byteData.setUint16(
+        _kOffsetToAxisValueOffsets + i * 2,
+        recordStart - _kOffsetToAxisValueOffsets,
+      );
+      _encodeAxisValue(byteData, recordStart, axisValues[i]);
+    }
   }
 
   /// Writes a format 1 `AxisValue` record naming a single point on the
