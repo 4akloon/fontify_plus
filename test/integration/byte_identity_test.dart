@@ -18,7 +18,7 @@ const _glyphOrder = ['arrow_right', 'plus', 'check', 'menu'];
 
 /// Matches `example/fontify_plus.yaml` — the shipped example is a variable
 /// font so the gallery can show `Icon(..., weight: …)`.
-final _exampleRange = StrokeWidthRange(1, 2);
+final _exampleRange = StrokeWidthRange(0.5, 3);
 
 /// The example font is checked in, so it doubles as a fixture: whatever the
 /// pipeline produces for `example/svg` must still be exactly what shipped.
