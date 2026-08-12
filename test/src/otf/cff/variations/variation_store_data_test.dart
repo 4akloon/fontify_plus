@@ -10,13 +10,24 @@ import 'package:test/test.dart';
 // itemVariationDataCount/Offsets/variationRegionListOffset start consistent
 // with the subtable list — see item_variation_store_test.dart for why.
 ItemVariationStore _store() => ItemVariationStore(
-  1,
-  12,
-  1,
-  [0],
-  VariationRegionList(1, 1, [RegionAxisCoordinates(0, 0x4000, 0x8000)]),
-  [
-    ItemVariationData(2, 1, 1, [0]),
+  format: 1,
+  variationRegionListOffset: 12,
+  itemVariationDataCount: 1,
+  itemVariationDataOffsets: [0],
+  variationRegionList: const VariationRegionList(
+    axisCount: 1,
+    regionCount: 1,
+    regions: [
+      RegionAxisCoordinates(startCoord: 0, peakCoord: 0x4000, endCoord: 0x8000),
+    ],
+  ),
+  itemVariationDataList: [
+    const ItemVariationData(
+      itemCount: 2,
+      shortDeltaCount: 1,
+      regionIndexCount: 1,
+      regionIndexes: [0],
+    ),
   ],
 );
 

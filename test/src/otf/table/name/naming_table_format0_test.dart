@@ -6,6 +6,26 @@ import 'package:fontify_plus/src/otf/table/table_record_entry.dart';
 import 'package:fontify_plus/src/utils/otf.dart';
 import 'package:test/test.dart';
 
+/// The NameIDs this format's fixed default-string map always writes.
+///
+/// `NameID.values` also includes `strokeWidthAxis`, an `fvar`/`STAT` axis
+/// name that `NamingTableFormat0.create` writes only when its optional
+/// `axisName` parameter is given (see `naming_table_test.dart` for that
+/// case). None of the calls in this file pass one, so it's excluded here
+/// rather than asserted (incorrectly) to be present.
+const _kStandardNameIds = [
+  NameID.copyright,
+  NameID.fontFamily,
+  NameID.fontSubfamily,
+  NameID.uniqueID,
+  NameID.fullFontName,
+  NameID.version,
+  NameID.postScriptName,
+  NameID.manufacturer,
+  NameID.description,
+  NameID.urlVendor,
+];
+
 void main() {
   group('NamingTableFormat0.create', () {
     test('familyName is the font name it was given', () {
@@ -25,8 +45,11 @@ void main() {
         const Revision(1, 0),
       );
 
-      // 10 NameIDs, written for 2 platform templates (Mac + Windows).
-      expect(table.header.nameRecordList, hasLength(20));
+      // Written for 2 platform templates (Mac + Windows).
+      expect(
+        table.header.nameRecordList,
+        hasLength(_kStandardNameIds.length * 2),
+      );
     });
 
     test('uses the given description when provided', () {
@@ -59,7 +82,7 @@ void main() {
         const Revision(1, 0),
       );
 
-      for (final id in NameID.values) {
+      for (final id in _kStandardNameIds) {
         expect(table.getStringByNameId(id), isNotNull, reason: '$id');
       }
     });
@@ -78,7 +101,12 @@ void main() {
 
       final decoded = NamingTableFormat0.fromByteData(
         bytes,
-        TableRecordEntry('name', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'name',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       )!;
 
       expect(decoded.familyName, 'My Icons');

@@ -57,26 +57,26 @@ CFF1Table _buildCFF1Table(
 
   return CFF1Table(
     null,
-    CFF1TableHeader.create(),
-    CFFIndexWithData<Uint8List>.create(
+    header: CFF1TableHeader.create(),
+    nameIndex: CFFIndexWithData<Uint8List>.create(
       [Uint8List.fromList(fontName.getPostScriptString().codeUnits)],
       true,
     ),
-    topDicts,
-    CFFIndexWithData<Uint8List>.create(strings.data, true),
-    CFFIndexWithData<Uint8List>.create([], true),
-    _CharsetEntryFormat1.create(glyphSidList),
-    CFFIndexWithData<Uint8List>.create(
+    topDicts: topDicts,
+    stringIndex: CFFIndexWithData<Uint8List>.create(strings.data, true),
+    globalSubrsData: CFFIndexWithData<Uint8List>.create([], true),
+    charsets: _CharsetEntryFormat1.create(glyphSidList),
+    charStringsData: CFFIndexWithData<Uint8List>.create(
       _encodeCharStrings(glyphList, hmtx),
       true,
     ),
-    CFFIndexWithData<CFFDict>.create([CFFDict.empty()], true),
-    [
+    fontDictList: CFFIndexWithData<CFFDict>.create([CFFDict.empty()], true),
+    privateDictList: [
       CFFDict([
         CFFDictEntry([CFFOperand.fromValue(0)], op.nominalWidthX),
       ]),
     ],
-    <CFFIndexWithData<Uint8List>>[],
+    localSubrsDataList: <CFFIndexWithData<Uint8List>>[],
   )..recalculateOffsets();
 }
 

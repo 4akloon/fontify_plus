@@ -1,7 +1,9 @@
 # Stroked Icons
 
-A font glyph is a filled region. The format has no concept of stroke width,
-line caps, or joins — only enclosed area matters.
+A font glyph is a filled region. The OpenType format still has no notion of
+line caps or joins — only enclosed area matters — but a **variable font** can
+now vary the stroke width that outlining is done at. See
+[Variable stroke width](variable_stroke.md).
 
 ## Centreline strokes
 

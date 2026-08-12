@@ -16,6 +16,10 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   fontify_plus:
     path: ../
+  integration_test:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
 
 flutter:
   uses-material-design: true
@@ -23,3 +27,19 @@ flutter:
     - family: My Icons
       fonts:
         - asset: fonts/my_icons.otf
+    # gvar lost the format decision (Task 5) and was retired from the render
+    # matrix — see integration_test/variable_stroke_test.dart and
+    # tool/variable_prototype/README.md. Rebuilt by tool/build_proto_fonts.py
+    # (package CLI, not varLib).
+    - family: ProtoCff2
+      fonts:
+        - asset: fonts/proto/variable_cff2.otf
+    - family: ProtoCff133
+      fonts:
+        - asset: fonts/proto/static_1.33_cff.otf
+    - family: ProtoCff150
+      fonts:
+        - asset: fonts/proto/static_1.5_cff.otf
+    - family: ProtoCff200
+      fonts:
+        - asset: fonts/proto/static_2.0_cff.otf

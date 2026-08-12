@@ -40,11 +40,11 @@ Debouncer _manualDebouncer(List<_FakeTimer> timers) {
 
 void main() {
   test('SVG debounce regenerates; config reparses all jobs', () async {
-    final icons = FontJob(
+    const icons = FontJob(
       inputSvgDir: 'assets/icons',
       outputFontFile: 'fonts/icons.otf',
     );
-    final brand = FontJob(
+    const brand = FontJob(
       inputSvgDir: 'assets/brand',
       outputFontFile: 'fonts/brand.otf',
     );
@@ -54,7 +54,7 @@ void main() {
     final runs = <List<String>>[];
     var reparses = 0;
 
-    final initial = CliRunRequest(
+    const initial = CliRunRequest(
       jobs: [icons],
       verbose: false,
       watch: true,
@@ -65,7 +65,7 @@ void main() {
       initial: initial,
       reparse: () {
         reparses++;
-        return CliRunRequest(
+        return const CliRunRequest(
           jobs: [icons, brand],
           verbose: false,
           watch: true,
@@ -107,11 +107,11 @@ void main() {
   });
 
   test('multi-path SVG coalesce unions jobs in one run', () async {
-    final icons = FontJob(
+    const icons = FontJob(
       inputSvgDir: 'assets/icons',
       outputFontFile: 'fonts/icons.otf',
     );
-    final brand = FontJob(
+    const brand = FontJob(
       inputSvgDir: 'assets/brand',
       outputFontFile: 'fonts/brand.otf',
     );
@@ -121,7 +121,7 @@ void main() {
     final runs = <List<String>>[];
 
     final loop = runWatchLoop(
-      initial: CliRunRequest(
+      initial: const CliRunRequest(
         jobs: [icons, brand],
         verbose: false,
         watch: true,
@@ -155,11 +155,11 @@ void main() {
   });
 
   test('config cancels pending SVG debounce', () async {
-    final icons = FontJob(
+    const icons = FontJob(
       inputSvgDir: 'assets/icons',
       outputFontFile: 'fonts/icons.otf',
     );
-    final brand = FontJob(
+    const brand = FontJob(
       inputSvgDir: 'assets/brand',
       outputFontFile: 'fonts/brand.otf',
     );
@@ -171,7 +171,7 @@ void main() {
     var reparses = 0;
 
     final loop = runWatchLoop(
-      initial: CliRunRequest(
+      initial: const CliRunRequest(
         jobs: [icons],
         verbose: false,
         watch: true,
@@ -179,7 +179,7 @@ void main() {
       ),
       reparse: () {
         reparses++;
-        return CliRunRequest(
+        return const CliRunRequest(
           jobs: [icons, brand],
           verbose: false,
           watch: true,
@@ -226,7 +226,7 @@ void main() {
   });
 
   test('throwing runJobs is swallowed; later events still run', () async {
-    final icons = FontJob(
+    const icons = FontJob(
       inputSvgDir: 'assets/icons',
       outputFontFile: 'fonts/icons.otf',
     );
@@ -237,7 +237,7 @@ void main() {
     var calls = 0;
 
     final loop = runWatchLoop(
-      initial: CliRunRequest(
+      initial: const CliRunRequest(
         jobs: [icons],
         verbose: false,
         watch: true,

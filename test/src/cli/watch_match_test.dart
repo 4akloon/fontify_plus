@@ -9,11 +9,11 @@ void main() {
   });
 
   test('jobsForSvgPath matches by input prefix', () {
-    final icons = FontJob(
+    const icons = FontJob(
       inputSvgDir: 'assets/icons',
       outputFontFile: 'fonts/icons.otf',
     );
-    final brand = FontJob(
+    const brand = FontJob(
       inputSvgDir: 'assets/brand',
       outputFontFile: 'fonts/brand.otf',
     );

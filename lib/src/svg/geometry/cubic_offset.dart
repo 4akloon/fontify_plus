@@ -1,5 +1,6 @@
 import 'cubic.dart';
 import 'offset_approximation.dart';
+import 'offset_plan.dart';
 
 /// Recursion cap, as a backstop behind the degeneracy check.
 const _maxDepth = 8;
@@ -34,21 +35,26 @@ class CubicOffsetter {
   /// How far the result may stray from the true offset.
   final double tolerance;
 
-  List<Cubic> offset(Cubic curve) {
-    final result = <Cubic>[];
+  /// The offset of [curve], subdivided for this offsetter's own distance.
+  List<Cubic> offset(Cubic curve) => plan(curve).evaluate(distance);
 
-    _offset(curve, result, 0);
+  /// How [curve] subdivides at this offsetter's distance, for replay at any
+  /// other distance.
+  OffsetPlan plan(Cubic curve) {
+    final pieces = <OffsetPiece>[];
 
-    return result;
+    _plan(curve, pieces, 0);
+
+    return OffsetPlan(pieces);
   }
 
-  void _offset(Cubic curve, List<Cubic> out, int depth) {
+  void _plan(Cubic curve, List<OffsetPiece> out, int depth) {
     final candidate = approximateOffset(curve, distance);
 
     if (candidate != null &&
         (depth >= _maxDepth ||
             maxOffsetDeviation(curve, candidate, distance) <= tolerance)) {
-      out.add(candidate);
+      out.add(OffsetPiece(curve, chord: false));
       return;
     }
 
@@ -58,21 +64,21 @@ class CubicOffsetter {
     // nonzero rule absorbs the overlap, so take the best approximation and
     // stop.
     if (_isDegenerate(curve)) {
-      out.add(candidate ?? offsetChord(curve, distance));
+      out.add(OffsetPiece(curve, chord: candidate == null));
       return;
     }
 
     if (depth >= _maxDepth) {
       // No usable approximation and no budget left: fall back to the chord so
       // the contour stays closed rather than dropping a piece of the outline.
-      out.add(offsetChord(curve, distance));
+      out.add(OffsetPiece(curve, chord: true));
       return;
     }
 
     final (left, right) = curve.splitAt(0.5);
 
-    _offset(left, out, depth + 1);
-    _offset(right, out, depth + 1);
+    _plan(left, out, depth + 1);
+    _plan(right, out, depth + 1);
   }
 
   /// Whether offsetting [curve] collapses somewhere along it.

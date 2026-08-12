@@ -15,6 +15,13 @@ const kDefaultFontRevision = Revision(1, 0);
 /// Default `head.created` / `head.modified` when no existing font is reused.
 final kDefaultFontTimestamp = DateTime.utc(2020, 1, 1);
 
+/// The display name written for the `wght` axis of a variable font.
+///
+/// Not "Weight": the axis carries literal stroke widths, so the name a font
+/// picker shows should say what the number means. `fvar`'s `axisNameID` and
+/// every `STAT` `valueNameID` resolve to this one string.
+const kStrokeWidthAxisName = 'Stroke Width';
+
 // Default glyph indicies for post table.
 const kDefaultGlyphIndex = <int>[
   0, // .notdef
@@ -52,30 +59,30 @@ GenericGlyph _generateNotdefGlyph(int ascender) {
   final outlines = [
     // Outer rectangle clockwise
     Outline(
-      [
+      pointList: [
         outerRect.bottomLeft,
         outerRect.bottomRight,
         outerRect.topRight,
         outerRect.topLeft,
       ],
-      List.filled(4, true),
-      false,
-      true,
-      FillRule.nonzero,
+      isOnCurveList: List.filled(4, true),
+      hasCompactCurves: false,
+      hasQuadCurves: true,
+      fillRule: FillRule.nonzero,
     ),
 
     // Inner rectangle counter-clockwise
     Outline(
-      [
+      pointList: [
         innerRect.bottomLeft,
         innerRect.topLeft,
         innerRect.topRight,
         innerRect.bottomRight,
       ],
-      List.filled(4, true),
-      false,
-      true,
-      FillRule.nonzero,
+      isOnCurveList: List.filled(4, true),
+      hasCompactCurves: false,
+      hasQuadCurves: true,
+      fillRule: FillRule.nonzero,
     ),
   ];
 

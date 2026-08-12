@@ -1,16 +1,39 @@
 /// Interpreter limits the CFF specification places on a charstring.
 class CharStringInterpreterLimits {
-  factory CharStringInterpreterLimits(bool isCFF1) => isCFF1
-      ? const CharStringInterpreterLimits._cff1()
-      : const CharStringInterpreterLimits._cff2();
+  factory CharStringInterpreterLimits(bool isCFF1, {int regionCount = 0}) {
+    assert(regionCount >= 0, 'regionCount must not be negative');
 
-  const CharStringInterpreterLimits._cff1() : argumentStackLimit = 48;
+    if (isCFF1) {
+      return const CharStringInterpreterLimits._(48);
+    }
 
-  const CharStringInterpreterLimits._cff2() : argumentStackLimit = 513;
+    if (regionCount == 0) {
+      return const CharStringInterpreterLimits._(_kCFF2StackSize);
+    }
 
-  /// How many operands may be on the argument stack at once.
+    // A blended command puts n base values, n * k deltas and the count n on
+    // the stack at once, so it fits only while n * (k + 1) + 1 <= 513. The
+    // optimizer merges adjacent commands up to this limit, so the limit is
+    // where the constraint has to be applied: without it a long merged
+    // rrcurveto encodes fine and then overflows the interpreter at render
+    // time, on someone else's machine.
+    return CharStringInterpreterLimits._(
+      (_kCFF2StackSize - 1) ~/ (regionCount + 1),
+    );
+  }
+
+  const CharStringInterpreterLimits._(this.argumentStackLimit);
+
+  /// How many operands a *pre-blend* command may carry.
   ///
-  /// A command with more operands than this has to be split, which is what the
-  /// charstring optimizer uses this for.
+  /// With `regionCount == 0` this is also the interpreter's real stack
+  /// ceiling. With `regionCount > 0` it is smaller than that ceiling on
+  /// purpose: blending a command of `n` operands expands it to
+  /// `n * (regionCount + 1) + 1` operands on the stack, so this field caps
+  /// `n` at whatever keeps that expansion within the true 513-operand limit,
+  /// not at 513 itself. The charstring optimizer uses this to decide how much
+  /// it may merge.
   final int argumentStackLimit;
 }
+
+const _kCFF2StackSize = 513;

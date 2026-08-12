@@ -35,7 +35,12 @@ void main() {
 
         final decoded = GlyphSubstitutionTableHeader.fromByteData(
           bytes,
-          TableRecordEntry('GSUB', 0, 0, bytes.lengthInBytes),
+          TableRecordEntry(
+            'GSUB',
+            checkSum: 0,
+            offset: 0,
+            length: bytes.lengthInBytes,
+          ),
         );
 
         expect(decoded.isV10, isTrue);
@@ -49,14 +54,26 @@ void main() {
     test(
       'round-trips a version-1.1 header, including featureVariationsOffset',
       () {
-        final header = GlyphSubstitutionTableHeader(1, 1, 10, 20, 30, 40);
+        final header = GlyphSubstitutionTableHeader(
+          majorVersion: 1,
+          minorVersion: 1,
+          scriptListOffset: 10,
+          featureListOffset: 20,
+          lookupListOffset: 30,
+          featureVariationsOffset: 40,
+        );
         final bytes = ByteData(header.size);
 
         header.encodeToBinary(bytes);
 
         final decoded = GlyphSubstitutionTableHeader.fromByteData(
           bytes,
-          TableRecordEntry('GSUB', 0, 0, bytes.lengthInBytes),
+          TableRecordEntry(
+            'GSUB',
+            checkSum: 0,
+            offset: 0,
+            length: bytes.lengthInBytes,
+          ),
         );
 
         expect(decoded.isV10, isFalse);

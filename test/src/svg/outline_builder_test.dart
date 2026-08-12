@@ -105,7 +105,11 @@ void main() {
 
   group('outlinesFromContours', () {
     List<Outline> fromContours(List<List<Cubic>> contours) =>
-        outlinesFromContours(contours, height: 10);
+        outlinesFromContours(
+          contours,
+          height: 10,
+          shape: planContourShape(contours, height: 10),
+        );
 
     test('is always nonzero', () {
       // The outliner leans on the nonzero rule to merge overlapping walls
@@ -219,7 +223,7 @@ void main() {
         ],
       ];
 
-      for (final outline in outlinesFromContours(contours, height: 10)) {
+      for (final outline in fromContours(contours)) {
         expect(outline.isOnCurveList.last, isTrue);
       }
     });

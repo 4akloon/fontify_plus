@@ -81,6 +81,7 @@ FontJobResult runFontJob(FontJob job) {
     fontName: job.fontName,
     created: created,
     modified: modified,
+    strokeWidthRange: job.strokeWidthRange,
   );
 
   writeToFile(job.outputFontFile, otfResult.font);
@@ -95,6 +96,7 @@ FontJobResult runFontJob(FontJob job) {
       fontFileName: fontFileName,
       familyName: otfResult.font.familyName,
       package: job.package,
+      strokeWidthRange: job.strokeWidthRange,
     );
     classFile.writeAsStringSync(classSource);
   } else {

@@ -14,7 +14,11 @@ class CFFOperand extends BinaryCodable {
 
   CFFOperand.fromValue(this.value);
 
-  factory CFFOperand.fromByteData(ByteData byteData, int offset, int b0) {
+  factory CFFOperand.fromByteData(
+    ByteData byteData, {
+    required int offset,
+    required int b0,
+  }) {
     switch (b0) {
       /// -32768 to +32767
       case 28:

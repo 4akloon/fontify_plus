@@ -8,6 +8,8 @@ import 'operator.dart';
 
 /// One charstring operator together with the operands it consumes.
 class CharStringCommand implements BinaryCodable {
+  // Not const: the assert reads [operator].context, which is not a constant
+  // expression; operandList is also mutated in place by the optimizer.
   CharStringCommand(this.operator, this.operandList)
     : assert(
         operator.context == CFFOperatorContext.charString,

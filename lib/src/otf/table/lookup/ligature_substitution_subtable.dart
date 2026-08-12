@@ -9,13 +9,13 @@ import 'substitution_subtable.dart';
 /// Written empty. An icon font has no ligatures, but a GSUB table has to
 /// contain at least one well-formed lookup to be valid.
 class LigatureSubstitutionSubtable extends SubstitutionSubtable {
-  const LigatureSubstitutionSubtable(
-    this.substFormat,
-    this.coverageOffset,
-    this.ligatureSetCount,
-    this.ligatureSetOffsets,
-    this.coverageTable,
-  );
+  const LigatureSubstitutionSubtable({
+    required this.substFormat,
+    required this.coverageOffset,
+    required this.ligatureSetCount,
+    required this.ligatureSetOffsets,
+    required this.coverageTable,
+  });
 
   factory LigatureSubstitutionSubtable.fromByteData(
     ByteData byteData,
@@ -25,14 +25,17 @@ class LigatureSubstitutionSubtable extends SubstitutionSubtable {
     final ligatureSetCount = byteData.getUint16(offset + 4);
 
     return LigatureSubstitutionSubtable(
-      byteData.getUint16(offset),
-      coverageOffset,
-      ligatureSetCount,
-      List.generate(
+      substFormat: byteData.getUint16(offset),
+      coverageOffset: coverageOffset,
+      ligatureSetCount: ligatureSetCount,
+      ligatureSetOffsets: List.generate(
         ligatureSetCount,
         (i) => byteData.getUint16(offset + 6 + 2 * i),
       ),
-      CoverageTable.fromByteData(byteData, offset + coverageOffset),
+      coverageTable: CoverageTable.fromByteData(
+        byteData,
+        offset + coverageOffset,
+      ),
     );
   }
 

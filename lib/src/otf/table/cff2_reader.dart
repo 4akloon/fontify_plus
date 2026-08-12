@@ -87,13 +87,13 @@ CFF2Table _readCFF2Table(ByteData byteData, TableRecordEntry entry) {
 
   return CFF2Table(
     entry,
-    header,
-    topDict,
-    globalSubrsData,
-    charStringsData,
-    vstoreData,
-    fontDictList,
-    privateDictList,
-    localSubrsDataList,
+    header: header,
+    topDict: topDict,
+    globalSubrsData: globalSubrsData,
+    charStringsData: charStringsData,
+    vstoreData: vstoreData,
+    fontDictList: fontDictList,
+    privateDictList: privateDictList,
+    localSubrsDataList: localSubrsDataList,
   );
 }

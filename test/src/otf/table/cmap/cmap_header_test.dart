@@ -9,9 +9,12 @@ void main() {
   group('CharacterToGlyphTableHeader', () {
     test('size accounts for every encoding record', () {
       final header = CharacterToGlyphTableHeader(
-        0,
-        2,
-        [EncodingRecord(3, 1, 0), EncodingRecord(1, 0, 0)],
+        version: 0,
+        numTables: 2,
+        encodingRecords: [
+          EncodingRecord(platformID: 3, encodingID: 1, offset: 0),
+          EncodingRecord(platformID: 1, encodingID: 0, offset: 0),
+        ],
       );
 
       expect(header.size, 4 + 8 * 2);
@@ -19,16 +22,23 @@ void main() {
 
     test('round-trips through encodeToBinary and fromByteData', () {
       final header = CharacterToGlyphTableHeader(
-        0,
-        1,
-        [EncodingRecord(3, 1, 20)],
+        version: 0,
+        numTables: 1,
+        encodingRecords: [
+          EncodingRecord(platformID: 3, encodingID: 1, offset: 20),
+        ],
       );
       final bytes = ByteData(header.size);
 
       header.encodeToBinary(bytes);
       final decoded = CharacterToGlyphTableHeader.fromByteData(
         bytes,
-        TableRecordEntry('cmap', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'cmap',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded.numTables, 1);

@@ -69,6 +69,14 @@ void defineOptions(ArgParser argParser) {
           'curves an SVG is drawn with directly; TrueType has to approximate '
           'them with quadratics, which costs points.',
     )
+    ..addOption(
+      kJobCliOptions[JobField.strokeWidthRange]!,
+      help:
+          'Build a variable font whose wght axis is the stroke width, as '
+          'MIN,MAX in the SVG\'s own units (for example 1.33,2). The maximum '
+          'is the default instance. Omit for a static font.',
+      valueHelp: 'min,max',
+    )
     ..addSeparator('Other options:')
     ..addOption(
       kCliConfigFileOption,

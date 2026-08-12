@@ -7,14 +7,14 @@ import 'variation_region_list.dart';
 
 /// The variation store: a region list plus the subtables that index into it.
 class ItemVariationStore extends BinaryCodable {
-  ItemVariationStore(
-    this.format,
-    this.variationRegionListOffset,
-    this.itemVariationDataCount,
-    this.itemVariationDataOffsets,
-    this.variationRegionList,
-    this.itemVariationDataList,
-  );
+  ItemVariationStore({
+    required this.format,
+    required this.variationRegionListOffset,
+    required this.itemVariationDataCount,
+    required this.itemVariationDataOffsets,
+    required this.variationRegionList,
+    required this.itemVariationDataList,
+  });
 
   factory ItemVariationStore.fromByteData(ByteData byteData) {
     final variationRegionListOffset = byteData.getUint32(2);
@@ -25,14 +25,14 @@ class ItemVariationStore extends BinaryCodable {
     );
 
     return ItemVariationStore(
-      byteData.getUint16(0),
-      variationRegionListOffset,
-      itemVariationDataCount,
-      itemVariationDataOffsets,
-      VariationRegionList.fromByteData(
+      format: byteData.getUint16(0),
+      variationRegionListOffset: variationRegionListOffset,
+      itemVariationDataCount: itemVariationDataCount,
+      itemVariationDataOffsets: itemVariationDataOffsets,
+      variationRegionList: VariationRegionList.fromByteData(
         byteData.sublistView(variationRegionListOffset),
       ),
-      [
+      itemVariationDataList: [
         for (final offset in itemVariationDataOffsets)
           ItemVariationData.fromByteData(byteData.sublistView(offset)),
       ],

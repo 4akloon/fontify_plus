@@ -92,3 +92,14 @@ Publish workflow verifies tag ↔ pubspec and publishes via OIDC. See [CONTRIBUT
 | Run focused tests, then `dart test` before claiming done | Skip e2e after writer/table changes |
 | Ask before committing `docs/superpowers/**` | Commit design/plan scratch by default |
 | Keep example artifacts in sync if defaults change codegen | Leave example fonts stale after intentional regen |
+
+## Cursor Cloud specific instructions
+
+Prefer the **Flutter SDK** (ships Dart) over a standalone Dart install — `example/` is a Flutter app, and agents should be able to run it and Flutter-facing checks. Package unit/integration tests under `test/` are still plain `dart test` and do not need the Flutter framework.
+
+Standard commands: [CONTRIBUTING.md](CONTRIBUTING.md) / Commands above. Cloud gotchas:
+
+- Use Flutter’s `dart`/`flutter` on `PATH` (typically `/opt/flutter/bin`). CI-style package-only deps: `dart pub get --no-example`. With Flutter present, root `dart pub get` also resolves `example/`.
+- Example app: `cd example && dart run tool/generate.dart` then `flutter run -d chrome`. Chrome is the supported device here (web); Android/Linux desktop toolchains are optional and not required for this repo.
+- Regenerating the example updates committed `example/fonts/` and `example/lib/my_icons.dart` — only commit those when the change is intentional.
+- `dart analyze --fatal-infos` matches CI; format is pinned on stable (`dart format --output=none --set-exit-if-changed bin lib test`).

@@ -6,17 +6,24 @@ import 'package:fontify_plus/src/otf/table/lookup/lookup_table.dart';
 import 'package:test/test.dart';
 
 const _kSubtable = LigatureSubstitutionSubtable(
-  1,
-  6,
-  0,
-  [],
-  kDefaultCoverageTable,
+  substFormat: 1,
+  coverageOffset: 6,
+  ligatureSetCount: 0,
+  ligatureSetOffsets: [],
+  coverageTable: kDefaultCoverageTable,
 );
 
 void main() {
   group('LookupTable.size', () {
     test('is 6 bytes plus 2 per subtable offset plus the subtables', () {
-      const table = LookupTable(4, 0, 1, [8], null, [_kSubtable]);
+      const table = LookupTable(
+        lookupType: 4,
+        lookupFlag: 0,
+        subTableCount: 1,
+        subtableOffsets: [8],
+        markFilteringSet: null,
+        subtables: [_kSubtable],
+      );
 
       expect(table.size, 6 + 2 * 1 + _kSubtable.size);
     });
@@ -24,7 +31,14 @@ void main() {
 
   group('LookupTable round trip', () {
     test('round-trips a table without a mark-filtering set', () {
-      const table = LookupTable(4, 0, 1, [8], null, [_kSubtable]);
+      const table = LookupTable(
+        lookupType: 4,
+        lookupFlag: 0,
+        subTableCount: 1,
+        subtableOffsets: [8],
+        markFilteringSet: null,
+        subtables: [_kSubtable],
+      );
       final bytes = ByteData(table.size);
 
       table.encodeToBinary(bytes);
@@ -37,7 +51,14 @@ void main() {
     });
 
     test('round-trips a table with a mark-filtering set (flag bit 0x0010)', () {
-      const table = LookupTable(4, 0x0010, 1, [8], 3, [_kSubtable]);
+      const table = LookupTable(
+        lookupType: 4,
+        lookupFlag: 0x0010,
+        subTableCount: 1,
+        subtableOffsets: [8],
+        markFilteringSet: 3,
+        subtables: [_kSubtable],
+      );
       final bytes = ByteData(table.size);
 
       table.encodeToBinary(bytes);

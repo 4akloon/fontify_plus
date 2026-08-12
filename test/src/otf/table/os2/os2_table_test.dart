@@ -16,7 +16,7 @@ const _kUnitsPerEm = 1000;
 
 List<GenericGlyphMetrics> _metricsList() => [
   GenericGlyphMetrics.empty(),
-  GenericGlyphMetrics(0, 700, 0, 800),
+  const GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
 ];
 
 List<GenericGlyph> _fullGlyphList() => [
@@ -32,7 +32,12 @@ OS2Table _built({int version = kOS2Version5}) {
     const Revision(1, 0),
     _kUnitsPerEm,
   );
-  final hhea = HorizontalHeaderTable.create(_metricsList(), hmtx, 800, -200);
+  final hhea = HorizontalHeaderTable.create(
+    _metricsList(),
+    hmtx,
+    ascender: 800,
+    descender: -200,
+  );
   final cmap = CharacterToGlyphTable.create(_fullGlyphList());
 
   return OS2Table.create(
@@ -67,7 +72,7 @@ void main() {
 
   group('OS2Table.create', () {
     test('delegates to buildOS2Table', () {
-      expect(_built().achVendID, 'PfPl');
+      expect(_built().version0.achVendID, 'PfPl');
     });
   });
 
@@ -80,11 +85,16 @@ void main() {
 
       final decoded = OS2Table.fromByteData(
         bytes,
-        TableRecordEntry('OS/2', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'OS/2',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded.version, table.version);
-      expect(decoded.achVendID, table.achVendID);
+      expect(decoded.version0.achVendID, table.version0.achVendID);
     });
   });
 }

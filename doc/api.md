@@ -60,6 +60,7 @@ Converts a map of SVG strings into an OpenType font.
 | `normalize` | `bool?` | `true` | Scale each glyph so its longest side fills the em square, then centre it. |
 | `useOpenType` | `bool?` | `true` | Emit CFF (OpenType) outlines. When `false`, TrueType outlines are generated with cubic-to-quadratic approximation. |
 | `fontName` | `String?` | `null` | PostScript / family name for the generated font. |
+| `strokeWidthRange` | `StrokeWidthRange?` | `null` | Build a variable font whose `wght` axis is the stroke width (`min` and `max` in SVG units). Omit for a static font. See [Variable stroke width](variable_stroke.md). |
 
 Returns a `SvgToOtfResult` containing:
 
@@ -78,6 +79,7 @@ Emits Dart source for a class of `IconData` constants.
 | `package` | `String?` | `null` | Package name when the font is provided through a dependency. |
 | `fontFileName` | `String?` | `null` | Font file name referenced in generated docs. |
 | `indent` | `int?` | `2` | Leading spaces for class members. |
+| `strokeWidthRange` | `StrokeWidthRange?` | `null` | When set, documents the variable `wght` axis in the class comment. |
 
 Returns the class file contents as a `String`.
 

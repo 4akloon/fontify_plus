@@ -7,14 +7,14 @@ import '../table_record_entry.dart';
 
 /// The GSUB header: a version and offsets to the three lists it holds.
 class GlyphSubstitutionTableHeader implements BinaryCodable {
-  GlyphSubstitutionTableHeader(
-    this.majorVersion,
-    this.minorVersion,
-    this.scriptListOffset,
-    this.featureListOffset,
-    this.lookupListOffset,
-    this.featureVariationsOffset,
-  );
+  GlyphSubstitutionTableHeader({
+    required this.majorVersion,
+    required this.minorVersion,
+    required this.scriptListOffset,
+    required this.featureListOffset,
+    required this.lookupListOffset,
+    required this.featureVariationsOffset,
+  });
 
   factory GlyphSubstitutionTableHeader.fromByteData(
     ByteData byteData,
@@ -33,17 +33,25 @@ class GlyphSubstitutionTableHeader implements BinaryCodable {
     }
 
     return GlyphSubstitutionTableHeader(
-      major,
-      minor,
-      byteData.getUint16(entry.offset + 4),
-      byteData.getUint16(entry.offset + 6),
-      byteData.getUint16(entry.offset + 8),
-      isV10 ? null : byteData.getUint32(entry.offset + 10),
+      majorVersion: major,
+      minorVersion: minor,
+      scriptListOffset: byteData.getUint16(entry.offset + 4),
+      featureListOffset: byteData.getUint16(entry.offset + 6),
+      lookupListOffset: byteData.getUint16(entry.offset + 8),
+      featureVariationsOffset: isV10
+          ? null
+          : byteData.getUint32(entry.offset + 10),
     );
   }
 
-  factory GlyphSubstitutionTableHeader.create() =>
-      GlyphSubstitutionTableHeader(1, 0, null, null, null, null);
+  factory GlyphSubstitutionTableHeader.create() => GlyphSubstitutionTableHeader(
+    majorVersion: 1,
+    minorVersion: 0,
+    scriptListOffset: null,
+    featureListOffset: null,
+    lookupListOffset: null,
+    featureVariationsOffset: null,
+  );
 
   final int majorVersion;
   final int minorVersion;

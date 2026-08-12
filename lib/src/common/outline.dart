@@ -25,13 +25,14 @@ enum FillRule { nonzero, evenodd }
 /// encoders require a specific one, and the conversions between them are the
 /// methods on this class.
 class Outline {
-  Outline(
-    this.pointList,
-    this.isOnCurveList,
-    this._hasCompactCurves,
-    this._hasQuadCurves,
-    this.fillRule,
-  );
+  Outline({
+    required this.pointList,
+    required this.isOnCurveList,
+    required bool hasCompactCurves,
+    required bool hasQuadCurves,
+    required this.fillRule,
+  }) : _hasCompactCurves = hasCompactCurves,
+       _hasQuadCurves = hasQuadCurves;
 
   final List<Point<num>> pointList;
   final List<bool> isOnCurveList;
@@ -48,11 +49,11 @@ class Outline {
   /// Deep copy of an outline
   Outline copy() {
     return Outline(
-      [...pointList],
-      [...isOnCurveList],
-      _hasCompactCurves,
-      _hasQuadCurves,
-      fillRule,
+      pointList: [...pointList],
+      isOnCurveList: [...isOnCurveList],
+      hasCompactCurves: _hasCompactCurves,
+      hasQuadCurves: _hasQuadCurves,
+      fillRule: fillRule,
     );
   }
 

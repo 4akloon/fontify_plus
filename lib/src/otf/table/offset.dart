@@ -9,23 +9,23 @@ const _kOffsetTableTrueTypeVersion = 0x00010000;
 const _kOffsetTableOpenTypeVersion = 0x4F54544F;
 
 class OffsetTable implements BinaryCodable {
-  OffsetTable(
-    this.sfntVersion,
-    this.numTables,
-    this.searchRange,
-    this.entrySelector,
-    this.rangeShift,
-  );
+  const OffsetTable({
+    required this.sfntVersion,
+    required this.numTables,
+    required this.searchRange,
+    required this.entrySelector,
+    required this.rangeShift,
+  });
 
   factory OffsetTable.fromByteData(ByteData data) {
     final version = data.getUint32(0);
 
     return OffsetTable(
-      version,
-      data.getUint16(4),
-      data.getUint16(6),
-      data.getUint16(8),
-      data.getUint16(10),
+      sfntVersion: version,
+      numTables: data.getUint16(4),
+      searchRange: data.getUint16(6),
+      entrySelector: data.getUint16(8),
+      rangeShift: data.getUint16(10),
     );
   }
 
@@ -35,11 +35,13 @@ class OffsetTable implements BinaryCodable {
     final rangeShift = numTables * 16 - searchRange;
 
     return OffsetTable(
-      isOpenType ? _kOffsetTableOpenTypeVersion : _kOffsetTableTrueTypeVersion,
-      numTables,
-      searchRange,
-      entrySelector,
-      rangeShift,
+      sfntVersion: isOpenType
+          ? _kOffsetTableOpenTypeVersion
+          : _kOffsetTableTrueTypeVersion,
+      numTables: numTables,
+      searchRange: searchRange,
+      entrySelector: entrySelector,
+      rangeShift: rangeShift,
     );
   }
 

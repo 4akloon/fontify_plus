@@ -6,14 +6,14 @@ import 'substitution_subtable.dart';
 
 /// One lookup: a type, its flags, and the subtables that apply it.
 class LookupTable implements BinaryCodable {
-  const LookupTable(
-    this.lookupType,
-    this.lookupFlag,
-    this.subTableCount,
-    this.subtableOffsets,
-    this.markFilteringSet,
-    this.subtables,
-  );
+  const LookupTable({
+    required this.lookupType,
+    required this.lookupFlag,
+    required this.subTableCount,
+    required this.subtableOffsets,
+    required this.markFilteringSet,
+    required this.subtables,
+  });
 
   factory LookupTable.fromByteData(ByteData byteData, int offset) {
     final lookupType = byteData.getUint16(offset);
@@ -28,14 +28,14 @@ class LookupTable implements BinaryCodable {
     final markFilteringSetOffset = offset + 6 + 2 * subTableCount;
 
     return LookupTable(
-      lookupType,
-      lookupFlag,
-      subTableCount,
-      subtableOffsets,
-      _useMarkFilteringSet(lookupFlag)
+      lookupType: lookupType,
+      lookupFlag: lookupFlag,
+      subTableCount: subTableCount,
+      subtableOffsets: subtableOffsets,
+      markFilteringSet: _useMarkFilteringSet(lookupFlag)
           ? byteData.getUint16(markFilteringSetOffset)
           : null,
-      List.generate(
+      subtables: List.generate(
         subTableCount,
         (i) => SubstitutionSubtable.fromByteData(
           byteData,

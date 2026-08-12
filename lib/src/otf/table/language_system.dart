@@ -30,12 +30,12 @@ class LanguageSystemRecord implements BinaryCodable {
 }
 
 class LanguageSystemTable implements BinaryCodable {
-  const LanguageSystemTable(
-    this.lookupOrder,
-    this.requiredFeatureIndex,
-    this.featureIndexCount,
-    this.featureIndices,
-  );
+  const LanguageSystemTable({
+    required this.lookupOrder,
+    required this.requiredFeatureIndex,
+    required this.featureIndexCount,
+    required this.featureIndices,
+  });
 
   factory LanguageSystemTable.fromByteData(ByteData byteData, int offset) {
     final featureIndexCount = byteData.getUint16(offset + 4);
@@ -45,10 +45,10 @@ class LanguageSystemTable implements BinaryCodable {
     );
 
     return LanguageSystemTable(
-      byteData.getUint16(offset),
-      byteData.getUint16(offset + 2),
-      featureIndexCount,
-      featureIndices,
+      lookupOrder: byteData.getUint16(offset),
+      requiredFeatureIndex: byteData.getUint16(offset + 2),
+      featureIndexCount: featureIndexCount,
+      featureIndices: featureIndices,
     );
   }
 

@@ -55,6 +55,7 @@ runFontJob(FontJob(
 ## Where to go next
 
 - **API Usage** — parameters on `svgToOtf` and `generateFlutterClass`.
+- **Variable stroke width** — `wght` axis as literal stroke width.
 - **Stroked Icons** — why outline-style SVGs need stroke conversion.
 - **Glyph Sizing** — artboard mapping vs `--normalize`.
 - **CLI & Config** — flags and the yaml config file.

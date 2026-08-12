@@ -3,10 +3,14 @@ import 'dart:typed_data';
 /// A class that supports decoding from binary representation
 ///
 /// Every implementation of the interface has *fromByteData* factory
-abstract class BinaryDecodable {}
+abstract class BinaryDecodable {
+  const BinaryDecodable();
+}
 
 /// A class that supports encoding to binary representation
 abstract class BinaryEncodable {
+  const BinaryEncodable();
+
   /// Calculates and returns size of the object (in bytes)
   int get size;
 
@@ -15,4 +19,6 @@ abstract class BinaryEncodable {
 }
 
 /// A class that supports both encoding and decoding to/from binary representation
-abstract class BinaryCodable implements BinaryEncodable, BinaryDecodable {}
+abstract class BinaryCodable implements BinaryEncodable, BinaryDecodable {
+  const BinaryCodable();
+}

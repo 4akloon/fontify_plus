@@ -1,8 +1,9 @@
 import '../common/api.dart';
+import '../common/stroke_width_range.dart';
 
 /// One icon-font generation job with fully resolved options.
 class FontJob {
-  FontJob({
+  const FontJob({
     this.name,
     required this.inputSvgDir,
     required this.outputFontFile,
@@ -16,6 +17,7 @@ class FontJob {
     this.outlineStrokes = true,
     this.preview = true,
     this.useOpenType = true,
+    this.strokeWidthRange,
   });
 
   final String? name;
@@ -31,11 +33,16 @@ class FontJob {
   final bool outlineStrokes;
   final bool preview;
   final bool useOpenType;
+
+  /// When set, builds a variable font whose `wght` axis is the stroke width,
+  /// spanning this range. See [StrokeWidthRange] and `svgToOtf`'s
+  /// `strokeWidthRange` parameter, which this is passed straight through to.
+  final StrokeWidthRange? strokeWidthRange;
 }
 
 /// Result of [runFontJob].
 class FontJobResult {
-  FontJobResult({this.name, required this.otf, this.classSource});
+  const FontJobResult({this.name, required this.otf, this.classSource});
 
   final String? name;
   final SvgToOtfResult otf;

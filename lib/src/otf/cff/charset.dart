@@ -29,7 +29,7 @@ abstract class CharsetEntry implements BinaryCodable {
 }
 
 class _CharsetEntryFormat1 extends CharsetEntry {
-  _CharsetEntryFormat1(super.format, this.rangeList);
+  const _CharsetEntryFormat1(super.format, this.rangeList);
 
   factory _CharsetEntryFormat1.fromByteData(ByteData byteData, int glyphCount) {
     final rangeList = <_Range1>[];

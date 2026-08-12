@@ -17,14 +17,20 @@ SimpleGlyph _triangle() {
   ];
 
   return SimpleGlyph(
-    GlyphHeader(1, 0, 0, 10, 10),
-    [2],
-    [],
-    [
+    header: const GlyphHeader(
+      numberOfContours: 1,
+      xMin: 0,
+      yMin: 0,
+      xMax: 10,
+      yMax: 10,
+    ),
+    endPtsOfContours: [2],
+    instructions: [],
+    flags: [
       for (var i = 0; i < points.length; i++)
-        SimpleGlyphFlag.createForPoint(0, 0, true),
+        SimpleGlyphFlag.createForPoint(x: 0, y: 0, isOnCurve: true),
     ],
-    points,
+    pointList: points,
   );
 }
 
@@ -59,7 +65,12 @@ void main() {
 
       final decoded = IndexToLocationTable.fromByteData(
         bytes,
-        TableRecordEntry('loca', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'loca',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
         0,
         glyf.glyphList.length,
       );
@@ -76,7 +87,12 @@ void main() {
 
       final decoded = IndexToLocationTable.fromByteData(
         bytes,
-        TableRecordEntry('loca', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'loca',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
         1,
         glyf.glyphList.length,
       );

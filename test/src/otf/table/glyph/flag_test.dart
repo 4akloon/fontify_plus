@@ -59,7 +59,11 @@ void main() {
 
   group('SimpleGlyphFlag.createForPoint', () {
     test('marks a short positive delta as short and same-or-positive', () {
-      final flag = SimpleGlyphFlag.createForPoint(10, 20, true);
+      final flag = SimpleGlyphFlag.createForPoint(
+        x: 10,
+        y: 20,
+        isOnCurve: true,
+      );
 
       expect(flag.xShortVector, isTrue);
       expect(flag.xIsSameOrPositive, isTrue);
@@ -68,7 +72,11 @@ void main() {
     });
 
     test('marks a short negative delta as short but not same-or-positive', () {
-      final flag = SimpleGlyphFlag.createForPoint(-10, -20, false);
+      final flag = SimpleGlyphFlag.createForPoint(
+        x: -10,
+        y: -20,
+        isOnCurve: false,
+      );
 
       expect(flag.xShortVector, isTrue);
       expect(flag.xIsSameOrPositive, isFalse);
@@ -77,7 +85,11 @@ void main() {
     });
 
     test('marks a delta past 0xFF as not short', () {
-      final flag = SimpleGlyphFlag.createForPoint(1000, -1000, true);
+      final flag = SimpleGlyphFlag.createForPoint(
+        x: 1000,
+        y: -1000,
+        isOnCurve: true,
+      );
 
       expect(flag.xShortVector, isFalse);
       expect(flag.xIsSameOrPositive, isFalse);
@@ -86,22 +98,36 @@ void main() {
     });
 
     test('carries the given onCurvePoint through', () {
-      expect(SimpleGlyphFlag.createForPoint(0, 0, true).onCurvePoint, isTrue);
-      expect(SimpleGlyphFlag.createForPoint(0, 0, false).onCurvePoint, isFalse);
+      expect(
+        SimpleGlyphFlag.createForPoint(
+          x: 0,
+          y: 0,
+          isOnCurve: true,
+        ).onCurvePoint,
+        isTrue,
+      );
+      expect(
+        SimpleGlyphFlag.createForPoint(
+          x: 0,
+          y: 0,
+          isOnCurve: false,
+        ).onCurvePoint,
+        isFalse,
+      );
     });
   });
 
   group('SimpleGlyphFlag.hasSameBits', () {
     test('is true for identical flags regardless of repeat count', () {
-      final a = SimpleGlyphFlag.createForPoint(10, 10, true);
+      final a = SimpleGlyphFlag.createForPoint(x: 10, y: 10, isOnCurve: true);
       final b = a.repeated(4);
 
       expect(a.hasSameBits(b), isTrue);
     });
 
     test('is false when any non-repeat bit differs', () {
-      final a = SimpleGlyphFlag.createForPoint(10, 10, true);
-      final b = SimpleGlyphFlag.createForPoint(10, 10, false);
+      final a = SimpleGlyphFlag.createForPoint(x: 10, y: 10, isOnCurve: true);
+      final b = SimpleGlyphFlag.createForPoint(x: 10, y: 10, isOnCurve: false);
 
       expect(a.hasSameBits(b), isFalse);
     });
@@ -109,7 +135,11 @@ void main() {
 
   group('SimpleGlyphFlag.repeated', () {
     test('keeps every other field but sets the repeat count', () {
-      final flag = SimpleGlyphFlag.createForPoint(10, -300, true).repeated(3);
+      final flag = SimpleGlyphFlag.createForPoint(
+        x: 10,
+        y: -300,
+        isOnCurve: true,
+      ).repeated(3);
 
       expect(flag.repeatTimes, 3);
       expect(flag.isRepeating, isTrue);
@@ -121,19 +151,27 @@ void main() {
 
   group('SimpleGlyphFlag size and encoding', () {
     test('size is 1 byte when not repeating', () {
-      final flag = SimpleGlyphFlag.createForPoint(0, 0, true);
+      final flag = SimpleGlyphFlag.createForPoint(x: 0, y: 0, isOnCurve: true);
 
       expect(flag.size, 1);
     });
 
     test('size is 2 bytes when repeating', () {
-      final flag = SimpleGlyphFlag.createForPoint(0, 0, true).repeated(2);
+      final flag = SimpleGlyphFlag.createForPoint(
+        x: 0,
+        y: 0,
+        isOnCurve: true,
+      ).repeated(2);
 
       expect(flag.size, 2);
     });
 
     test('round-trips through encodeToBinary and fromByteData', () {
-      final flag = SimpleGlyphFlag.createForPoint(-10, 300, false).repeated(6);
+      final flag = SimpleGlyphFlag.createForPoint(
+        x: -10,
+        y: 300,
+        isOnCurve: false,
+      ).repeated(6);
       final bytes = ByteData(flag.size);
 
       flag.encodeToBinary(bytes);

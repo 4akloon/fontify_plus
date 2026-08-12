@@ -76,6 +76,7 @@ void main() {
       expect(job.recursive, isFalse);
       expect(job.outlineStrokes, isTrue);
       expect(job.preview, isTrue);
+      expect(job.strokeWidthRange, isNull);
     });
 
     test('--no-preview disables dartdoc previews', () {
@@ -85,6 +86,64 @@ void main() {
 
       expect(job.preview, isFalse);
     });
+
+    test('--stroke-width-range is parsed into a StrokeWidthRange', () {
+      const args = [
+        './',
+        'test/fonts/my_font.otf',
+        '--stroke-width-range=1.33,2',
+      ];
+
+      final job = parseArgsAndConfig(argParser, args).jobs.single;
+
+      expect(job.strokeWidthRange!.min, 1.33);
+      expect(job.strokeWidthRange!.max, 2);
+    });
+
+    test('an unparsable --stroke-width-range errors naming the option', () {
+      // Goes through the same coercion FontifyException -> CliArgumentException
+      // path as --indent's own malformed-value test above; this pins down
+      // that the stroke_width_range coercion failure reaches the CLI caller
+      // too, not just resolveFontJob's direct callers.
+      expect(
+        () => parseArgsAndConfig(argParser, [
+          './',
+          'test/fonts/my_font.otf',
+          '--stroke-width-range=not-a-range',
+        ]),
+        throwsA(
+          isA<CliArgumentException>().having(
+            (e) => e.message,
+            'message',
+            contains('stroke_width_range'),
+          ),
+        ),
+      );
+    });
+
+    test(
+      '--stroke-width-range with --no-outline-strokes errors at parse time',
+      () {
+        expect(
+          () => parseArgsAndConfig(argParser, [
+            './',
+            'test/fonts/my_font.otf',
+            '--stroke-width-range=1.33,2',
+            '--no-outline-strokes',
+          ]),
+          throwsA(
+            isA<CliArgumentException>().having(
+              (e) => e.message,
+              'message',
+              allOf(
+                contains('stroke_width_range'),
+                contains('outline_strokes'),
+              ),
+            ),
+          ),
+        );
+      },
+    );
 
     test('missing positionals without config errors', () {
       expectCliArgumentException([]);

@@ -14,7 +14,12 @@ const _kUnitsPerEm = 1000;
 
 List<GenericGlyphMetrics> _metricsList() => [
   GenericGlyphMetrics.empty(), // .notdef
-  GenericGlyphMetrics(0, 700, 0, 800), // one icon glyph
+  const GenericGlyphMetrics(
+    xMin: 0,
+    xMax: 700,
+    yMin: 0,
+    yMax: 800,
+  ), // one icon glyph
 ];
 
 List<GenericGlyph> _fullGlyphList() => [
@@ -33,7 +38,12 @@ HeaderTable _head() => HeaderTable.create(
 );
 
 HorizontalHeaderTable _hhea(HorizontalMetricsTable hmtx) =>
-    HorizontalHeaderTable.create(_metricsList(), hmtx, 800, -200);
+    HorizontalHeaderTable.create(
+      _metricsList(),
+      hmtx,
+      ascender: 800,
+      descender: -200,
+    );
 
 CharacterToGlyphTable _cmap() => CharacterToGlyphTable.create(_fullGlyphList());
 
@@ -68,7 +78,7 @@ void main() {
         version: kOS2Version1,
       );
 
-      expect(table.achVendID, 'PfPl');
+      expect(table.version0.achVendID, 'PfPl');
       expect(table.version, kOS2Version1);
     });
 
@@ -84,8 +94,8 @@ void main() {
         'PfPl',
       );
 
-      expect(table.usFirstCharIndex, 0xE001);
-      expect(table.usLastCharIndex, 0xE001);
+      expect(table.version0.usFirstCharIndex, 0xE001);
+      expect(table.version0.usLastCharIndex, 0xE001);
     });
 
     test('carries the ascender/descender/lineGap through from hhea', () {
@@ -101,12 +111,12 @@ void main() {
         'PfPl',
       );
 
-      expect(table.sTypoAscender, hhea.ascender);
-      expect(table.sTypoDescender, hhea.descender);
-      expect(table.sTypoLineGap, hhea.lineGap);
+      expect(table.version0.sTypoAscender, hhea.ascender);
+      expect(table.version0.sTypoDescender, hhea.descender);
+      expect(table.version0.sTypoLineGap, hhea.lineGap);
     });
 
-    test('leaves version-1+ fields null below version 1', () {
+    test('leaves the version-1+ groups null below version 1', () {
       final hmtx = _hmtx();
 
       final table = buildOS2Table(
@@ -119,9 +129,9 @@ void main() {
         version: kOS2Version0,
       );
 
-      expect(table.ulCodePageRange1, isNull);
-      expect(table.sxHeight, isNull);
-      expect(table.usLowerOpticalPointSize, isNull);
+      expect(table.version1, isNull);
+      expect(table.version4, isNull);
+      expect(table.version5, isNull);
     });
 
     test('fills version-5 fields by default', () {
@@ -137,8 +147,34 @@ void main() {
       );
 
       expect(table.version, kOS2Version5);
-      expect(table.usLowerOpticalPointSize, 0);
-      expect(table.usUpperOpticalPointSize, 0xFFFE);
+      expect(table.version5?.usLowerOpticalPointSize, 0);
+      expect(table.version5?.usUpperOpticalPointSize, 0xFFFE);
+    });
+
+    test('pins usWeightClass to 400 (Regular)', () {
+      // buildOS2Table takes no axis or range argument, so this only pins
+      // the constant itself, not any claim about behaving consistently
+      // across a wght range — it can't vary here regardless. An honest
+      // usWeightClass for the 1.33-2.0 stroke-width axis this package's
+      // variable font carries would be 2 ("Extra-thin"), but generic
+      // tooling that reads this field without instancing the font would
+      // then treat the icon font as thinner than Thin. 400 is the
+      // deliberate, documented choice — see the comment in
+      // os2_builder.dart. A test that actually varies the axis and checks
+      // usWeightClass stays 400 belongs in Task 19, once a real variable
+      // font exists to build it from.
+      final hmtx = _hmtx();
+
+      final table = buildOS2Table(
+        hmtx,
+        _head(),
+        _hhea(hmtx),
+        _cmap(),
+        GlyphSubstitutionTable.create(),
+        'PfPl',
+      );
+
+      expect(table.version0.usWeightClass, 400);
     });
   });
 }

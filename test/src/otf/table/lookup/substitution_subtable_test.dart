@@ -9,11 +9,11 @@ void main() {
   group('SubstitutionSubtable.fromByteData', () {
     test('dispatches lookup type 4 to LigatureSubstitutionSubtable', () {
       const subtable = LigatureSubstitutionSubtable(
-        1,
-        6,
-        0,
-        [],
-        kDefaultCoverageTable,
+        substFormat: 1,
+        coverageOffset: 6,
+        ligatureSetCount: 0,
+        ligatureSetOffsets: [],
+        coverageTable: kDefaultCoverageTable,
       );
       final bytes = ByteData(subtable.size);
       subtable.encodeToBinary(bytes);

@@ -5,6 +5,7 @@ import '../../common/codable/binary.dart';
 import '../../common/generic_glyph.dart';
 import '../../utils/misc.dart';
 import '../../utils/otf.dart';
+import '../cff/cff2_region_context.dart';
 import '../cff/char_string.dart';
 import '../cff/char_string_operator.dart' as cs_op;
 import '../cff/char_string_optimizer.dart';

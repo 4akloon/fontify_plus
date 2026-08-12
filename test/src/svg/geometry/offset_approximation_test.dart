@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:fontify_plus/src/svg/geometry/arc.dart';
 import 'package:fontify_plus/src/svg/geometry/cubic.dart';
 import 'package:fontify_plus/src/svg/geometry/offset_approximation.dart';
 import 'package:test/test.dart';
@@ -141,6 +144,48 @@ void main() {
       expect(offset.p3.y, closeTo(2, _kEpsilon));
       expect(offset.p3.x - offset.p0.x, closeTo(10, _kEpsilon));
     });
+
+    test(
+      'takes the 2x2 solve, not the parallel fallback, once the end '
+      'tangents genuinely diverge',
+      () {
+        // A shallow arc whose end tangents cross at ~9.5e-3 — comfortably
+        // past _kParallelTangentEpsilon (2e-3), in the region its own
+        // derivation found the solve pulling decisively ahead of the
+        // fallback. The fallback does not generally satisfy the midpoint
+        // constraint for a genuinely curved segment, so if the epsilon were
+        // ever widened enough to swallow this divergence, this curve's
+        // approximation would stop passing through the true offset's
+        // midpoint.
+        //
+        // The argument is 9.5e-3, not the rounder 1e-2: asin(1e-2) makes the
+        // resulting cross product land at 1.0013e-2 — only ~0.1% above
+        // 1e-2 — so a mutant that mistypes the epsilon as exactly `0.01`
+        // (the value someone is most likely to reach for by hand, being the
+        // next round number up from the real 2e-3) would slip through
+        // undetected, saved only by float32 rounding falling the right way.
+        // 9.5e-3 gives a deliberate ~5% margin below 0.01 instead, so that
+        // exact mutant reliably fails this test (verified: with
+        // _kParallelTangentEpsilon temporarily set to 1e-2, this assertion
+        // fails; restored to 2e-3, it passes).
+        const distance = 5.0;
+        final shallowArc = arcToCubics(
+          Vector2(0, 0),
+          20,
+          0,
+          math.asin(9.5e-3),
+        ).single;
+
+        final offset = approximateOffset(shallowArc, distance)!;
+
+        expect(
+          offset
+              .pointAt(0.5)
+              .distanceTo(offsetPointAt(shallowArc, 0.5, distance)),
+          lessThan(_kEpsilon),
+        );
+      },
+    );
 
     test('gives up when the fit would fold a control point backwards', () {
       // Inside a turn tighter than the offset, the solve wants a negative

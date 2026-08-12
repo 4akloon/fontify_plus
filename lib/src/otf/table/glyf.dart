@@ -47,7 +47,10 @@ class GlyphDataTable extends FontTable {
   }
 
   factory GlyphDataTable.fromGlyphs(List<GenericGlyph> glyphList) {
-    final glyphListCopy = glyphList.map((e) => e.copy());
+    // Eager: the loop below mutates each copy in place via cubicToQuad and
+    // compactImplicitPoints. A lazy Iterable would hand the map below a
+    // second, unconverted batch of copies instead of these mutated ones.
+    final glyphListCopy = glyphList.map((e) => e.copy()).toList();
 
     for (final glyph in glyphListCopy) {
       for (final outline in glyph.outlines) {

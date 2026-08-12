@@ -34,11 +34,17 @@ class GenericGlyph {
     final outlines = [
       for (var i = 1; i < endPoints.length; i++)
         Outline(
-          glyph.pointList.sublist(endPoints[i - 1] + 1, endPoints[i] + 1),
-          isOnCurveList.sublist(endPoints[i - 1] + 1, endPoints[i] + 1),
-          true,
-          true,
-          FillRule.nonzero,
+          pointList: glyph.pointList.sublist(
+            endPoints[i - 1] + 1,
+            endPoints[i] + 1,
+          ),
+          isOnCurveList: isOnCurveList.sublist(
+            endPoints[i - 1] + 1,
+            endPoints[i] + 1,
+          ),
+          hasCompactCurves: true,
+          hasQuadCurves: true,
+          fillRule: FillRule.nonzero,
         ),
     ];
 
@@ -97,10 +103,13 @@ class GenericGlyph {
         continue;
       }
 
+      final contours = StrokeOutliner(stroke).outline(shape.path.commands);
+
       outlines.addAll(
         outlinesFromContours(
-          StrokeOutliner(stroke).outline(shape.path.commands),
+          contours,
           height: height,
+          shape: planContourShape(contours, height: height),
         ),
       );
     }
@@ -158,7 +167,7 @@ class GenericGlyph {
       yMax = math.max(yMax, p.y.toInt());
     }
 
-    return GenericGlyphMetrics(xMin, xMax, yMin, yMax);
+    return GenericGlyphMetrics(xMin: xMin, xMax: xMax, yMin: yMin, yMax: yMax);
   }
 
   /// Deep copy of a glyph and its outlines

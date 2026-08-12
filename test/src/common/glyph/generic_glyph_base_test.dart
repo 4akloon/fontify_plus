@@ -10,15 +10,21 @@ import 'package:test/test.dart';
 
 /// A single triangular contour, all on-curve.
 SimpleGlyph triangleGlyph() => SimpleGlyph(
-  GlyphHeader(1, 0, 0, 10, 10),
-  [2],
-  [],
-  [
-    SimpleGlyphFlag.createForPoint(0, 0, true),
-    SimpleGlyphFlag.createForPoint(10, 0, true),
-    SimpleGlyphFlag.createForPoint(10, 10, true),
+  header: const GlyphHeader(
+    numberOfContours: 1,
+    xMin: 0,
+    yMin: 0,
+    xMax: 10,
+    yMax: 10,
+  ),
+  endPtsOfContours: [2],
+  instructions: [],
+  flags: [
+    SimpleGlyphFlag.createForPoint(x: 0, y: 0, isOnCurve: true),
+    SimpleGlyphFlag.createForPoint(x: 10, y: 0, isOnCurve: true),
+    SimpleGlyphFlag.createForPoint(x: 10, y: 10, isOnCurve: true),
   ],
-  [const Point(0, 0), const Point(10, 0), const Point(10, 10)],
+  pointList: [const Point(0, 0), const Point(10, 0), const Point(10, 10)],
 );
 
 void main() {
@@ -56,11 +62,20 @@ void main() {
 
     test('splits multiple contours at their end points', () {
       final glyph = SimpleGlyph(
-        GlyphHeader(2, 0, 0, 10, 10),
-        [1, 3],
-        [],
-        List.filled(4, SimpleGlyphFlag.createForPoint(0, 0, true)),
-        [
+        header: const GlyphHeader(
+          numberOfContours: 2,
+          xMin: 0,
+          yMin: 0,
+          xMax: 10,
+          yMax: 10,
+        ),
+        endPtsOfContours: [1, 3],
+        instructions: [],
+        flags: List.filled(
+          4,
+          SimpleGlyphFlag.createForPoint(x: 0, y: 0, isOnCurve: true),
+        ),
+        pointList: [
           const Point(0, 0),
           const Point(1, 0),
           const Point(5, 5),
@@ -198,11 +213,20 @@ void main() {
 
     test('endPoints marks the last index of each contour', () {
       final glyph = SimpleGlyph(
-        GlyphHeader(2, 0, 0, 10, 10),
-        [1, 3],
-        [],
-        List.filled(4, SimpleGlyphFlag.createForPoint(0, 0, true)),
-        [
+        header: const GlyphHeader(
+          numberOfContours: 2,
+          xMin: 0,
+          yMin: 0,
+          xMax: 10,
+          yMax: 10,
+        ),
+        endPtsOfContours: [1, 3],
+        instructions: [],
+        flags: List.filled(
+          4,
+          SimpleGlyphFlag.createForPoint(x: 0, y: 0, isOnCurve: true),
+        ),
+        pointList: [
           const Point(0, 0),
           const Point(1, 0),
           const Point(5, 5),
@@ -227,11 +251,15 @@ void main() {
       final glyph = GenericGlyph(
         [
           Outline(
-            [const Point(2, 2), const Point(4, 2), const Point(4, 4)],
-            [true, true, true],
-            false,
-            false,
-            FillRule.nonzero,
+            pointList: [
+              const Point(2, 2),
+              const Point(4, 2),
+              const Point(4, 4),
+            ],
+            isOnCurveList: [true, true, true],
+            hasCompactCurves: false,
+            hasQuadCurves: false,
+            fillRule: FillRule.nonzero,
           ),
         ],
         const Rectangle(0, 0, 100, 100),

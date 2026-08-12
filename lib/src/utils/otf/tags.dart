@@ -13,6 +13,8 @@ const String kNameTag = 'name';
 const String kPostTag = 'post';
 const String kCFFTag = 'CFF ';
 const String kCFF2Tag = 'CFF2';
+const String kFvarTag = 'fvar';
+const String kStatTag = 'STAT';
 
 const kPlatformUnicode = 0;
 const kPlatformMacintosh = 1;

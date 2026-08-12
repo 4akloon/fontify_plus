@@ -9,16 +9,29 @@ import 'lookup_table.dart';
 const kLookupListTableSize = 4;
 
 const _kDefaultSubtableList = [
-  LigatureSubstitutionSubtable(1, 6, 0, [], kDefaultCoverageTable),
+  LigatureSubstitutionSubtable(
+    substFormat: 1,
+    coverageOffset: 6,
+    ligatureSetCount: 0,
+    ligatureSetOffsets: [],
+    coverageTable: kDefaultCoverageTable,
+  ),
 ];
 
 const _kDefaultLookupTableList = [
-  LookupTable(4, 0, 1, [8], null, _kDefaultSubtableList),
+  LookupTable(
+    lookupType: 4,
+    lookupFlag: 0,
+    subTableCount: 1,
+    subtableOffsets: [8],
+    markFilteringSet: null,
+    subtables: _kDefaultSubtableList,
+  ),
 ];
 
 /// Every lookup in the font, in application order.
 class LookupListTable implements BinaryCodable {
-  LookupListTable(this.lookupCount, this.lookups, this.lookupTables);
+  const LookupListTable(this.lookupCount, this.lookups, this.lookupTables);
 
   factory LookupListTable.fromByteData(ByteData byteData, int offset) {
     final lookupCount = byteData.getUint16(offset);
@@ -39,7 +52,7 @@ class LookupListTable implements BinaryCodable {
   }
 
   factory LookupListTable.create() =>
-      LookupListTable(1, [4], _kDefaultLookupTableList);
+      const LookupListTable(1, [4], _kDefaultLookupTableList);
 
   final int lookupCount;
   final List<int> lookups;

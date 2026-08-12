@@ -4,13 +4,13 @@ import 'package:test/test.dart';
 void main() {
   group('CliArgumentException', () {
     test('toString returns the given message verbatim', () {
-      final exception = CliArgumentException('something went wrong');
+      const exception = CliArgumentException('something went wrong');
 
       expect(exception.toString(), 'something went wrong');
     });
 
     test('is an Exception', () {
-      expect(CliArgumentException('x'), isA<Exception>());
+      expect(const CliArgumentException('x'), isA<Exception>());
     });
   });
 

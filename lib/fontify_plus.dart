@@ -23,18 +23,26 @@
 ///
 /// ## Stroked icons
 ///
-/// A font glyph is a filled region — the format has no notion of stroke width,
-/// caps or joins. Outline-style icon sets exported from Figma describe the
-/// *centreline* of a stroke, which encloses no area and would render blank.
+/// A font glyph is a filled region — caps and joins are not stored in the
+/// file, only enclosed area. Outline-style icon sets exported from Figma
+/// describe the *centreline* of a stroke, which encloses no area and would
+/// render blank.
 ///
 /// [svgToOtf] therefore converts stroked paths into the region the stroke
 /// covers before encoding them. This is on by default; pass
 /// `outlineStrokes: false` to treat path data as fill geometry instead.
 ///
+/// ## Variable stroke width
+///
+/// Pass [StrokeWidthRange] to [svgToOtf] (or `stroke_width_range` in YAML /
+/// `--stroke-width-range` on the CLI) to emit a variable font whose `wght`
+/// axis is the literal stroke width. See `doc/variable_stroke.md`.
+///
 /// [IconData]: https://api.flutter.dev/flutter/widgets/IconData-class.html
 ///
 /// {@category getting-started}
 /// {@category cli}
+/// {@category variable-stroke}
 library;
 
 export 'src/common.dart';

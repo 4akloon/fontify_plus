@@ -11,7 +11,7 @@ import 'post_script_data.dart';
 /// Names already in the Macintosh standard list are referenced by index; the
 /// rest follow as Pascal strings, in glyph order.
 class PostScriptVersion20 extends PostScriptData {
-  PostScriptVersion20(
+  const PostScriptVersion20(
     this.numberOfGlyphs,
     this.glyphNameIndex,
     this.glyphNames,
