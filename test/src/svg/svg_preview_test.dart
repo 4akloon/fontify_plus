@@ -101,4 +101,25 @@ void main() {
       expect(minifySvgPreview(svg), contains("aria-label='it&apos;s'"));
     });
   });
+
+  group('svgPreviewDataUri', () {
+    test('passes path data and single quotes through unencoded', () {
+      expect(
+        svgPreviewDataUri("<svg width='32'><path d='M5,12h14z'/></svg>"),
+        "data:image/svg+xml,%3Csvg%20width='32'%3E"
+        "%3Cpath%20d='M5,12h14z'/%3E%3C/svg%3E",
+      );
+    });
+
+    test('percent-encodes the markdown- and URI-unsafe set', () {
+      expect(
+        svgPreviewDataUri('<>"#%(){} '),
+        'data:image/svg+xml,%3C%3E%22%23%25%28%29%7B%7D%20',
+      );
+    });
+
+    test('encodes control characters and non-ASCII as UTF-8 triplets', () {
+      expect(svgPreviewDataUri('é\n'), 'data:image/svg+xml,%C3%A9%0A');
+    });
+  });
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:xml/xml.dart';
 
 /// Metadata elements that cost bytes but do not draw.
@@ -103,3 +105,39 @@ double? _cssLength(String? value) {
 String _fmt(double value) => value == value.roundToDouble()
     ? value.round().toString()
     : value.toString();
+
+/// Printable-ASCII bytes that still need percent-encoding in a preview data
+/// URI: what URI grammar and markdown link syntax cannot carry raw.
+/// Space, controls, DEL, and non-ASCII are caught by the printable check.
+const _kEncodedAscii = {
+  0x22, // "
+  0x23, // #
+  0x25, // %
+  0x28, // (
+  0x29, // )
+  0x3C, // <
+  0x3E, // >
+  0x7B, // {
+  0x7D, // }
+};
+
+/// Wraps a minified SVG in a `data:` URI usable inside a markdown image.
+///
+/// Percent-encoding is minimal on purpose: SVG path data is mostly URI-safe
+/// already, and single quotes pass through — which is why [minifySvgPreview]
+/// single-quotes attributes.
+String svgPreviewDataUri(String svg) {
+  final buffer = StringBuffer('data:image/svg+xml,');
+
+  for (final byte in utf8.encode(svg)) {
+    final printableAscii = byte > 0x20 && byte < 0x7F;
+
+    if (printableAscii && !_kEncodedAscii.contains(byte)) {
+      buffer.writeCharCode(byte);
+    } else {
+      buffer.write('%${byte.toRadixString(16).toUpperCase().padLeft(2, '0')}');
+    }
+  }
+
+  return buffer.toString();
+}
