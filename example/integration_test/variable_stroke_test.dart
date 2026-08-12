@@ -60,52 +60,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    var pixels = await capture(key, expectedSide: probeSize * 2);
-
-    // Font assets load asynchronously, and pumpAndSettle cannot wait for
-    // them: it drains the framework's own scheduler against fake time, while
-    // the engine is fetching and registering the font in real time. Rendering
-    // straight after it can therefore capture a blank frame — which is not an
-    // error the measurements can see, because two blank captures compare as
-    // identical and read as "nothing changed".
-    //
-    // That is not hypothetical. It turned CI red for every run on one
-    // machine while passing on another: the two static masters both captured
-    // blank, their difference came out at exactly 0, and every threshold
-    // derived from that span became unreachable. The suite's own "did the
-    // fonts load?" guard caught it, correctly, but by then the run was a
-    // failure rather than a wait.
-    //
-    // runAsync yields to real time, which is what lets the load actually
-    // progress. Bounded so a genuinely missing font still reaches that guard
-    // and reports itself, rather than hanging here.
-    for (var attempt = 0; attempt < 40 && !hasInk(pixels); attempt++) {
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 50)),
-      );
-      await tester.pumpAndSettle();
-
-      pixels = await capture(key, expectedSide: probeSize * 2);
-    }
-
-    // Still blank after waiting: the family never became available. Said here,
-    // once, naming the family — because the measurements downstream cannot
-    // say it. Two blank captures differ by exactly zero, every threshold
-    // derived from that span collapses to `lessThan(0)`, and the run reports
-    // four arithmetic failures that look like the axis misbehaving instead of
-    // one font that never arrived.
-    if (!hasInk(pixels)) {
-      throw StateError(
-        'Family "$family" rendered nothing for U+'
-        '${codePoint.toRadixString(16).toUpperCase()} after waiting 2s. '
-        'The glyph is black on white and never empty, so this is the font '
-        'failing to load, not a rendering difference. Check that '
-        'tool/build_proto_fonts.py ran and that example/pubspec.yaml still '
-        'declares this family.',
-      );
-    }
-
-    return pixels;
+    return capture(key, expectedSide: probeSize * 2);
   }
 
   /// How much rebuilding the font at the two widths changes the raster, and

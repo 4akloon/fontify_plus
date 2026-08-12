@@ -15,6 +15,19 @@
   Requires `stroke_width_range`; a value outside the range, or on either
   endpoint, is rejected before generation starts. See
   `doc/variable_stroke.md`.
+* **Fix icon codepoints depending on directory listing order.** The input
+  SVGs were used in whatever order `Directory.listSync` returned them, and
+  charcodes are handed out by position from the Private Use Area, so that
+  order *was* the numbering. Listing order is not sorted and not stable: ext4
+  returns entries in a hash order derived from the names, and a CI runner
+  produced two different orders on two runs of the same commit. Regenerating
+  a font could therefore renumber every icon, so a previously generated
+  `IconData` constant rendered a different glyph — silently, since the
+  codepoints still existed and only their meaning changed. Icons are now
+  sorted by name, which also makes a build reproducible across machines.
+  **If your icons were numbered on a filesystem that did not return them
+  alphabetically, regenerating will renumber them once**; regenerate the
+  font and its class together and the two stay in step.
 * Fix `stroke_width_range` failing with `IncompatibleMastersException` on a
   large fraction of real icons — about one in five of a chained-cubic set such
   as Hugeicons, at some ranges. Three branches in the stroke joiner decided a

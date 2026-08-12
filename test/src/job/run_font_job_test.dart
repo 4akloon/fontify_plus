@@ -87,6 +87,50 @@ void main() {
     expect(File(classPath).readAsStringSync(), contains('class TestIcons'));
   });
 
+  test('codepoints follow the icon names, not the directory listing', () {
+    // Charcodes are handed out by position, so whatever order the SVGs reach
+    // the builder in *is* the numbering. Taking that order from
+    // `Directory.listSync` makes it a property of the filesystem: this
+    // machine returns these five names as mango, zebra, banana, apple,
+    // cherry — neither alphabetical nor the order they were created in — and
+    // a CI runner on ext4 produced two different orders on two runs of the
+    // same commit. The font built by the second run renders a different
+    // glyph for every IconData constant the first one generated, silently,
+    // because the codepoints all still exist and merely mean something else.
+    //
+    // Names chosen so that creation order, alphabetical order and this
+    // filesystem's listing order are three different orders; asserting
+    // alphabetical therefore pins the sort rather than an accident.
+    final svgDir = Directory('${tempDir.path}/icons')..createSync();
+    const circle =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+        '<circle cx="12" cy="12" r="8" fill="#000"/></svg>';
+
+    for (final name in ['zebra', 'mango', 'apple', 'banana', 'cherry']) {
+      File('${svgDir.path}/$name.svg').writeAsStringSync(circle);
+    }
+
+    final result = runFontJob(
+      FontJob(
+        inputSvgDir: svgDir.path,
+        outputFontFile: '${tempDir.path}/fruit.otf',
+      ),
+    );
+
+    expect(
+      [for (final glyph in result.otf.glyphList) glyph.metadata.name],
+      ['apple', 'banana', 'cherry', 'mango', 'zebra'],
+    );
+
+    // The numbering itself, not just the order: an icon's codepoint is what
+    // a generated IconData carries, and the whole point is that rebuilding
+    // hands the same name the same number.
+    expect(
+      [for (final glyph in result.otf.glyphList) glyph.metadata.charCode],
+      [0xe000, 0xe001, 0xe002, 0xe003, 0xe004],
+    );
+  });
+
   test('runFontJob throws when the SVG directory has no .svg files', () {
     final empty = Directory('${tempDir.path}/empty')..createSync();
     final fontPath = '${tempDir.path}/out.otf';

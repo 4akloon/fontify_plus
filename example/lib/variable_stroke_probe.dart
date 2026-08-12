@@ -91,29 +91,16 @@ Future<Uint8List> capture(GlobalKey key, {required double expectedSide}) async {
   return data!.buffer.asUint8List();
 }
 
-/// Whether [pixels] contains any ink at all.
-///
-/// Every glyph this probe renders is black on white and none of them is
-/// empty, so a capture with no dark pixel did not draw its glyph. On web that
-/// means the font asset had not finished loading when the frame was
-/// rasterized — the codepoints are all in the Private Use Area, so a fallback
-/// font contributes nothing visible and the capture comes back blank rather
-/// than as tofu.
-///
-/// Worth distinguishing from "drew the wrong thing": two blank captures
-/// compare as identical, which reads as "the axis changed nothing" and can
-/// fail an assertion that is actually measuring an unloaded font.
-bool hasInk(Uint8List pixels) => inkCount(pixels) > 0;
-
 /// How many colour bytes in [pixels] are dark.
 ///
 /// Reported alongside the comparisons below, because the comparisons are
-/// differences and a difference cannot distinguish "both rendered the same
-/// glyph" from "both rendered the same *wrong* thing". A missing font is not
-/// reliably blank: a platform that draws .notdef as a filled box gives two
-/// identical tofu captures, whose difference is 0 — the same answer a
-/// correctly-loaded font gives when the axis is ignored. The ink count tells
-/// those apart, since tofu and a real glyph do not cover the same area.
+/// differences and a difference cannot say what was drawn. Two renders that
+/// come out identical give 0 whether they are the same correct glyph, the
+/// same wrong glyph, or the same fallback box — and the fix differs in each
+/// case. This is what told the three apart when the render matrix went red:
+/// every family and every weight reported exactly 624, which no set of three
+/// genuinely different masters can do, and pointed at the fonts holding the
+/// wrong glyphs rather than at the axis.
 int inkCount(Uint8List pixels) {
   var dark = 0;
 
