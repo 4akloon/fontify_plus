@@ -8,44 +8,44 @@ const kPostHeaderSize = 32;
 
 /// The fixed part of the `post` table, present in every version.
 class PostScriptTableHeader implements BinaryCodable {
-  PostScriptTableHeader(
-    this.version,
-    this.italicAngle,
-    this.underlinePosition,
-    this.underlineThickness,
-    this.isFixedPitch,
-    this.minMemType42,
-    this.maxMemType42,
-    this.minMemType1,
-    this.maxMemType1,
-  );
+  const PostScriptTableHeader({
+    required this.version,
+    required this.italicAngle,
+    required this.underlinePosition,
+    required this.underlineThickness,
+    required this.isFixedPitch,
+    required this.minMemType42,
+    required this.maxMemType42,
+    required this.minMemType1,
+    required this.maxMemType1,
+  });
 
   factory PostScriptTableHeader.fromByteData(
     ByteData byteData,
     TableRecordEntry entry,
   ) => PostScriptTableHeader(
-    Revision.fromInt32(byteData.getInt32(entry.offset)),
-    byteData.getFixed(entry.offset + 4),
-    byteData.getFWord(entry.offset + 8),
-    byteData.getFWord(entry.offset + 10),
-    byteData.getUint32(entry.offset + 12),
-    byteData.getUint32(entry.offset + 16),
-    byteData.getUint32(entry.offset + 20),
-    byteData.getUint32(entry.offset + 24),
-    byteData.getUint32(entry.offset + 28),
+    version: Revision.fromInt32(byteData.getInt32(entry.offset)),
+    italicAngle: byteData.getFixed(entry.offset + 4),
+    underlinePosition: byteData.getFWord(entry.offset + 8),
+    underlineThickness: byteData.getFWord(entry.offset + 10),
+    isFixedPitch: byteData.getUint32(entry.offset + 12),
+    minMemType42: byteData.getUint32(entry.offset + 16),
+    maxMemType42: byteData.getUint32(entry.offset + 20),
+    minMemType1: byteData.getUint32(entry.offset + 24),
+    maxMemType1: byteData.getUint32(entry.offset + 28),
   );
 
   factory PostScriptTableHeader.create(Revision version) =>
       PostScriptTableHeader(
-        version,
-        0, // italicAngle - upright text
-        0, // underlinePosition
-        0, // underlineThickness
-        0, // isFixedPitch - proportionally spaced
-        0,
-        0,
-        0,
-        0,
+        version: version,
+        italicAngle: 0, // upright text
+        underlinePosition: 0,
+        underlineThickness: 0,
+        isFixedPitch: 0, // proportionally spaced
+        minMemType42: 0,
+        maxMemType42: 0,
+        minMemType1: 0,
+        maxMemType1: 0,
       );
 
   final Revision version;

@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 
 List<GenericGlyphMetrics> _metricsList() => [
   GenericGlyphMetrics.empty(),
-  GenericGlyphMetrics(0, 700, 0, 800),
+  const GenericGlyphMetrics(xMin: 0, xMax: 700, yMin: 0, yMax: 800),
 ];
 
 void main() {
@@ -18,8 +18,8 @@ void main() {
       final table = HorizontalHeaderTable.create(
         _metricsList(),
         hmtx,
-        800,
-        -200,
+        ascender: 800,
+        descender: -200,
       );
 
       expect(table.ascender, 800);
@@ -31,8 +31,8 @@ void main() {
       final table = HorizontalHeaderTable.create(
         _metricsList(),
         hmtx,
-        800,
-        -200,
+        ascender: 800,
+        descender: -200,
       );
 
       expect(table.numberOfHMetrics, 2);
@@ -43,8 +43,8 @@ void main() {
       final table = HorizontalHeaderTable.create(
         _metricsList(),
         hmtx,
-        800,
-        -200,
+        ascender: 800,
+        descender: -200,
       );
 
       expect(table.advanceWidthMax, hmtx.advanceWidthMax);
@@ -58,8 +58,8 @@ void main() {
       final table = HorizontalHeaderTable.create(
         _metricsList(),
         hmtx,
-        800,
-        -200,
+        ascender: 800,
+        descender: -200,
       );
       final bytes = ByteData(table.size);
 
@@ -67,7 +67,12 @@ void main() {
 
       final decoded = HorizontalHeaderTable.fromByteData(
         bytes,
-        TableRecordEntry('hhea', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'hhea',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded.ascender, 800);

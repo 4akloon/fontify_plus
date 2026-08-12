@@ -12,7 +12,7 @@ ByteData encode(CFFOperand operand) {
 }
 
 CFFOperand decode(ByteData bytes, [int offset = 1]) =>
-    CFFOperand.fromByteData(bytes, offset, bytes.getUint8(0));
+    CFFOperand.fromByteData(bytes, offset: offset, b0: bytes.getUint8(0));
 
 /// Encodes [value] and decodes it straight back.
 num roundTrip(num value) {
@@ -98,7 +98,7 @@ void main() {
       // b0 in [32, 246] encodes -107..107 as b0 - 139.
       final bytes = ByteData(1)..setUint8(0, 139);
 
-      expect(CFFOperand.fromByteData(bytes, 1, 139).value, 0);
+      expect(CFFOperand.fromByteData(bytes, offset: 1, b0: 139).value, 0);
     });
 
     test('decodes a three-byte value (marker 28)', () {
@@ -121,7 +121,7 @@ void main() {
       final bytes = ByteData(1)..setUint8(0, 255);
 
       expect(
-        () => CFFOperand.fromByteData(bytes, 1, 255),
+        () => CFFOperand.fromByteData(bytes, offset: 1, b0: 255),
         throwsA(isA<TableDataFormatException>()),
       );
     });

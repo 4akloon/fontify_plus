@@ -34,7 +34,12 @@ void main() {
 
       final decoded = PostScriptTableHeader.fromByteData(
         bytes,
-        TableRecordEntry('post', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'post',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded.version.major, 3);

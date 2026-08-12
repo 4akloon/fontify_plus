@@ -6,18 +6,18 @@ part of 'cff.dart';
 /// one, so this class stays the table's structure and its encoder.
 class CFF1Table extends CFFTable implements CalculatableOffsets {
   CFF1Table(
-    super.entry,
-    this.header,
-    this.nameIndex,
-    this.topDicts,
-    this.stringIndex,
-    this.globalSubrsData,
-    this.charsets,
-    this.charStringsData,
-    this.fontDictList,
-    this.privateDictList,
-    this.localSubrsDataList,
-  ) : super.fromTableRecordEntry();
+    super.entry, {
+    required this.header,
+    required this.nameIndex,
+    required this.topDicts,
+    required this.stringIndex,
+    required this.globalSubrsData,
+    required this.charsets,
+    required this.charStringsData,
+    required this.fontDictList,
+    required this.privateDictList,
+    required this.localSubrsDataList,
+  }) : super.fromTableRecordEntry();
 
   factory CFF1Table.fromByteData(ByteData byteData, TableRecordEntry entry) =>
       _readCFF1Table(byteData, entry);

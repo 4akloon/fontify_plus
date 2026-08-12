@@ -27,7 +27,7 @@ void main() {
     test('CFF2Table.isCFF1 is false', () {
       final font = readFromFile(_kTestCFF2FontAssetPath);
 
-      expect(font.cff2.isCFF1, isFalse);
+      expect(font.cff2?.isCFF1, isFalse);
     });
   });
 }

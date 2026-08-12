@@ -1,5 +1,5 @@
 class CliArgumentException implements Exception {
-  CliArgumentException(this.message);
+  const CliArgumentException(this.message);
 
   final String message;
 

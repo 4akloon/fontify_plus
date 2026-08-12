@@ -6,13 +6,17 @@ const kSequentialMapGroupSize = 12;
 
 /// One run of a format 12 subtable.
 class SequentialMapGroup implements BinaryCodable {
-  SequentialMapGroup(this.startCharCode, this.endCharCode, this.startGlyphID);
+  const SequentialMapGroup({
+    required this.startCharCode,
+    required this.endCharCode,
+    required this.startGlyphID,
+  });
 
   factory SequentialMapGroup.fromByteData(ByteData byteData, int offset) =>
       SequentialMapGroup(
-        byteData.getUint32(offset),
-        byteData.getUint32(offset + 4),
-        byteData.getUint32(offset + 8),
+        startCharCode: byteData.getUint32(offset),
+        endCharCode: byteData.getUint32(offset + 4),
+        startGlyphID: byteData.getUint32(offset + 8),
       );
 
   final int startCharCode;

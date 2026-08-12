@@ -14,13 +14,21 @@ void main() {
 
   group('CoverageTableFormat1', () {
     test('size is 4 bytes plus 2 per covered glyph', () {
-      const table = CoverageTableFormat1(1, 2, [3, 4]);
+      const table = CoverageTableFormat1(
+        coverageFormat: 1,
+        glyphCount: 2,
+        glyphArray: [3, 4],
+      );
 
       expect(table.size, 8);
     });
 
     test('round-trips through encodeToBinary and fromByteData', () {
-      const table = CoverageTableFormat1(1, 2, [3, 4]);
+      const table = CoverageTableFormat1(
+        coverageFormat: 1,
+        glyphCount: 2,
+        glyphArray: [3, 4],
+      );
       final bytes = ByteData(table.size);
 
       table.encodeToBinary(bytes);
@@ -33,7 +41,11 @@ void main() {
 
   group('CoverageTable.fromByteData', () {
     test('dispatches format 1 to CoverageTableFormat1', () {
-      const table = CoverageTableFormat1(1, 1, [7]);
+      const table = CoverageTableFormat1(
+        coverageFormat: 1,
+        glyphCount: 1,
+        glyphArray: [7],
+      );
       final bytes = ByteData(table.size);
       table.encodeToBinary(bytes);
 

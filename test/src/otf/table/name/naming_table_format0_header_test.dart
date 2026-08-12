@@ -14,7 +14,16 @@ void main() {
     });
 
     test('stringOffset points just past the record list', () {
-      final records = [NameRecord(1, 0, 0, 0, 5, 0)];
+      final records = [
+        const NameRecord(
+          platformID: 1,
+          encodingID: 0,
+          languageID: 0,
+          nameID: 0,
+          length: 5,
+          offset: 0,
+        ),
+      ];
       final header = NamingTableFormat0Header.create(records);
 
       expect(header.stringOffset, 6 + 12);
@@ -23,7 +32,16 @@ void main() {
 
   group('NamingTableFormat0Header round trip', () {
     test('round-trips through encodeToBinary and fromByteData', () {
-      final records = [NameRecord(1, 0, 0, 1, 5, 0)];
+      final records = [
+        const NameRecord(
+          platformID: 1,
+          encodingID: 0,
+          languageID: 0,
+          nameID: 1,
+          length: 5,
+          offset: 0,
+        ),
+      ];
       final header = NamingTableFormat0Header.create(records);
       final bytes = ByteData(header.size);
 
@@ -31,7 +49,12 @@ void main() {
 
       final decoded = NamingTableFormat0Header.fromByteData(
         bytes,
-        TableRecordEntry('name', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'name',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded!.count, 1);
@@ -43,7 +66,12 @@ void main() {
 
       final decoded = NamingTableFormat0Header.fromByteData(
         bytes,
-        TableRecordEntry('name', 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          'name',
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       expect(decoded, isNull);

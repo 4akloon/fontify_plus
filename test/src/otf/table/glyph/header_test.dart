@@ -6,13 +6,25 @@ import 'package:test/test.dart';
 void main() {
   group('GlyphHeader.isComposite', () {
     test('is false for a non-negative contour count', () {
-      final header = GlyphHeader(1, 0, 0, 10, 10);
+      const header = GlyphHeader(
+        numberOfContours: 1,
+        xMin: 0,
+        yMin: 0,
+        xMax: 10,
+        yMax: 10,
+      );
 
       expect(header.isComposite, isFalse);
     });
 
     test('is true for a negative contour count', () {
-      final header = GlyphHeader(-1, 0, 0, 10, 10);
+      const header = GlyphHeader(
+        numberOfContours: -1,
+        xMin: 0,
+        yMin: 0,
+        xMax: 10,
+        yMax: 10,
+      );
 
       expect(header.isComposite, isTrue);
     });
@@ -20,13 +32,25 @@ void main() {
 
   group('GlyphHeader', () {
     test('size is fixed at 10 bytes', () {
-      final header = GlyphHeader(1, 0, 0, 10, 10);
+      const header = GlyphHeader(
+        numberOfContours: 1,
+        xMin: 0,
+        yMin: 0,
+        xMax: 10,
+        yMax: 10,
+      );
 
       expect(header.size, 10);
     });
 
     test('round-trips through encodeToBinary and fromByteData', () {
-      final header = GlyphHeader(2, -5, -6, 100, 200);
+      const header = GlyphHeader(
+        numberOfContours: 2,
+        xMin: -5,
+        yMin: -6,
+        xMax: 100,
+        yMax: 200,
+      );
       final bytes = ByteData(header.size);
 
       header.encodeToBinary(bytes);

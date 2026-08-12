@@ -39,7 +39,7 @@ class PostScriptTable extends FontTable {
         ? PostScriptVersion20.create(
             [for (final glyph in glyphList) glyph.metadata.name ?? ''],
           )
-        : PostScriptVersion30();
+        : const PostScriptVersion30();
 
     return PostScriptTable(
       null,

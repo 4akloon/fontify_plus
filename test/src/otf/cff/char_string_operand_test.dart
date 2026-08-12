@@ -29,13 +29,19 @@ void main() {
     test('decodes a one-byte integer through the shared CFFOperand path', () {
       final bytes = ByteData(1)..setUint8(0, 139);
 
-      expect(CharStringOperand.fromByteData(bytes, 1, 139).value, 0);
+      expect(
+        CharStringOperand.fromByteData(bytes, offset: 1, b0: 139).value,
+        0,
+      );
     });
 
     test('decodes the 255 marker as a fixed-point number', () {
       final bytes = ByteData(4)..setUint32(0, 3 * 0x10000);
 
-      expect(CharStringOperand.fromByteData(bytes, 0, 255).value, 3.0);
+      expect(
+        CharStringOperand.fromByteData(bytes, offset: 0, b0: 255).value,
+        3.0,
+      );
     });
   });
 }

@@ -88,15 +88,15 @@ CFF1Table _readCFF1Table(ByteData byteData, TableRecordEntry entry) {
 
   return CFF1Table(
     entry,
-    header,
-    nameIndex,
-    topDicts,
-    stringIndex,
-    globalSubrsData,
-    charsetEntry,
-    charStringsData,
-    CFFIndexWithData<CFFDict>.create([], true),
-    <CFFDict>[privateDict],
-    localSubrsDataList,
+    header: header,
+    nameIndex: nameIndex,
+    topDicts: topDicts,
+    stringIndex: stringIndex,
+    globalSubrsData: globalSubrsData,
+    charsets: charsetEntry,
+    charStringsData: charStringsData,
+    fontDictList: CFFIndexWithData<CFFDict>.create([], true),
+    privateDictList: <CFFDict>[privateDict],
+    localSubrsDataList: localSubrsDataList,
   );
 }

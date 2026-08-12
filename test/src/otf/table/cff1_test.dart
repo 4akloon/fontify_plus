@@ -19,7 +19,10 @@ CFF1Table buildCff1Table({int glyphCount = 1}) {
     fontName: 'Test',
   );
 
-  return font.cff;
+  // `font.cff` is nullable — a TrueType font has no CFF table at all — but
+  // this one was just built with the default CFF outlines, so `require` both
+  // states that and names the tag if the default ever changes.
+  return font.tables.require<CFF1Table>(kCFFTag);
 }
 
 void main() {
@@ -42,7 +45,12 @@ void main() {
       // the bytes above start at the table's own beginning.
       final decoded = CFF1Table.fromByteData(
         bytes,
-        TableRecordEntry(kCFFTag, 0, 0, bytes.lengthInBytes),
+        TableRecordEntry(
+          kCFFTag,
+          checkSum: 0,
+          offset: 0,
+          length: bytes.lengthInBytes,
+        ),
       );
 
       // .notdef, space, and the one requested glyph.

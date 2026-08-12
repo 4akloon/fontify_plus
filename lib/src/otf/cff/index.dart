@@ -5,9 +5,17 @@ import '../../utils/exception.dart';
 
 /// The header of a CFF INDEX: how many elements it holds and where each ends.
 class CFFIndex extends BinaryCodable {
-  CFFIndex(this.count, this.offSize, this.offsetList, this.isCFF1);
+  const CFFIndex({
+    required this.count,
+    required this.offSize,
+    required this.offsetList,
+    required this.isCFF1,
+  });
 
-  CFFIndex.empty(this.isCFF1) : count = 0, offSize = 1, offsetList = [];
+  const CFFIndex.empty(this.isCFF1)
+    : count = 0,
+      offSize = 1,
+      offsetList = const [];
 
   factory CFFIndex.fromByteData(ByteData byteData, bool isCFF1) {
     var offset = 0;
@@ -35,7 +43,12 @@ class CFFIndex extends BinaryCodable {
       offsetList.add(value);
     }
 
-    return CFFIndex(count, offSize, offsetList, isCFF1);
+    return CFFIndex(
+      count: count,
+      offSize: offSize,
+      offsetList: offsetList,
+      isCFF1: isCFF1,
+    );
   }
 
   final int count;
@@ -57,7 +70,7 @@ class CFFIndex extends BinaryCodable {
 
   static void _validateOffSize(int offSize) {
     if (offSize < 1 || offSize > 4) {
-      throw TableDataFormatException('Wrong offSize value');
+      throw const TableDataFormatException('Wrong offSize value');
     }
   }
 

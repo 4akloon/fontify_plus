@@ -5,3 +5,17 @@ docs/
 # Scratch and tooling that only matters in the repo.
 .github/
 CONTRIBUTING.md
+
+# Native platform scaffolding for the Flutter example, kept in the repo only
+# so example/integration_test/variable_stroke_test.dart has somewhere to run
+# as a standing CI gate (android/ios/macos). None of it is needed to use the
+# example as sample code, and it is ~90 generated Gradle/Xcode files that add
+# nothing for a pure-Dart package's tarball.
+/example/android/
+/example/ios/
+/example/macos/
+
+# Phase 0/Phase 3 dev tooling (fonttools prototypes, the fonttools oracle).
+# Anchored to the repo root so it does not also match example/tool/, which
+# example/pubspec.yaml's own tooling still needs.
+/tool/

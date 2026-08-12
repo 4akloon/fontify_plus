@@ -36,8 +36,126 @@ jobs:
       - name: Analyze
         run: dart analyze --fatal-infos
 
+      # fonttools before dart test so variable_size_gate_test's pyftsubset
+      # half is not skipped on the stable job that also runs the oracle.
+      - uses: actions/setup-python@v5
+        if: matrix.sdk == 'stable'
+        with:
+          python-version: '3.12'
+
+      - name: Install fonttools and opentype-sanitizer
+        if: matrix.sdk == 'stable'
+        run: pip install fonttools opentype-sanitizer
+
       - name: Run tests
         run: dart test
+
+      # Independent OTF / variable-font checks against fonts this package
+      # just built (not committed fixtures, not varLib). Rebuilds protos so
+      # a writer regression turns this job red even if binary assets are stale.
+      - name: Rebuild package-built proto fonts
+        if: matrix.sdk == 'stable'
+        run: python3 tool/build_proto_fonts.py
+
+      - name: Validate generated fonts against fonttools
+        if: matrix.sdk == 'stable'
+        run: |
+          python3 tool/oracle/validate_font.py example/fonts/my_icons.otf
+          python3 tool/oracle/validate_font.py \
+            --variable example/fonts/proto/variable_cff2.otf \
+            --static-prefix example/fonts/proto/static_
+
+  variable-stroke-render-matrix:
+    name: Variable stroke render matrix (web)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter config --enable-web
+
+      - name: Install a chromedriver matching this runner's Chrome
+        run: |
+          set -euo pipefail
+          chrome_version="$(google-chrome --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')"
+          chrome_major="${chrome_version%%.*}"
+          echo "Runner Chrome: $chrome_version (major $chrome_major)"
+          driver_url="$(curl -fsSL https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json \
+            | jq -r --arg major "$chrome_major" \
+              '[.versions[] | select(.version | startswith($major + "."))] | last | .downloads.chromedriver[] | select(.platform=="linux64") | .url')"
+          echo "chromedriver: $driver_url"
+          mkdir -p "$RUNNER_TEMP/chromedriver"
+          curl -fsSL "$driver_url" -o "$RUNNER_TEMP/chromedriver.zip"
+          unzip -j -o "$RUNNER_TEMP/chromedriver.zip" "*/chromedriver" -d "$RUNNER_TEMP/chromedriver"
+          chmod +x "$RUNNER_TEMP/chromedriver/chromedriver"
+          echo "$RUNNER_TEMP/chromedriver" >> "$GITHUB_PATH"
+
+      - name: Start chromedriver
+        run: |
+          chromedriver --port=4444 &
+          for _ in $(seq 1 30); do
+            curl -sf http://localhost:4444/status && exit 0
+            sleep 1
+          done
+          echo "chromedriver never became ready" >&2
+          exit 1
+
+      - name: Install example dependencies
+        working-directory: example
+        run: flutter pub get
+
+      # Root package config for `dart run bin/fontify_plus.dart` inside
+      # build_proto_fonts.py — example/ flutter pub get does not create it.
+      - name: Install package dependencies
+        run: dart pub get --no-example
+
+      # Rebuild proto assets with the package CLI so the matrix judges this
+      # commit's writer, not a stale committed fixture.
+      - name: Rebuild package-built proto fonts
+        run: python3 tool/build_proto_fonts.py
+
+      # `-d chrome` treats Chrome as the running device and connects to it
+      # through DWDS's own debug-service handshake — verified against a real
+      # run on this workflow's ubuntu-latest runner, that handshake throws
+      # AppConnectionException and the process then hangs indefinitely
+      # instead of failing (also reproduced locally on macOS with matched
+      # Chrome/chromedriver versions, so this isn't runner-specific). `-d
+      # web-server --browser-name=chrome` sidesteps DWDS for driving
+      # entirely: flutter_tools serves the app over plain HTTP and the
+      # `webdriver` package drives a chromedriver-controlled browser session
+      # against it directly — the actual mechanism CI recipes for this use in
+      # practice, unlike `-d chrome`'s development-workflow path.
+      - name: Run the variable stroke render matrix on Chrome (CanvasKit)
+        working-directory: example
+        run: |
+          flutter drive \
+            --driver=test_driver/integration_test.dart \
+            --target=integration_test/variable_stroke_test.dart \
+            -d web-server --browser-name=chrome --headless \
+            --web-port=8765 --driver-port=4444
+
+      # NOT COVERED by this workflow, and not silently assumed to pass:
+      #   - Chrome/skwasm (`flutter drive ... -d chrome --wasm`): same runner,
+      #     no extra infrastructure, but `flutter drive`'s web output
+      #     aggregates all assertions into one pass/fail block per run and
+      #     was unreliable to parse per-test even locally (task-4-report.md).
+      #     Left out to avoid a gate that can't localize its own failures.
+      #   - macOS desktop / iOS simulator: needs a macOS runner
+      #     (`runs-on: macos-latest`) plus, for iOS, a booted simulator; adds
+      #     real minutes to every push. A future job can add
+      #     `runs-on: macos-latest` and `flutter test ... -d macos` cheaply;
+      #     iOS additionally needs `xcrun simctl boot`.
+      #   - Android emulator: needs `reactivecircus/android-emulator-runner`
+      #     or equivalent, which boots a full AVD (KVM acceleration only
+      #     available on Linux runners, several minutes per boot) — slow
+      #     enough that Task 14 does not add it as a blocking gate.
+      #   - Linux and Windows desktop: Task 4 never ran these either (no
+      #     target existed on the Darwin host that measured the matrix); the
+      #     evidence gap documented in tool/variable_prototype/README.md
+      #     stands.
 
   publish-dry-run:
     name: Publish dry-run

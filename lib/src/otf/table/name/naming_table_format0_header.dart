@@ -9,19 +9,19 @@ import 'naming_table.dart';
 
 /// The format 0 header: a record per string, then the storage area.
 class NamingTableFormat0Header implements BinaryCodable {
-  NamingTableFormat0Header(
-    this.format,
-    this.count,
-    this.stringOffset,
-    this.nameRecordList,
-  );
+  const NamingTableFormat0Header({
+    required this.format,
+    required this.count,
+    required this.stringOffset,
+    required this.nameRecordList,
+  });
 
   factory NamingTableFormat0Header.create(List<NameRecord> nameRecordList) =>
       NamingTableFormat0Header(
-        kNameFormat0,
-        nameRecordList.length,
-        6 + nameRecordList.length * kNameRecordSize,
-        nameRecordList,
+        format: kNameFormat0,
+        count: nameRecordList.length,
+        stringOffset: 6 + nameRecordList.length * kNameRecordSize,
+        nameRecordList: nameRecordList,
       );
 
   static NamingTableFormat0Header? fromByteData(
@@ -38,10 +38,10 @@ class NamingTableFormat0Header implements BinaryCodable {
     final count = byteData.getUint16(entry.offset + 2);
 
     return NamingTableFormat0Header(
-      format,
-      count,
-      byteData.getUint16(entry.offset + 4),
-      List.generate(
+      format: format,
+      count: count,
+      stringOffset: byteData.getUint16(entry.offset + 4),
+      nameRecordList: List.generate(
         count,
         (i) => NameRecord.fromByteData(
           byteData,

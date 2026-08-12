@@ -6,19 +6,36 @@ import 'package:fontify_plus/src/otf/table/script/script_table.dart';
 import 'package:fontify_plus/src/utils/otf.dart';
 import 'package:test/test.dart';
 
-const _kLangSys = LanguageSystemTable(0, 0xFFFF, 1, [0]);
+const _kLangSys = LanguageSystemTable(
+  lookupOrder: 0,
+  requiredFeatureIndex: 0xFFFF,
+  featureIndexCount: 1,
+  featureIndices: [0],
+);
 
 void main() {
   group('ScriptTable.size', () {
     test('is 4 bytes plus the default and listed lang-sys tables', () {
-      const table = ScriptTable(4, 0, [], [], _kLangSys);
+      const table = ScriptTable(
+        defaultLangSysOffset: 4,
+        langSysCount: 0,
+        langSysRecords: [],
+        langSysTables: [],
+        defaultLangSys: _kLangSys,
+      );
 
       expect(table.size, 4 + _kLangSys.size);
     });
 
     test('adds each listed lang-sys record and table', () {
       final record = LanguageSystemRecord('ENG ', 0);
-      final table = ScriptTable(4, 1, [record], [_kLangSys], _kLangSys);
+      final table = ScriptTable(
+        defaultLangSysOffset: 4,
+        langSysCount: 1,
+        langSysRecords: [record],
+        langSysTables: [_kLangSys],
+        defaultLangSys: _kLangSys,
+      );
 
       expect(table.size, 4 + record.size + _kLangSys.size * 2);
     });
@@ -28,7 +45,13 @@ void main() {
     test(
       'round-trips a default-only table through encodeToBinary and fromByteData',
       () {
-        const table = ScriptTable(4, 0, [], [], _kLangSys);
+        const table = ScriptTable(
+          defaultLangSysOffset: 4,
+          langSysCount: 0,
+          langSysRecords: [],
+          langSysTables: [],
+          defaultLangSys: _kLangSys,
+        );
         final scriptRecord = ScriptRecord('latn', 0);
         final bytes = ByteData(table.size);
 
@@ -42,7 +65,13 @@ void main() {
 
     test('round-trips a table with a listed lang system', () {
       final record = LanguageSystemRecord('ENG ', 0);
-      final table = ScriptTable(4, 1, [record], [_kLangSys], _kLangSys);
+      final table = ScriptTable(
+        defaultLangSysOffset: 4,
+        langSysCount: 1,
+        langSysRecords: [record],
+        langSysTables: [_kLangSys],
+        defaultLangSys: _kLangSys,
+      );
       final scriptRecord = ScriptRecord('latn', 0);
       final bytes = ByteData(table.size);
 
@@ -56,7 +85,13 @@ void main() {
     });
 
     test('reads the table at the record\'s scriptOffset', () {
-      const table = ScriptTable(4, 0, [], [], _kLangSys);
+      const table = ScriptTable(
+        defaultLangSysOffset: 4,
+        langSysCount: 0,
+        langSysRecords: [],
+        langSysTables: [],
+        defaultLangSys: _kLangSys,
+      );
       final scriptRecord = ScriptRecord('latn', 10);
       final bytes = ByteData(10 + table.size);
 

@@ -5,6 +5,7 @@ import '../../debugger.dart';
 import '../table_record_entry.dart';
 import 'os2_table.dart';
 import 'os2_version.dart';
+import 'os2_version_fields.dart';
 
 /// Reads an OS/2 table out of an existing font.
 OS2Table readOS2Table(ByteData byteData, TableRecordEntry entry) {
@@ -20,44 +21,67 @@ OS2Table readOS2Table(ByteData byteData, TableRecordEntry entry) {
 
   return OS2Table(
     entry,
-    version,
-    byteData.getInt16(entry.offset + 2),
-    byteData.getUint16(entry.offset + 4),
-    byteData.getUint16(entry.offset + 6),
-    byteData.getUint16(entry.offset + 8),
-    byteData.getInt16(entry.offset + 10),
-    byteData.getInt16(entry.offset + 12),
-    byteData.getInt16(entry.offset + 14),
-    byteData.getInt16(entry.offset + 16),
-    byteData.getInt16(entry.offset + 18),
-    byteData.getInt16(entry.offset + 20),
-    byteData.getInt16(entry.offset + 22),
-    byteData.getInt16(entry.offset + 24),
-    byteData.getInt16(entry.offset + 26),
-    byteData.getInt16(entry.offset + 28),
-    byteData.getInt16(entry.offset + 30),
-    List.generate(10, (i) => byteData.getUint8(entry.offset + 32 + i)),
-    byteData.getUint32(entry.offset + 42),
-    byteData.getUint32(entry.offset + 46),
-    byteData.getUint32(entry.offset + 50),
-    byteData.getUint32(entry.offset + 54),
-    byteData.getTag(entry.offset + 58),
-    byteData.getUint16(entry.offset + 62),
-    byteData.getUint16(entry.offset + 64),
-    byteData.getUint16(entry.offset + 66),
-    byteData.getInt16(entry.offset + 68),
-    byteData.getInt16(entry.offset + 70),
-    byteData.getInt16(entry.offset + 72),
-    byteData.getUint16(entry.offset + 74),
-    byteData.getUint16(entry.offset + 76),
-    !isV1 ? null : byteData.getUint32(entry.offset + 78),
-    !isV1 ? null : byteData.getUint32(entry.offset + 82),
-    !isV4 ? null : byteData.getInt16(entry.offset + 86),
-    !isV4 ? null : byteData.getInt16(entry.offset + 88),
-    !isV4 ? null : byteData.getUint16(entry.offset + 90),
-    !isV4 ? null : byteData.getUint16(entry.offset + 92),
-    !isV4 ? null : byteData.getUint16(entry.offset + 94),
-    !isV5 ? null : byteData.getUint16(entry.offset + 96),
-    !isV5 ? null : byteData.getUint16(entry.offset + 98),
+    version: version,
+    version0: OS2Version0Fields(
+      xAvgCharWidth: byteData.getInt16(entry.offset + 2),
+      usWeightClass: byteData.getUint16(entry.offset + 4),
+      usWidthClass: byteData.getUint16(entry.offset + 6),
+      fsType: byteData.getUint16(entry.offset + 8),
+      ySubscriptXSize: byteData.getInt16(entry.offset + 10),
+      ySubscriptYSize: byteData.getInt16(entry.offset + 12),
+      ySubscriptXOffset: byteData.getInt16(entry.offset + 14),
+      ySubscriptYOffset: byteData.getInt16(entry.offset + 16),
+      ySuperscriptXSize: byteData.getInt16(entry.offset + 18),
+      ySuperscriptYSize: byteData.getInt16(entry.offset + 20),
+      ySuperscriptXOffset: byteData.getInt16(entry.offset + 22),
+      ySuperscriptYOffset: byteData.getInt16(entry.offset + 24),
+      yStrikeoutSize: byteData.getInt16(entry.offset + 26),
+      yStrikeoutPosition: byteData.getInt16(entry.offset + 28),
+      sFamilyClass: byteData.getInt16(entry.offset + 30),
+      panose: List.generate(
+        10,
+        (i) => byteData.getUint8(entry.offset + 32 + i),
+      ),
+      ulUnicodeRange1: byteData.getUint32(entry.offset + 42),
+      ulUnicodeRange2: byteData.getUint32(entry.offset + 46),
+      ulUnicodeRange3: byteData.getUint32(entry.offset + 50),
+      ulUnicodeRange4: byteData.getUint32(entry.offset + 54),
+      achVendID: byteData.getTag(entry.offset + 58),
+      fsSelection: byteData.getUint16(entry.offset + 62),
+      usFirstCharIndex: byteData.getUint16(entry.offset + 64),
+      usLastCharIndex: byteData.getUint16(entry.offset + 66),
+      sTypoAscender: byteData.getInt16(entry.offset + 68),
+      sTypoDescender: byteData.getInt16(entry.offset + 70),
+      sTypoLineGap: byteData.getInt16(entry.offset + 72),
+      usWinAscent: byteData.getUint16(entry.offset + 74),
+      usWinDescent: byteData.getUint16(entry.offset + 76),
+    ),
+    // Each group owns the next, so the nesting here is the table's shape:
+    // where the reader stops is where the table stops.
+    version1: !isV1
+        ? null
+        : OS2Version1Fields(
+            ulCodePageRange1: byteData.getUint32(entry.offset + 78),
+            ulCodePageRange2: byteData.getUint32(entry.offset + 82),
+            version4: !isV4
+                ? null
+                : OS2Version4Fields(
+                    sxHeight: byteData.getInt16(entry.offset + 86),
+                    sCapHeight: byteData.getInt16(entry.offset + 88),
+                    usDefaultChar: byteData.getUint16(entry.offset + 90),
+                    usBreakChar: byteData.getUint16(entry.offset + 92),
+                    usMaxContext: byteData.getUint16(entry.offset + 94),
+                    version5: !isV5
+                        ? null
+                        : OS2Version5Fields(
+                            usLowerOpticalPointSize: byteData.getUint16(
+                              entry.offset + 96,
+                            ),
+                            usUpperOpticalPointSize: byteData.getUint16(
+                              entry.offset + 98,
+                            ),
+                          ),
+                  ),
+          ),
   );
 }

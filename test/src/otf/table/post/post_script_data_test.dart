@@ -9,14 +9,14 @@ import 'package:test/test.dart';
 void main() {
   group('PostScriptVersion30', () {
     test('has zero size and encodes nothing', () {
-      final data = PostScriptVersion30();
+      const data = PostScriptVersion30();
 
       expect(data.size, 0);
       expect(() => data.encodeToBinary(ByteData(0)), returnsNormally);
     });
 
     test('reports version 3.0', () {
-      final data = PostScriptVersion30();
+      const data = PostScriptVersion30();
 
       expect(data.version.major, 3);
       expect(data.version.minor, 0);

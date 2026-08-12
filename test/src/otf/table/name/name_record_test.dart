@@ -6,7 +6,11 @@ import 'package:test/test.dart';
 void main() {
   group('NameRecord.template', () {
     test('leaves the string-specific fields as placeholders', () {
-      const record = NameRecord.template(3, 1, 0x0409);
+      const record = NameRecord.template(
+        platformID: 3,
+        encodingID: 1,
+        languageID: 0x0409,
+      );
 
       expect(record.nameID, -1);
       expect(record.length, -1);
@@ -14,7 +18,11 @@ void main() {
     });
 
     test('keeps the platform fields given to it', () {
-      const record = NameRecord.template(3, 1, 0x0409);
+      const record = NameRecord.template(
+        platformID: 3,
+        encodingID: 1,
+        languageID: 0x0409,
+      );
 
       expect(record.platformID, 3);
       expect(record.encodingID, 1);
@@ -24,7 +32,11 @@ void main() {
 
   group('NameRecord.copyWith', () {
     test('fills the template\'s placeholders in for one string', () {
-      const template = NameRecord.template(3, 1, 0x0409);
+      const template = NameRecord.template(
+        platformID: 3,
+        encodingID: 1,
+        languageID: 0x0409,
+      );
       final record = template.copyWith(nameID: 1, length: 10, offset: 0);
 
       expect(record.nameID, 1);
@@ -33,7 +45,11 @@ void main() {
     });
 
     test('keeps the platform fields from the template unless overridden', () {
-      const template = NameRecord.template(3, 1, 0x0409);
+      const template = NameRecord.template(
+        platformID: 3,
+        encodingID: 1,
+        languageID: 0x0409,
+      );
       final record = template.copyWith(nameID: 1, length: 10, offset: 0);
 
       expect(record.platformID, 3);
@@ -42,7 +58,11 @@ void main() {
     });
 
     test('does not mutate the original', () {
-      const template = NameRecord.template(3, 1, 0x0409);
+      const template = NameRecord.template(
+        platformID: 3,
+        encodingID: 1,
+        languageID: 0x0409,
+      );
       template.copyWith(nameID: 5);
 
       expect(template.nameID, -1);
@@ -51,13 +71,27 @@ void main() {
 
   group('NameRecord round trip', () {
     test('size is fixed at 12 bytes', () {
-      final record = NameRecord(3, 1, 0x0409, 1, 10, 0);
+      const record = NameRecord(
+        platformID: 3,
+        encodingID: 1,
+        languageID: 0x0409,
+        nameID: 1,
+        length: 10,
+        offset: 0,
+      );
 
       expect(record.size, 12);
     });
 
     test('round-trips through encodeToBinary and fromByteData', () {
-      final record = NameRecord(3, 1, 0x0409, 4, 20, 100);
+      const record = NameRecord(
+        platformID: 3,
+        encodingID: 1,
+        languageID: 0x0409,
+        nameID: 4,
+        length: 20,
+        offset: 100,
+      );
       final bytes = ByteData(record.size);
 
       record.encodeToBinary(bytes);

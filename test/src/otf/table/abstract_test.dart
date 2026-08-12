@@ -17,7 +17,7 @@ class _FakeTable extends FontTable {
 void main() {
   group('FontTable.fromTableRecordEntry', () {
     test('carries the given entry through', () {
-      final entry = TableRecordEntry('glyf', 0, 0, 0);
+      const entry = TableRecordEntry('glyf', checkSum: 0, offset: 0, length: 0);
       final table = _FakeTable(entry);
 
       expect(table.entry, same(entry));

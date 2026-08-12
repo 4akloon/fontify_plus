@@ -11,6 +11,7 @@ import '../hmtx.dart';
 import 'os2_defaults.dart';
 import 'os2_table.dart';
 import 'os2_version.dart';
+import 'os2_version_fields.dart';
 
 /// Builds an OS/2 table from the metrics the other tables already carry.
 OS2Table buildOS2Table(
@@ -25,7 +26,7 @@ OS2Table buildOS2Table(
   final asciiAchVendID = achVendID.getAsciiPrintable();
 
   if (asciiAchVendID.length != 4) {
-    throw TableDataFormatException(
+    throw const TableDataFormatException(
       'Incorrect achVendID tag format in OS/2 table',
     );
   }
@@ -53,53 +54,77 @@ OS2Table buildOS2Table(
 
   return OS2Table(
     null,
-    version,
-    _getAverageWidth(hmtx),
-    400, // Regular weight
-    5, // Normal width
-    0, // Installable embedding
-    scriptXsize,
-    scriptYsize,
-    0, // zero X offset
-    (height * kDefaultSubscriptRelativeYoffset).round(),
-    scriptXsize,
-    scriptYsize,
-    0, // zero X offset
-    (height * kDefaultSuperscriptRelativeYoffset).round(),
-    (height * kDefaultStrikeoutRelativeSize).round(),
-    (height * kDefaultStrikeoutRelativeOffset).round(),
-    0, // No Classification
-    kDefaultPANOSE,
+    version: version,
+    version0: OS2Version0Fields(
+      xAvgCharWidth: _getAverageWidth(hmtx),
+      // Pinned to 400 (Regular) even for a variable font whose `wght` axis
+      // carries literal stroke widths in the 1.33-2.0 range. An honest
+      // usWeightClass for that range would be 2 ("Extra-thin"), but generic
+      // font tooling that reads usWeightClass without instancing the font
+      // would then treat the icon font as thinner than Thin, which is a worse
+      // default than a class that doesn't describe this axis at all.
+      usWeightClass: 400,
+      usWidthClass: 5, // Normal width
+      fsType: 0, // Installable embedding
+      ySubscriptXSize: scriptXsize,
+      ySubscriptYSize: scriptYsize,
+      ySubscriptXOffset: 0,
+      ySubscriptYOffset: (height * kDefaultSubscriptRelativeYoffset).round(),
+      ySuperscriptXSize: scriptXsize,
+      ySuperscriptYSize: scriptYsize,
+      ySuperscriptXOffset: 0,
+      ySuperscriptYOffset: (height * kDefaultSuperscriptRelativeYoffset)
+          .round(),
+      yStrikeoutSize: (height * kDefaultStrikeoutRelativeSize).round(),
+      yStrikeoutPosition: (height * kDefaultStrikeoutRelativeOffset).round(),
+      sFamilyClass: 0, // No Classification
+      panose: kDefaultPANOSE,
 
-    /// NOTE: Only 2 unicode ranges are used now.
-    ///
-    /// Should be made calculated, in case of using other ranges.
-    1, // Bit 1: Basic Latin. Includes space
-    (1 << 28) | (1 << 25), // Bits 57 & 60: Non-Plane 0 and Private Use Area
-    0,
-    0,
-    asciiAchVendID,
-    0x40 | 0x80, // REGULAR and USE_TYPO_METRICS
-    cmapFormat4subtable.startCode.first,
-    lastRealCharIndex,
-    hhea.ascender,
-    hhea.descender,
-    hhea.lineGap,
-    math.max(head.yMax, hhea.ascender),
-    -math.min(head.yMin, hhea.descender),
-    !isV1 ? null : 0, // The code page is not functional
-    !isV1 ? null : 0,
-    !isV4 ? null : 0,
-    !isV4 ? null : 0,
-    !isV4 ? null : 0,
-    !isV4 ? null : kUnicodeSpaceCharCode,
-    !isV4 ? null : _getMaxContext(gsub),
+      /// NOTE: Only 2 unicode ranges are used now.
+      ///
+      /// Should be made calculated, in case of using other ranges.
+      ulUnicodeRange1: 1, // Bit 1: Basic Latin. Includes space
+      // Bits 57 & 60: Non-Plane 0 and Private Use Area
+      ulUnicodeRange2: (1 << 28) | (1 << 25),
+      ulUnicodeRange3: 0,
+      ulUnicodeRange4: 0,
+      achVendID: asciiAchVendID,
+      fsSelection: 0x40 | 0x80, // REGULAR and USE_TYPO_METRICS
+      usFirstCharIndex: cmapFormat4subtable.startCode.first,
+      usLastCharIndex: lastRealCharIndex,
+      sTypoAscender: hhea.ascender,
+      sTypoDescender: hhea.descender,
+      sTypoLineGap: hhea.lineGap,
+      usWinAscent: math.max(head.yMax, hhea.ascender),
+      usWinDescent: -math.min(head.yMin, hhea.descender),
+    ),
+    // The code page is not functional.
+    version1: !isV1
+        ? null
+        : OS2Version1Fields(
+            ulCodePageRange1: 0,
+            ulCodePageRange2: 0,
+            version4: !isV4
+                ? null
+                : OS2Version4Fields(
+                    sxHeight: 0,
+                    sCapHeight: 0,
+                    usDefaultChar: 0,
+                    usBreakChar: kUnicodeSpaceCharCode,
+                    usMaxContext: _getMaxContext(gsub),
 
-    /// For fonts that were not designed for multiple optical-size variants,
-    /// usLowerOpticalPointSize should be set to 0 (zero),
-    /// and usUpperOpticalPointSize should be set to 0xFFFF.
-    !isV5 ? null : 0,
-    !isV5 ? null : 0xFFFE,
+                    /// For fonts that were not designed for multiple
+                    /// optical-size variants, usLowerOpticalPointSize should
+                    /// be set to 0 (zero), and usUpperOpticalPointSize should
+                    /// be set to 0xFFFF.
+                    version5: !isV5
+                        ? null
+                        : const OS2Version5Fields(
+                            usLowerOpticalPointSize: 0,
+                            usUpperOpticalPointSize: 0xFFFE,
+                          ),
+                  ),
+          ),
   );
 }
 

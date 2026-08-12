@@ -1,5 +1,6 @@
 import '../common/constant.dart';
 import '../common/generic_glyph.dart';
+import '../common/stroke_width_range.dart';
 import '../otf/defaults.dart';
 import 'class_gen/dart_identifier.dart';
 import 'class_gen/icon_name_allocator.dart';
@@ -20,6 +21,8 @@ class FlutterClassGenerator {
   /// * [fontFileName] is font file's name. Used in generated docs for class.
   /// * [indent] is a number of spaces in leading indentation for class'
   /// members. Defaults to 2.
+  /// * [strokeWidthRange], when given, documents the variable `wght` axis in the
+  /// class comment.
   FlutterClassGenerator(
     this.glyphList, {
     String? className,
@@ -27,12 +30,14 @@ class FlutterClassGenerator {
     String? fontFileName,
     String? package,
     int? indent,
+    StrokeWidthRange? strokeWidthRange,
   }) : _indent = ' ' * (indent ?? _kDefaultIndent),
        _className = toDartIdentifier(className ?? _kDefaultClassName),
        _familyName = familyName ?? kDefaultFontFamily,
        _fontFileName = fontFileName ?? _kDefaultFontFileName,
        _iconVarNames = _allocateNames(glyphList),
-       _package = package?.isEmpty ?? true ? null : package;
+       _package = package?.isEmpty ?? true ? null : package,
+       _strokeWidthRange = strokeWidthRange;
 
   final List<GenericGlyph> glyphList;
   final String _fontFileName;
@@ -41,6 +46,7 @@ class FlutterClassGenerator {
   final String _indent;
   final String? _package;
   final List<String> _iconVarNames;
+  final StrokeWidthRange? _strokeWidthRange;
 
   static List<String> _allocateNames(List<GenericGlyph> glyphList) {
     final allocator = IconNameAllocator();
@@ -62,7 +68,7 @@ class FlutterClassGenerator {
 
     final body = members.map((e) => e.isEmpty ? '' : '$_indent$e').join('\n');
 
-    return '${_header()}$_docComment'
+    return '${_header()}$_axisDocComment$_docComment'
         'abstract final class $_className {\n'
         '$body\n'
         '}\n';
@@ -94,6 +100,37 @@ class FlutterClassGenerator {
 import 'package:flutter/widgets.dart';
 
 ''';
+
+  String get _axisDocComment {
+    final range = _strokeWidthRange;
+
+    if (range == null) {
+      return '';
+    }
+
+    final min = _formatAxisValue(range.min);
+    final max = _formatAxisValue(range.max);
+    final exampleIcon = _iconVarNames.firstOrNull ?? 'icon';
+
+    return '/// Variable stroke width: $min … $max (`wght` axis).\n'
+        '/// Set the width explicitly: '
+        'Icon($_className.$exampleIcon, '
+        'size: 16, weight: $min)\n'
+        '///\n';
+  }
+
+  /// Formats axis values for generated docs: `2` reads as `2.0`, `1.33` as `1.33`.
+  static String _formatAxisValue(double value) {
+    final rounded = (value * 100).roundToDouble() / 100;
+
+    if (rounded == rounded.roundToDouble()) {
+      return rounded.toStringAsFixed(1);
+    }
+
+    final text = rounded.toStringAsFixed(2);
+
+    return text.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+  }
 
   String get _docComment =>
       '''

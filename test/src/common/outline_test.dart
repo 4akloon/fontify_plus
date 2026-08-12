@@ -9,7 +9,13 @@ Outline outlineOf(
   bool compact = false,
   bool quad = false,
   FillRule fillRule = FillRule.nonzero,
-}) => Outline(points, onCurve, compact, quad, fillRule);
+}) => Outline(
+  pointList: points,
+  isOnCurveList: onCurve,
+  hasCompactCurves: compact,
+  hasQuadCurves: quad,
+  fillRule: fillRule,
+);
 
 void main() {
   group('Outline.copy', () {

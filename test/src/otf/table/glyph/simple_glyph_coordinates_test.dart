@@ -8,14 +8,22 @@ import 'package:test/test.dart';
 void main() {
   group('GlyphAxis.isShort / isSameOrPositive', () {
     test('x reads the x-specific bits', () {
-      final flag = SimpleGlyphFlag.createForPoint(10, -300, true);
+      final flag = SimpleGlyphFlag.createForPoint(
+        x: 10,
+        y: -300,
+        isOnCurve: true,
+      );
 
       expect(GlyphAxis.x.isShort(flag), isTrue);
       expect(GlyphAxis.x.isSameOrPositive(flag), isTrue);
     });
 
     test('y reads the y-specific bits', () {
-      final flag = SimpleGlyphFlag.createForPoint(10, -300, true);
+      final flag = SimpleGlyphFlag.createForPoint(
+        x: 10,
+        y: -300,
+        isOnCurve: true,
+      );
 
       expect(GlyphAxis.y.isShort(flag), isFalse);
       expect(GlyphAxis.y.isSameOrPositive(flag), isFalse);
@@ -31,7 +39,11 @@ void main() {
       ];
       final flags = [
         for (final p in points)
-          SimpleGlyphFlag.createForPoint(p.x.toInt(), p.y.toInt(), true),
+          SimpleGlyphFlag.createForPoint(
+            x: p.x.toInt(),
+            y: p.y.toInt(),
+            isOnCurve: true,
+          ),
       ];
 
       final xs = [for (final p in points) p.x.toInt()];
@@ -81,7 +93,11 @@ void main() {
     });
 
     test('a short negative delta round-trips to the same sign', () {
-      final flag = SimpleGlyphFlag.createForPoint(-100, 0, true);
+      final flag = SimpleGlyphFlag.createForPoint(
+        x: -100,
+        y: 0,
+        isOnCurve: true,
+      );
       final bytes = ByteData(1);
 
       writeCoordinates(bytes, 0, [flag], [-100], 1, GlyphAxis.x);

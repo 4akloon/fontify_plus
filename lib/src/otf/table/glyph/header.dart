@@ -5,21 +5,21 @@ import '../../../common/codable/binary.dart';
 const _kGlyphHeaderSize = 10;
 
 class GlyphHeader implements BinaryCodable {
-  GlyphHeader(
-    this.numberOfContours,
-    this.xMin,
-    this.yMin,
-    this.xMax,
-    this.yMax,
-  );
+  const GlyphHeader({
+    required this.numberOfContours,
+    required this.xMin,
+    required this.yMin,
+    required this.xMax,
+    required this.yMax,
+  });
 
   factory GlyphHeader.fromByteData(ByteData byteData, int offset) {
     return GlyphHeader(
-      byteData.getInt16(offset),
-      byteData.getInt16(offset + 2),
-      byteData.getInt16(offset + 4),
-      byteData.getInt16(offset + 6),
-      byteData.getInt16(offset + 8),
+      numberOfContours: byteData.getInt16(offset),
+      xMin: byteData.getInt16(offset + 2),
+      yMin: byteData.getInt16(offset + 4),
+      xMax: byteData.getInt16(offset + 6),
+      yMax: byteData.getInt16(offset + 8),
     );
   }
 

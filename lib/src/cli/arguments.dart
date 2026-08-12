@@ -20,7 +20,7 @@ const _kDefaultConfigPathList = ['pubspec.yaml', 'fontify_plus.yaml'];
 
 /// Parsed CLI invocation: jobs to run and global verbose flag.
 class CliRunRequest {
-  CliRunRequest({required this.jobs, required this.verbose});
+  const CliRunRequest({required this.jobs, required this.verbose});
 
   final List<FontJob> jobs;
   final bool verbose;
@@ -36,13 +36,17 @@ CliRunRequest parseArgsAndConfig(ArgParser argParser, List<String> args) {
     throw CliArgumentException(err.message);
   }
 
-  if (argResults[kCliHelpOption] as bool) {
+  // `flag` and `option` are typed accessors over the same values
+  // `argResults[...]` returns as `dynamic`; they check the option's kind
+  // against how it was declared instead of asserting the type at the call
+  // site.
+  if (argResults.flag(kCliHelpOption)) {
     throw CliHelpException();
   }
 
   final cliOverrides = _cliOverridesFrom(argResults);
-  final fontFilter = argResults[kCliFontOption] as String?;
-  final configFilePath = argResults[kCliConfigFileOption] as String?;
+  final fontFilter = argResults.option(kCliFontOption);
+  final configFilePath = argResults.option(kCliConfigFileOption);
 
   final positionalCount = math.min(
     kPositionalJobFields.length,
@@ -51,7 +55,7 @@ CliRunRequest parseArgsAndConfig(ArgParser argParser, List<String> args) {
   final hasPositionals = positionalCount > 0;
 
   if (hasPositionals && fontFilter != null) {
-    throw CliArgumentException(
+    throw const CliArgumentException(
       '--$kCliFontOption cannot be used with positional arguments.',
     );
   }
@@ -71,14 +75,14 @@ CliRunRequest parseArgsAndConfig(ArgParser argParser, List<String> args) {
 
   if (hasPositionals) {
     if (config != null) {
-      throw CliArgumentException(
+      throw const CliArgumentException(
         'Use either positional arguments for a one-off run or a config file '
         'with fontify_plus.fonts, not both.',
       );
     }
 
     if (positionalCount < kPositionalJobFields.length) {
-      throw CliArgumentException(
+      throw const CliArgumentException(
         'Both <input-svg-dir> and <output-font-file> are required.',
       );
     }
@@ -102,7 +106,7 @@ CliRunRequest parseArgsAndConfig(ArgParser argParser, List<String> args) {
   }
 
   if (config == null) {
-    throw CliArgumentException(
+    throw const CliArgumentException(
       'No config found. Provide <input-svg-dir> and <output-font-file>, or '
       'add a fontify_plus.fonts section to pubspec.yaml or fontify_plus.yaml.',
     );

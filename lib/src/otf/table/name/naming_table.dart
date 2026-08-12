@@ -25,14 +25,26 @@ abstract class NamingTable extends FontTable {
     return null;
   }
 
+  /// Builds a `name` table.
+  ///
+  /// * [axisName], when given, is written under [NameID.strokeWidthAxis] so
+  /// `fvar`'s `axisNameID` and `STAT`'s `valueNameID` resolve to a string —
+  /// OTS rejects a variable font whose name table is missing it. Omitted for
+  /// a static font, which carries no axis to name.
   static NamingTable? create(
     String fontName,
     String? description,
     Revision revision, {
     int format = kNameFormat0,
+    String? axisName,
   }) {
     if (format == kNameFormat0) {
-      return NamingTableFormat0.create(fontName, description, revision);
+      return NamingTableFormat0.create(
+        fontName,
+        description,
+        revision,
+        axisName: axisName,
+      );
     }
 
     debuggerOTF.debugUnsupportedTableFormat(kNameTag, format);

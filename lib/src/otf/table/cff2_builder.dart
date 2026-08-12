@@ -1,20 +1,43 @@
 part of 'cff.dart';
 
-/// Builds a CFF2 table for [glyphList].
-CFF2Table _buildCFF2Table(List<GenericGlyph> glyphList) {
+/// Builds a CFF2 table for [glyphMasterList].
+///
+/// Each entry is one glyph's masters, default first. A single-element entry
+/// is a glyph that does not vary; every entry being single-element is a
+/// static CFF2 table, and produces no `vstore` at all.
+CFF2Table _buildCFF2Table(List<List<GenericGlyph>> glyphMasterList) {
+  final regionCount = glyphMasterList.isEmpty
+      ? 0
+      : glyphMasterList.first.length - 1;
+
+  final context = Cff2RegionContext(regionCount);
+
+  for (final masters in glyphMasterList) {
+    if (masters.length - 1 != regionCount) {
+      throw ArgumentError(
+        'Every glyph must have the same number of masters: '
+        '${regionCount + 1} vs ${masters.length}',
+      );
+    }
+  }
+
   const charStringWriter = CharStringWriter(isCFF1: false);
 
-  final charStringRawList = glyphList.map((g) {
-    final glyph = g.copy();
+  final charStringRawList = glyphMasterList.map((masters) {
+    final prepared = masters.map((g) {
+      final glyph = g.copy();
 
-    for (final outline in glyph.outlines) {
-      outline
-        ..decompactImplicitPoints()
-        ..quadToCubic();
-    }
+      for (final outline in glyph.outlines) {
+        outline
+          ..decompactImplicitPoints()
+          ..quadToCubic();
+      }
+
+      return glyph;
+    }).toList();
 
     final byteData = charStringWriter.writeCommands(
-      glyph.toCharStringCommands(CharStringOptimizer(false)),
+      context.encodeAndBlend(prepared),
     );
 
     return byteData.buffer.asUint8List();
@@ -22,20 +45,27 @@ CFF2Table _buildCFF2Table(List<GenericGlyph> glyphList) {
 
   final table = CFF2Table(
     null,
-    CFF2TableHeader.create(),
-    CFFDict.empty(),
-    CFFIndexWithData<Uint8List>.create([], false),
-    CFFIndexWithData<Uint8List>.create(charStringRawList, false),
-    null, // vstore omitted - no variations
-    CFFIndexWithData<CFFDict>.create(
+    header: CFF2TableHeader.create(),
+    topDict: CFFDict.empty(),
+    globalSubrsData: CFFIndexWithData<Uint8List>.create([], false),
+    charStringsData: CFFIndexWithData<Uint8List>.create(
+      charStringRawList,
+      false,
+    ),
+    vstoreData: context.vstoreData,
+    fontDictList: CFFIndexWithData<CFFDict>.create(
       [
-        CFFDict([CFFDictEntry([], op.private)]),
+        // Growable list: recalculateOffsets clears and rewrites the operands.
+        // List.empty (not []) so prefer_const_constructors cannot freeze it.
+        CFFDict([
+          CFFDictEntry(List<CFFOperand>.empty(growable: true), op.private),
+        ]),
       ],
       false,
     ),
     // A Private DICT is required, but can be empty
-    [CFFDict([])],
-    <CFFIndexWithData<Uint8List>>[],
+    privateDictList: [CFFDict([])],
+    localSubrsDataList: <CFFIndexWithData<Uint8List>>[],
   );
 
   // The first pass fills each Font DICT's Private entry in with its real

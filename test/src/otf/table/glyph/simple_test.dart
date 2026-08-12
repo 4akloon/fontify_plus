@@ -14,14 +14,20 @@ SimpleGlyph _triangle() {
   ];
 
   return SimpleGlyph(
-    GlyphHeader(1, 0, 0, 10, 10),
-    [2],
-    [],
-    [
+    header: const GlyphHeader(
+      numberOfContours: 1,
+      xMin: 0,
+      yMin: 0,
+      xMax: 10,
+      yMax: 10,
+    ),
+    endPtsOfContours: [2],
+    instructions: [],
+    flags: [
       for (var i = 0; i < points.length; i++)
-        SimpleGlyphFlag.createForPoint(0, 0, true),
+        SimpleGlyphFlag.createForPoint(x: 0, y: 0, isOnCurve: true),
     ],
-    points,
+    pointList: points,
   );
 }
 
@@ -65,13 +71,24 @@ void main() {
       final points = [
         for (var i = 0; i < 5; i++) math.Point<num>(i * 10, 0),
       ];
-      final flag = SimpleGlyphFlag.createForPoint(0, 0, true).repeated(4);
+      final flag = SimpleGlyphFlag.createForPoint(
+        x: 0,
+        y: 0,
+        isOnCurve: true,
+      ).repeated(4);
       final glyph = SimpleGlyph(
-        GlyphHeader(1, 0, 0, 40, 0),
-        [4],
-        [],
-        List.filled(5, flag), // one entry per point, as fromByteData builds it
-        points,
+        header: const GlyphHeader(
+          numberOfContours: 1,
+          xMin: 0,
+          yMin: 0,
+          xMax: 40,
+          yMax: 0,
+        ),
+        endPtsOfContours: [4],
+        instructions: [],
+        // One entry per point, as fromByteData builds it.
+        flags: List.filled(5, flag),
+        pointList: points,
       );
       final bytes = ByteData(glyph.size);
 
@@ -83,11 +100,17 @@ void main() {
 
     test('round-trips non-empty instructions', () {
       final glyph = SimpleGlyph(
-        GlyphHeader(1, 0, 0, 10, 10),
-        [0],
-        [1, 2, 3],
-        [SimpleGlyphFlag.createForPoint(0, 0, true)],
-        [const math.Point<num>(0, 0)],
+        header: const GlyphHeader(
+          numberOfContours: 1,
+          xMin: 0,
+          yMin: 0,
+          xMax: 10,
+          yMax: 10,
+        ),
+        endPtsOfContours: [0],
+        instructions: [1, 2, 3],
+        flags: [SimpleGlyphFlag.createForPoint(x: 0, y: 0, isOnCurve: true)],
+        pointList: [const math.Point<num>(0, 0)],
       );
       final bytes = ByteData(glyph.size);
 

@@ -11,13 +11,25 @@ import 'package:test/test.dart';
 // produces them — encodeToBinary recomputes them, but size (called before
 // encoding, as every BinaryEncodable expects) trusts the stored count as-is.
 ItemVariationStore _store() => ItemVariationStore(
-  1,
-  12, // 8 fixed bytes + 4 bytes for the one subtable offset
-  1,
-  [0], // placeholder, overwritten by encodeToBinary
-  VariationRegionList(1, 1, [RegionAxisCoordinates(0, 0x4000, 0x8000)]),
-  [
-    ItemVariationData(2, 1, 1, [0]),
+  format: 1,
+  // 8 fixed bytes + 4 bytes for the one subtable offset
+  variationRegionListOffset: 12,
+  itemVariationDataCount: 1,
+  itemVariationDataOffsets: [0], // overwritten by encodeToBinary
+  variationRegionList: const VariationRegionList(
+    axisCount: 1,
+    regionCount: 1,
+    regions: [
+      RegionAxisCoordinates(startCoord: 0, peakCoord: 0x4000, endCoord: 0x8000),
+    ],
+  ),
+  itemVariationDataList: [
+    const ItemVariationData(
+      itemCount: 2,
+      shortDeltaCount: 1,
+      regionIndexCount: 1,
+      regionIndexes: [0],
+    ),
   ],
 );
 
@@ -60,14 +72,35 @@ void main() {
 
     test('round-trips multiple subtables at their own offsets', () {
       final store = ItemVariationStore(
-        1,
-        16, // 8 fixed bytes + 4 bytes per two subtable offsets
-        2,
-        [0, 0], // placeholder, overwritten by encodeToBinary
-        VariationRegionList(1, 1, [RegionAxisCoordinates(0, 0x4000, 0x8000)]),
-        [
-          ItemVariationData(2, 1, 1, [0]),
-          ItemVariationData(3, 1, 1, [0]),
+        format: 1,
+        // 8 fixed bytes + 4 bytes per two subtable offsets
+        variationRegionListOffset: 16,
+        itemVariationDataCount: 2,
+        itemVariationDataOffsets: [0, 0], // overwritten by encodeToBinary
+        variationRegionList: const VariationRegionList(
+          axisCount: 1,
+          regionCount: 1,
+          regions: [
+            RegionAxisCoordinates(
+              startCoord: 0,
+              peakCoord: 0x4000,
+              endCoord: 0x8000,
+            ),
+          ],
+        ),
+        itemVariationDataList: [
+          const ItemVariationData(
+            itemCount: 2,
+            shortDeltaCount: 1,
+            regionIndexCount: 1,
+            regionIndexes: [0],
+          ),
+          const ItemVariationData(
+            itemCount: 3,
+            shortDeltaCount: 1,
+            regionIndexCount: 1,
+            regionIndexes: [0],
+          ),
         ],
       );
       final bytes = ByteData(store.size);

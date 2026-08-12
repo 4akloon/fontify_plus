@@ -34,23 +34,23 @@ class MaximumProfileTable extends FontTable {
       super.fromTableRecordEntry();
 
   MaximumProfileTable.v1(
-    super.entry,
-    this.numGlyphs,
-    this.maxPoints,
-    this.maxContours,
-    this.maxCompositePoints,
-    this.maxCompositeContours,
-    this.maxZones,
-    this.maxTwilightPoints,
-    this.maxStorage,
-    this.maxFunctionDefs,
-    this.maxInstructionDefs,
-    this.maxStackElements,
-    this.maxSizeOfInstructions,
-    this.maxComponentElements,
-    this.maxComponentDepth,
-  ) : version = _kVersion1,
-      super.fromTableRecordEntry();
+    super.entry, {
+    required this.numGlyphs,
+    required this.maxPoints,
+    required this.maxContours,
+    required this.maxCompositePoints,
+    required this.maxCompositeContours,
+    required this.maxZones,
+    required this.maxTwilightPoints,
+    required this.maxStorage,
+    required this.maxFunctionDefs,
+    required this.maxInstructionDefs,
+    required this.maxStackElements,
+    required this.maxSizeOfInstructions,
+    required this.maxComponentElements,
+    required this.maxComponentDepth,
+  }) : version = _kVersion1,
+       super.fromTableRecordEntry();
 
   factory MaximumProfileTable.create(int numGlyphs, GlyphDataTable? glyf) {
     final isOpenType = glyf == null;
@@ -61,21 +61,21 @@ class MaximumProfileTable extends FontTable {
 
     return MaximumProfileTable.v1(
       null,
-      numGlyphs,
-      glyf.maxPoints,
-      glyf.maxContours,
-      0, // Composite glyphs are not supported
-      0, // Composite glyphs are not supported
-      2, // The twilight zone is used
-      0, // 0 max points for the twilight zone
+      numGlyphs: numGlyphs,
+      maxPoints: glyf.maxPoints,
+      maxContours: glyf.maxContours,
+      maxCompositePoints: 0, // Composite glyphs are not supported
+      maxCompositeContours: 0, // Composite glyphs are not supported
+      maxZones: 2, // The twilight zone is used
+      maxTwilightPoints: 0, // 0 max points for the twilight zone
       /// Constants taken from FontForge
-      1,
-      1,
-      0,
-      64,
-      glyf.maxSizeOfInstructions,
-      0,
-      0,
+      maxStorage: 1,
+      maxFunctionDefs: 1,
+      maxInstructionDefs: 0,
+      maxStackElements: 64,
+      maxSizeOfInstructions: glyf.maxSizeOfInstructions,
+      maxComponentElements: 0,
+      maxComponentDepth: 0,
     );
   }
 
@@ -91,20 +91,20 @@ class MaximumProfileTable extends FontTable {
     if (version == _kVersion1) {
       return MaximumProfileTable.v1(
         entry,
-        data.getUint16(entry.offset + 4),
-        data.getUint16(entry.offset + 6),
-        data.getUint16(entry.offset + 8),
-        data.getUint16(entry.offset + 10),
-        data.getUint16(entry.offset + 12),
-        data.getUint16(entry.offset + 14),
-        data.getUint16(entry.offset + 16),
-        data.getUint16(entry.offset + 18),
-        data.getUint16(entry.offset + 20),
-        data.getUint16(entry.offset + 22),
-        data.getUint16(entry.offset + 24),
-        data.getUint16(entry.offset + 26),
-        data.getUint16(entry.offset + 28),
-        data.getUint16(entry.offset + 30),
+        numGlyphs: data.getUint16(entry.offset + 4),
+        maxPoints: data.getUint16(entry.offset + 6),
+        maxContours: data.getUint16(entry.offset + 8),
+        maxCompositePoints: data.getUint16(entry.offset + 10),
+        maxCompositeContours: data.getUint16(entry.offset + 12),
+        maxZones: data.getUint16(entry.offset + 14),
+        maxTwilightPoints: data.getUint16(entry.offset + 16),
+        maxStorage: data.getUint16(entry.offset + 18),
+        maxFunctionDefs: data.getUint16(entry.offset + 20),
+        maxInstructionDefs: data.getUint16(entry.offset + 22),
+        maxStackElements: data.getUint16(entry.offset + 24),
+        maxSizeOfInstructions: data.getUint16(entry.offset + 26),
+        maxComponentElements: data.getUint16(entry.offset + 28),
+        maxComponentDepth: data.getUint16(entry.offset + 30),
       );
     } else {
       debuggerOTF.debugUnsupportedTableVersion(entry.tag, version);

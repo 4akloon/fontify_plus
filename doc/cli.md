@@ -22,6 +22,7 @@ fontify_plus assets/svg/ fonts/my_icons_font.otf \
 | `--[no-]normalize` | Scale each glyph so its longest side fills the em square (default on). |
 | `--[no-]outline-strokes` | Convert stroked paths to filled regions (default on). |
 | `--[no-]opentype` | Emit CFF outlines (default on). |
+| `--stroke-width-range=<min,max>` | Build a variable font whose `wght` axis is the stroke width, in the SVG's own units (e.g. `1.33,2`). The maximum is the default instance. Omit for a static font. See [Variable stroke width](variable_stroke.md). |
 | `-r`, `--recursive` | Recursively search for `.svg` files. |
 | `-v`, `--verbose` | Print every log message. |
 | `-z`, `--config-file=<path>` | Path to a yaml config file (`pubspec.yaml` and `fontify_plus.yaml` are checked by default). |
@@ -50,10 +51,19 @@ fontify_plus:
     brand:
       input_svg_dir: assets/brand/
       output_font_file: fonts/brand.otf
+      stroke_width_range: [1.33, 2]
 ```
 
 `input_svg_dir` and `output_font_file` are required per font set. CLI flags
 merge on top of `defaults` and per-font values (only flags you pass override).
+
+`stroke_width_range` takes a two-element list of numbers (`[min, max]`) and
+builds a variable font whose `wght` axis is the stroke width instead of one
+fixed width; it is also allowed in `defaults` for font sets that share an
+icon library and range. There is no built-in default. Requires
+`outline_strokes` and `opentype` to stay on (their defaults) — pairing it
+with `outline_strokes: false` or `opentype: false` is rejected. Details:
+[Variable stroke width](variable_stroke.md).
 
 ```sh
 fontify_plus                  # all sets

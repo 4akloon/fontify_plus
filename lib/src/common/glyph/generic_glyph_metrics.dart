@@ -4,12 +4,18 @@
 /// small inside a 24-unit viewBox has metrics much smaller than its bounds,
 /// and that difference is the design information normalization discards.
 class GenericGlyphMetrics {
-  GenericGlyphMetrics(this.xMin, this.xMax, this.yMin, this.yMax);
+  const GenericGlyphMetrics({
+    required this.xMin,
+    required this.xMax,
+    required this.yMin,
+    required this.yMax,
+  });
 
-  factory GenericGlyphMetrics.empty() => GenericGlyphMetrics(0, 0, 0, 0);
+  factory GenericGlyphMetrics.empty() =>
+      const GenericGlyphMetrics(xMin: 0, xMax: 0, yMin: 0, yMax: 0);
 
   factory GenericGlyphMetrics.square(int unitsPerEm) =>
-      GenericGlyphMetrics(0, unitsPerEm, 0, unitsPerEm);
+      GenericGlyphMetrics(xMin: 0, xMax: unitsPerEm, yMin: 0, yMax: unitsPerEm);
 
   final int xMin;
   final int xMax;

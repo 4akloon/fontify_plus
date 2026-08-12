@@ -6,22 +6,31 @@ part of 'cff.dart';
 /// one, so this class stays the table's structure and its encoder.
 class CFF2Table extends CFFTable implements CalculatableOffsets {
   CFF2Table(
-    super.entry,
-    this.header,
-    this.topDict,
-    this.globalSubrsData,
-    this.charStringsData,
-    this.vstoreData,
-    this.fontDictList,
-    this.privateDictList,
-    this.localSubrsDataList,
-  ) : super.fromTableRecordEntry();
+    super.entry, {
+    required this.header,
+    required this.topDict,
+    required this.globalSubrsData,
+    required this.charStringsData,
+    required this.vstoreData,
+    required this.fontDictList,
+    required this.privateDictList,
+    required this.localSubrsDataList,
+  }) : super.fromTableRecordEntry();
 
   factory CFF2Table.fromByteData(ByteData byteData, TableRecordEntry entry) =>
       _readCFF2Table(byteData, entry);
 
-  factory CFF2Table.create(List<GenericGlyph> glyphList) =>
-      _buildCFF2Table(glyphList);
+  /// Builds a CFF2 table from [glyphMasterList].
+  ///
+  /// Each entry is one glyph's masters, default first — not a bare glyph
+  /// list. A single-element entry is a glyph that does not vary; every entry
+  /// being single-element is a static table, and [vstoreData] comes out
+  /// null. Two-element entries (one region) get a `vstore` built by
+  /// `SingleRegionVariationStore`, which is currently the only region count
+  /// this factory accepts — every glyph must agree on its master count, and
+  /// that count cannot exceed two.
+  factory CFF2Table.create(List<List<GenericGlyph>> glyphMasterList) =>
+      _buildCFF2Table(glyphMasterList);
 
   final CFF2TableHeader header;
   final CFFDict topDict;

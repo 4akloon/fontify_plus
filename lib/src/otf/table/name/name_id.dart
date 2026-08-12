@@ -31,6 +31,12 @@ enum NameID {
 
   /// 11: URL of font vendor
   urlVendor,
+
+  /// 256: Display name for the stroke width variation axis.
+  ///
+  /// The first ID in the user-defined range. `fvar` axis names must live there
+  /// rather than reuse a standard ID.
+  strokeWidthAxis,
 }
 
 /// The wire value of each [NameID].
@@ -48,4 +54,5 @@ const kNameIDmap = EnumClass<NameID, int>({
   NameID.manufacturer: 8,
   NameID.description: 10,
   NameID.urlVendor: 11,
+  NameID.strokeWidthAxis: 256,
 });

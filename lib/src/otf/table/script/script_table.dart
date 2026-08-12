@@ -7,13 +7,13 @@ import 'script_record.dart';
 
 /// The language systems available for one script.
 class ScriptTable implements BinaryCodable {
-  const ScriptTable(
-    this.defaultLangSysOffset,
-    this.langSysCount,
-    this.langSysRecords,
-    this.langSysTables,
-    this.defaultLangSys,
-  );
+  const ScriptTable({
+    required this.defaultLangSysOffset,
+    required this.langSysCount,
+    required this.langSysRecords,
+    required this.langSysTables,
+    required this.defaultLangSys,
+  });
 
   factory ScriptTable.fromByteData(
     ByteData byteData,
@@ -42,17 +42,17 @@ class ScriptTable implements BinaryCodable {
     );
 
     return ScriptTable(
-      defaultLangSysOffset,
-      langSysCount,
-      langSysRecords,
-      [
+      defaultLangSysOffset: defaultLangSysOffset,
+      langSysCount: langSysCount,
+      langSysRecords: langSysRecords,
+      langSysTables: [
         for (final record in langSysRecords)
           LanguageSystemTable.fromByteData(
             byteData,
             offset + record.langSysOffset,
           ),
       ],
-      defaultLangSys,
+      defaultLangSys: defaultLangSys,
     );
   }
 

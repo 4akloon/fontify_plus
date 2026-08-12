@@ -17,6 +17,14 @@ import 'fixtures/ttf_expected_data.dart';
 const _kTestFontAssetPath = '$kTestAssetsDir/test_font.ttf';
 const _kTestCFF2fontAssetPath = '$kTestAssetsDir/test_cff2_font.otf';
 
+/// The glyf table of a font these tests already know is TrueType.
+///
+/// `font.glyf` is nullable because a CFF font has no glyf at all; every use
+/// below is on `test_font.ttf`, so `require` states that and names the tag if
+/// the fixture ever stops being a TrueType font.
+GlyphDataTable _glyf(OpenTypeFont font) =>
+    font.tables.require<GlyphDataTable>(kGlyfTag);
+
 void main() {
   late OpenTypeFont font;
 
@@ -37,7 +45,7 @@ void main() {
     });
 
     test('Maximum Profile table', () {
-      final table = font.tableMap[kMaxpTag] as MaximumProfileTable;
+      final table = font.maxp;
       expect(table, isNotNull);
 
       expect(table.version, 0x00010000);
@@ -58,7 +66,7 @@ void main() {
     });
 
     test('Header table', () {
-      final table = font.tableMap[kHeadTag] as HeaderTable;
+      final table = font.head;
       expect(table, isNotNull);
 
       expect(table.majorVersion, 1);
@@ -83,7 +91,7 @@ void main() {
     });
 
     test('Glyph Data table', () {
-      final table = font.tableMap[kGlyfTag] as GlyphDataTable;
+      final table = _glyf(font);
       expect(table, isNotNull);
       expect(table.glyphList.length, 166);
 
@@ -137,45 +145,45 @@ void main() {
     });
 
     test('OS/2 V1 table', () {
-      final table = font.tableMap[kOS2Tag] as OS2Table;
+      final table = font.os2;
       expect(table, isNotNull);
 
       expect(table.version, 1);
-      expect(table.xAvgCharWidth, 862);
-      expect(table.usWeightClass, 400);
-      expect(table.usWidthClass, 5);
-      expect(table.fsType, 0);
-      expect(table.ySubscriptXSize, 634);
-      expect(table.ySubscriptYSize, 700);
-      expect(table.ySubscriptXOffset, 0);
-      expect(table.ySubscriptYOffset, 140);
-      expect(table.ySuperscriptXSize, 634);
-      expect(table.ySuperscriptYSize, 700);
-      expect(table.ySuperscriptXOffset, 0);
-      expect(table.ySuperscriptYOffset, 480);
-      expect(table.yStrikeoutSize, 49);
-      expect(table.yStrikeoutPosition, 258);
-      expect(table.sFamilyClass, 0);
-      expect(table.panose, [2, 0, 5, 3, 0, 0, 0, 0, 0, 0]);
-      expect(table.ulUnicodeRange1, 0);
-      expect(table.ulUnicodeRange2, 0);
-      expect(table.ulUnicodeRange3, 0);
-      expect(table.ulUnicodeRange4, 0);
-      expect(table.achVendID, 'PfEd');
-      expect(table.fsSelection, 64);
-      expect(table.usFirstCharIndex, 59414);
-      expect(table.usLastCharIndex, 62368);
-      expect(table.sTypoAscender, 850);
-      expect(table.sTypoDescender, -150);
-      expect(table.sTypoLineGap, 90);
-      expect(table.usWinAscent, 853);
-      expect(table.usWinDescent, 153);
-      expect(table.ulCodePageRange1, 1);
-      expect(table.ulCodePageRange2, 0);
+      expect(table.version0.xAvgCharWidth, 862);
+      expect(table.version0.usWeightClass, 400);
+      expect(table.version0.usWidthClass, 5);
+      expect(table.version0.fsType, 0);
+      expect(table.version0.ySubscriptXSize, 634);
+      expect(table.version0.ySubscriptYSize, 700);
+      expect(table.version0.ySubscriptXOffset, 0);
+      expect(table.version0.ySubscriptYOffset, 140);
+      expect(table.version0.ySuperscriptXSize, 634);
+      expect(table.version0.ySuperscriptYSize, 700);
+      expect(table.version0.ySuperscriptXOffset, 0);
+      expect(table.version0.ySuperscriptYOffset, 480);
+      expect(table.version0.yStrikeoutSize, 49);
+      expect(table.version0.yStrikeoutPosition, 258);
+      expect(table.version0.sFamilyClass, 0);
+      expect(table.version0.panose, [2, 0, 5, 3, 0, 0, 0, 0, 0, 0]);
+      expect(table.version0.ulUnicodeRange1, 0);
+      expect(table.version0.ulUnicodeRange2, 0);
+      expect(table.version0.ulUnicodeRange3, 0);
+      expect(table.version0.ulUnicodeRange4, 0);
+      expect(table.version0.achVendID, 'PfEd');
+      expect(table.version0.fsSelection, 64);
+      expect(table.version0.usFirstCharIndex, 59414);
+      expect(table.version0.usLastCharIndex, 62368);
+      expect(table.version0.sTypoAscender, 850);
+      expect(table.version0.sTypoDescender, -150);
+      expect(table.version0.sTypoLineGap, 90);
+      expect(table.version0.usWinAscent, 853);
+      expect(table.version0.usWinDescent, 153);
+      expect(table.version1?.ulCodePageRange1, 1);
+      expect(table.version1?.ulCodePageRange2, 0);
     });
 
     test('PostScript table', () {
-      final table = font.tableMap[kPostTag] as PostScriptTable;
+      final table = font.post;
       expect(table, isNotNull);
 
       expect(table.header.version, const Revision(2, 0));
@@ -198,7 +206,10 @@ void main() {
     });
 
     test('Naming table', () {
-      final table = font.tableMap[kNameTag] as NamingTableFormat0;
+      // `require` on the concrete format rather than `font.name`: the
+      // assertions below read format-0 fields, so this test does mean to
+      // pin down which NamingTable subtype the fixture carries.
+      final table = font.tables.require<NamingTableFormat0>(kNameTag);
       expect(table, isNotNull);
 
       expect(table.header.format, 0);
@@ -209,7 +220,7 @@ void main() {
     });
 
     test('Character To Glyph Index Mapping table', () {
-      final table = font.tableMap[kCmapTag] as CharacterToGlyphTable;
+      final table = font.cmap;
       expect(table, isNotNull);
 
       expect(table.header.version, 0);
@@ -262,7 +273,7 @@ void main() {
     });
 
     test('Horizontal Header table', () {
-      final table = font.tableMap[kHheaTag] as HorizontalHeaderTable;
+      final table = font.hhea;
       expect(table, isNotNull);
 
       expect(table.majorVersion, 1);
@@ -282,7 +293,7 @@ void main() {
     });
 
     test('Horizontal Metrics table', () {
-      final table = font.tableMap[kHmtxTag] as HorizontalMetricsTable;
+      final table = font.hmtx;
       expect(table, isNotNull);
 
       expect(table.leftSideBearings, isEmpty);
@@ -294,7 +305,7 @@ void main() {
     });
 
     test('Glyph Substitution table', () {
-      final table = font.tableMap[kGSUBTag] as GlyphSubstitutionTable;
+      final table = font.gsub;
       expect(table, isNotNull);
 
       final scriptTable = table.scriptListTable;
@@ -364,9 +375,9 @@ void main() {
       final glyphNameList = (font.post.data as PostScriptVersion20).glyphNames
           .map((s) => s.string)
           .toList();
-      final glyphList = font.glyf.glyphList
-          .map((e) => GenericGlyph.fromSimpleTrueTypeGlyph(e))
-          .toList();
+      final glyphList = _glyf(
+        font,
+      ).glyphList.map((e) => GenericGlyph.fromSimpleTrueTypeGlyph(e)).toList();
 
       for (var i = 0; i < glyphList.length; i++) {
         glyphList[i].metadata.name = glyphNameList[i];
@@ -427,7 +438,7 @@ void main() {
 
       // Was 675 while normalization scaled glyphs to ascender + descender
       // (700 units) instead of the 1000-unit span between them.
-      expect(table.xAvgCharWidth, 953);
+      expect(table.version0.xAvgCharWidth, 953);
     });
   });
 
@@ -442,7 +453,7 @@ void main() {
     });
 
     test('CFF2 Read & Write', () {
-      final table = font.cff2;
+      final table = font.tables.require<CFF2Table>(kCFF2Tag);
 
       final originalCFF2byteList = byteData.buffer
           .asUint8List(table.entry!.offset, table.size)
@@ -484,22 +495,22 @@ void main() {
     });
 
     test('Conversion from TrueType and back', () {
-      final genericList = font.glyf.glyphList
-          .map((e) => GenericGlyph.fromSimpleTrueTypeGlyph(e))
-          .toList();
+      final genericList = _glyf(
+        font,
+      ).glyphList.map((e) => GenericGlyph.fromSimpleTrueTypeGlyph(e)).toList();
       final simpleList = genericList
           .map((e) => e.toSimpleTrueTypeGlyph())
           .toList();
 
       for (var i = 0; i < genericList.length; i++) {
-        expect(simpleList[i].pointList, font.glyf.glyphList[i].pointList);
+        expect(simpleList[i].pointList, _glyf(font).glyphList[i].pointList);
       }
     });
 
     test('Decompact and compact back', () {
-      final genericList = font.glyf.glyphList
-          .map((e) => GenericGlyph.fromSimpleTrueTypeGlyph(e))
-          .toList();
+      final genericList = _glyf(
+        font,
+      ).glyphList.map((e) => GenericGlyph.fromSimpleTrueTypeGlyph(e)).toList();
 
       for (final g in genericList) {
         for (final o in g.outlines) {
@@ -526,7 +537,7 @@ void main() {
       for (var i = 0; i < genericList.length; i++) {
         final newLength = simpleList[i].pointList.length;
         final expectedLength =
-            changedForReason[i] ?? font.glyf.glyphList[i].pointList.length;
+            changedForReason[i] ?? _glyf(font).glyphList[i].pointList.length;
         expect(newLength, expectedLength);
       }
     });

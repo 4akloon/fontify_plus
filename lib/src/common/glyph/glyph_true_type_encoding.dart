@@ -69,21 +69,25 @@ extension GlyphTrueTypeEncoding on GenericGlyph {
 
     final flags = _compactRuns([
       for (var i = 0; i < points.length; i++)
-        SimpleGlyphFlag.createForPoint(relX[i], relY[i], isOnCurveList[i]),
+        SimpleGlyphFlag.createForPoint(
+          x: relX[i],
+          y: relY[i],
+          isOnCurve: isOnCurveList[i],
+        ),
     ]);
 
     return SimpleGlyph(
-      GlyphHeader(
-        endPoints.length,
-        absX.fold<int>(kInt32Max, math.min),
-        absY.fold<int>(kInt32Max, math.min),
-        absX.fold<int>(kInt32Min, math.max),
-        absY.fold<int>(kInt32Min, math.max),
+      header: GlyphHeader(
+        numberOfContours: endPoints.length,
+        xMin: absX.fold<int>(kInt32Max, math.min),
+        yMin: absY.fold<int>(kInt32Max, math.min),
+        xMax: absX.fold<int>(kInt32Min, math.max),
+        yMax: absY.fold<int>(kInt32Min, math.max),
       ),
-      endPoints,
-      [],
-      flags,
-      points,
+      endPtsOfContours: endPoints,
+      instructions: [],
+      flags: flags,
+      pointList: points,
     );
   }
 }
