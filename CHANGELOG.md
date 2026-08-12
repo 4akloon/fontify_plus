@@ -1,66 +1,32 @@
 # Changelog
 
-## Unreleased
-
-* CLI: `--recursive` and `--verbose` are negatable (`--no-recursive` /
-  `--no-verbose`) so they can override YAML defaults.
-* OTF `head` timestamps: reuse created/modified from an existing output
-  font when regenerating; otherwise use a fixed default (no wall clock).
-* CLI: `--watch` regenerates on SVG (debounced) and config changes.
-* Empty SVG input directories now fail the job. Recursive scans key icons by
-  relative path so duplicate basenames in different folders stay distinct.
-* Generated `IconData` dartdoc can embed SVG hover previews (IDE-visible).
-  Controlled via `--[no-]preview` / YAML `preview:` (default on).
-* Docs: fix README claims; add example gallery screenshot.
-
 ## 0.6.0
 
-* **Variable stroke width.** `stroke_width_range` (YAML),
-  `--stroke-width-range` (CLI), or `strokeWidthRange` (`svgToOtf` /
-  `createFromGlyphs`) emits a CFF2 variable font whose `wght` axis is the
-  literal stroke width in SVG units — e.g. `Icon(MyIcons.home, size: 16,
-  weight: 1.33)`. Requires `outline_strokes` and `opentype` (defaults). See
-  `doc/variable_stroke.md`. Generated Flutter classes document the axis when
-  a range is set. Without a range, static output stays byte-identical.
-* **Smaller fonts for everyone** (why this is a minor bump): offsetter fixes
-  drop redundant subdivision on near-straight edges and exact 90° round
-  joins. Example font 3112 → 2272 B; `arrow_right` 376 → 37 points, `check`
-  97 → 22. Rendered shape is essentially unchanged.
-* **Breaking:** `OS2Table` uses named parameters and nested version groups
-  (`version0` / `version1` / `version4` / `version5`). Read fields via
-  `table.version0.…` or the `version4?` / `version5?` shorthands. A
-  `version` that disagrees with the groups throws
-  `TableDataFormatException`.
-* **Breaking for `src/` importers:** many other wide positional constructors
-  now take named parameters (same hazard: adjacent same-typed args). Encoded
-  layout unchanged; only `src/` imports are affected.
-* **Breaking:** `OpenTypeFont.glyf` / `.loca` / `.cff` / `.cff2` are nullable;
-  use `?.` or `font.tables.require<…>(tag)`. New nullable `.fvar` / `.stat`.
-  Missing required tables throw `TableDataFormatException` instead of
-  `TypeError`.
-* **Breaking (runtime only):** `OpenTypeFont.tableMap` is read-only. Use
-  `OpenTypeFont.tables` (`lookup` / `require`) instead of casting map values.
-  Do not mutate `tableMap` after construction.
-* Known limits: this package writes `fvar`/`STAT` but does not read them back
-  yet (#12). OS/2 v2/v3 round-trip truncation is pre-existing (#13).
+* Variable stroke width: `stroke_width_range` / `--stroke-width-range` /
+  `strokeWidthRange` emits a CFF2 font whose `wght` axis is the SVG stroke
+  width (e.g. `Icon(..., weight: 1.33)`). See `doc/variable_stroke.md`.
+* Smaller outlined fonts — less subdivision on near-straight edges and exact
+  90° round joins.
+* IDE SVG previews in generated `IconData` dartdoc (`--[no-]preview` /
+  YAML `preview:`, default on).
+* CLI `--watch` (debounced SVG regen + config reload); negatable
+  `--[no-]recursive` / `--[no-]verbose`; empty SVG dirs fail; recursive icon
+  names use the path relative to the input dir.
+* Reuse `head` created/modified when rewriting an existing font; otherwise a
+  fixed default timestamp (no wall clock).
+* Docs: README fixes; example gallery screenshot.
+* **Breaking for `src/` importers:** many table constructors take named
+  parameters; `OS2Table` uses nested version groups; `.glyf` / `.loca` /
+  `.cff` / `.cff2` / `.fvar` / `.stat` are nullable; `tableMap` is read-only.
+  Static encoded output without a stroke range stays byte-identical aside from
+  the size wins above.
+* Known limits: no fvar/STAT read-back yet (#12); OS/2 v2/v3 truncation (#13).
 
 ## 0.5.2
 
-* Fix TrueType (`useOpenType: false`) output storing SVG cubic control points
-  verbatim as consecutive quadratic off-curve points instead of converting
-  them, which bulged curved outlines outward (a full circle overshot its
-  radius by close to 10% at the diagonals).
-* Fix `hmtx.lsb` being hardcoded to zero instead of the glyph's real `xMin`.
-  TrueType (`useOpenType: false`) requires `hmtx.lsb == glyf.xMin`; a
-  mismatch shifts a glyph sideways when rendered. This affects TrueType
-  output in **both** `normalize` modes: with `normalize: true`, centring
-  zeroes a glyph's *pre-conversion* `xMin`, but a curved outline can still
-  land several font units off zero once quadratic-approximated, so the two
-  need not coincide. `normalize: false` output changes for CFF
-  (OpenType) fonts too — `hmtx.lsb`, the `head` bounding box, and `hhea`'s
-  right-side-bearing/extent now reflect each glyph's real ink bounds
-  instead of a placeholder that assumed every custom glyph filled its whole
-  em square; advance widths are unchanged in every mode and format.
+* Fix TrueType cubic→quadratic conversion (curved outlines no longer bulge).
+* Fix `hmtx.lsb` (was always 0); TrueType needs `lsb == glyf.xMin`. With
+  `normalize: false`, CFF metrics also use real ink bounds.
 
 ## 0.5.1
 
