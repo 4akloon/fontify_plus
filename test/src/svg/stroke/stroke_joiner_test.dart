@@ -172,10 +172,19 @@ void main() {
       // pass even unfixed. Each band below brackets one threshold —
       //   * ~0.0018°, where |incoming - outgoing|^2 meets kPointEpsilon and a
       //     junction reads as coincident rather than merely smooth;
-      //   * ~151.045°, where the crossing reaches four radii, which is both
-      //     _kMaxInnerCrossingRadii and the default miter limit.
-      // Unfixed, this finds 324 flips; a whole-degree sweep over the same
-      // range and widths finds none.
+      //   * ~151.045°, exactly 2 * acos(0.25), where the crossing reaches four
+      //     radii — both _kMaxInnerCrossingRadii and the default miter limit.
+      //
+      // Both turn directions are swept, and that is load-bearing rather than
+      // symmetry for its own sake: `join` routes on the sign of the tangent
+      // cross product, so a sweep of positive turns alone reaches only
+      // `_inner` and never enters `_outer` at all. Half the branches this
+      // guards — the miter fallback and the round join — would then have no
+      // coverage here, which is what a first version of this test did.
+      //
+      // Against the code before the fix this reports 34 disagreeing
+      // (vertex, turn, join) triples out of 9648: 30 in the coincidence band
+      // and 4 in the four-radii band, split 18 inner and 16 outer.
       //
       // The far-from-origin vertices are not padding. At the origin the
       // coincidence band produces no flip at all — the cancellation needs two
@@ -194,43 +203,45 @@ void main() {
       ]) {
         for (final band in bands) {
           for (var i = 0; i <= 200; i++) {
-            final phi = band[0] + (band[1] - band[0]) * i / 200;
+            for (final sign in [1.0, -1.0]) {
+              final phi = sign * (band[0] + (band[1] - band[0]) * i / 200);
 
-            for (final join in LineJoin.values) {
-              final counts = <int>{};
+              for (final join in LineJoin.values) {
+                final counts = <int>{};
 
-              for (final width in [1.33, 1.45, 1.49, 1.5, 1.51, 1.55, 2.0]) {
-                final stroke = StrokeProperties(width: width, join: join);
-                final incoming = Cubic.line(
-                  vertex - Vector2(8, 0),
-                  vertex,
-                ).tangentAt(1);
-                final outgoing = Cubic.line(
-                  vertex,
-                  vertex + Vector2(math.cos(phi), math.sin(phi)) * 8,
-                ).tangentAt(0);
+                for (final width in [1.33, 1.45, 1.49, 1.5, 1.51, 1.55, 2.0]) {
+                  final stroke = StrokeProperties(width: width, join: join);
+                  final incoming = Cubic.line(
+                    vertex - Vector2(8, 0),
+                    vertex,
+                  ).tangentAt(1);
+                  final outgoing = Cubic.line(
+                    vertex,
+                    vertex + Vector2(math.cos(phi), math.sin(phi)) * 8,
+                  ).tangentAt(0);
 
-                counts.add(
-                  StrokeJoiner(stroke)
-                      .join(
-                        vertex: vertex,
-                        from: vertex + leftNormal(incoming) * stroke.radius,
-                        to: vertex + leftNormal(outgoing) * stroke.radius,
-                        incoming: incoming,
-                        outgoing: outgoing,
-                      )
-                      .length,
+                  counts.add(
+                    StrokeJoiner(stroke)
+                        .join(
+                          vertex: vertex,
+                          from: vertex + leftNormal(incoming) * stroke.radius,
+                          to: vertex + leftNormal(outgoing) * stroke.radius,
+                          incoming: incoming,
+                          outgoing: outgoing,
+                        )
+                        .length,
+                  );
+                }
+
+                expect(
+                  counts,
+                  hasLength(1),
+                  reason:
+                      'vertex $vertex, turn ${phi * 180 / math.pi}°, $join '
+                      'produced $counts segment counts across widths; every '
+                      'width must agree',
                 );
               }
-
-              expect(
-                counts,
-                hasLength(1),
-                reason:
-                    'vertex $vertex, turn ${phi * 180 / math.pi}°, $join '
-                    'produced $counts segment counts across widths; every '
-                    'width must agree',
-              );
             }
           }
         }
@@ -390,17 +401,35 @@ void main() {
       expect(geometry.single.p3.distanceTo(to), lessThan(_kEpsilon));
     });
 
-    test('bridges straight across when the inner tangents never cross', () {
-      // Anti-parallel tangents have no crossing at all.
-      final geometry = const StrokeJoiner(StrokeProperties(width: 2)).join(
-        vertex: Vector2.zero(),
-        from: Vector2(0, 1),
-        to: Vector2(5, 1),
-        incoming: Vector2(1, 0),
-        outgoing: Vector2(1, 0.0001),
-      );
+    test('bridges straight across when the tangents never cross', () {
+      // An exact reversal: the stroke doubles back on itself, so the two
+      // offset lines are parallel and lineIntersection returns null.
+      //
+      // Stated as a reversal rather than as the near-parallel pair this used
+      // to use, which named itself "never cross" but did cross — its tangents
+      // were 0.0057° apart, its `to` sat five units from where its own
+      // tangent put it, and their dot product came to exactly 1.0, so it
+      // returned at the smooth-junction gate without ever reaching the
+      // crossing logic it claimed to test.
+      const stroke = StrokeProperties(width: 2);
+      final vertex = Vector2.zero();
+      final incoming = Vector2(1, 0);
+      final outgoing = Vector2(-1, 0);
 
-      expect(geometry, hasLength(1));
+      for (final join in LineJoin.values) {
+        final geometry =
+            StrokeJoiner(
+              StrokeProperties(width: 2, join: join),
+            ).join(
+              vertex: vertex,
+              from: vertex + leftNormal(incoming) * stroke.radius,
+              to: vertex + leftNormal(outgoing) * stroke.radius,
+              incoming: incoming,
+              outgoing: outgoing,
+            );
+
+        expect(geometry, hasLength(1), reason: '$join');
+      }
     });
 
     test('the join style does not affect the inner side', () {

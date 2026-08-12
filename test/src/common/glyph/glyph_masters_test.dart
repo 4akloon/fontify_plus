@@ -51,6 +51,15 @@ const _filled =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
     '<path d="M4 4H20V20H4Z" fill="#000"/></svg>';
 
+// The same curve as _curved with the default butt cap, so it draws no arcs at
+// all. A width whose radius underflows collapses this onto its centreline
+// without changing any segment count, which is why the guard has to be on the
+// radius rather than on a downstream count mismatch.
+const _buttCapped =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">'
+    '<path d="M2 12C2 6 6 2 12 2C18 2 22 6 22 12" stroke="#000" '
+    'stroke-width="1.5"/></svg>';
+
 // One shape from a real icon set (Hugeicons "Airplane 02", stroke-rounded),
 // verbatim. What matters is the authoring style rather than the picture: it is
 // one smooth outline written as a long chain of cubics whose control points
@@ -327,31 +336,55 @@ void main() {
       );
     });
 
-    test('a width whose radius underflows to zero still diverges loudly', () {
-      // The replay check is not dead now that the joins are width-invariant.
-      // One width-dependent branch is left on purpose: `arcToCubics` returns
-      // nothing at all once `radius <= kZeroLength`, so this cap collapses
-      // from four segments to none while the plan still expects four. That is
-      // a real structural divergence rather than a numerical accident, and it
-      // is what keeps `_checkContoursReplayShape` covered — it names the
-      // glyph and the segment where the two disagree instead of letting
-      // `outlinesFromContours` read off the end of the recording.
+    test('a width whose radius underflows is named too', () {
+      // The bound is on the radius, not on the width being merely positive.
+      // Below kZeroLength `arcToCubics` emits nothing, so a round cap would
+      // collapse from four segments to none — and a butt-capped glyph, which
+      // draws no arcs, would not even do that: it would build "successfully"
+      // with every outline squashed onto the centreline. Checking the radius
+      // catches both, and it is what leaves no width-dependent branch
+      // downstream of `StrokePlan.evaluate` at all.
       //
-      // 1e-12 is a radius of 5e-13, just under `kZeroLength`; 1e-11 already
-      // builds cleanly, so this sits on the last width that can reach here.
+      // 1e-11 builds cleanly, so 1e-12 sits just the far side of the bound.
+      for (final width in [1e-12, 1e-300, 5e-324]) {
+        for (final source in [_curved, _buttCapped]) {
+          expect(
+            () => GlyphMasterBuilder(
+              _range,
+              defaultWidth: width,
+            ).fromSvg('icon', source),
+            throwsA(
+              isA<ArgumentError>().having((e) => e.name, 'name', 'width'),
+            ),
+            reason: 'width $width should be rejected',
+          );
+        }
+      }
+
       expect(
         () => GlyphMasterBuilder(
           _range,
-          defaultWidth: 1e-12,
+          defaultWidth: 1e-11,
         ).fromSvg('icon', _curved),
+        returnsNormally,
+      );
+    });
+
+    test('incompatible masters are reported with the glyph and the reason', () {
+      // `_checkContoursReplayShape` can no longer be reached by any input —
+      // see its own comment — so this covers the same exception through
+      // `checkCompatible`, which is public and is what actually fires if two
+      // masters ever come out differently shaped.
+      final builder = GlyphMasterBuilder(_range);
+      final masters = builder.fromSvg('icon', _curved);
+      final other = builder.fromSvg('icon', _plus);
+
+      expect(
+        () => builder.checkCompatible('icon', masters.min, other.max),
         throwsA(
           isA<IncompatibleMastersException>()
               .having((e) => e.glyphName, 'glyphName', 'icon')
-              .having(
-                (e) => e.detail,
-                'detail',
-                contains('diverges at segment'),
-              ),
+              .having((e) => e.detail, 'detail', contains('contour')),
         ),
       );
     });

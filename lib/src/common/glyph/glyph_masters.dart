@@ -283,6 +283,18 @@ class GlyphMasterBuilder {
 /// width, but nothing upstream of this checks that they actually did, so a
 /// regression there would otherwise surface as a bare `RangeError` instead of
 /// a message that names the glyph.
+///
+/// No input can currently reach it. Every branch downstream of
+/// `StrokePlan.evaluate` decides on the source tangents, which do not depend
+/// on the width, and the one that did not — `arcToCubics` emitting nothing
+/// below [kZeroLength] — is now unreachable because `evaluate` rejects a
+/// width whose radius is that small. That is the point rather than a reason
+/// to delete this: it guards against a *code* change reintroducing a
+/// width-dependent branch, which is exactly the defect that made real icons
+/// fail to build, and it went unnoticed because nothing asserted the
+/// invariant it was supposed to protect. It is deliberately untested for
+/// want of any way to reach it; `checkCompatible` above covers the same
+/// exception on a path that is reachable.
 void _checkContoursReplayShape(
   String glyphName,
   List<List<Cubic>> reference,

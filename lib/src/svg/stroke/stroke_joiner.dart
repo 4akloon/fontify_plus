@@ -81,6 +81,14 @@ class StrokeJoiner {
     // while the measured gap does not: between widths 1.45 and 1.55 the
     // bound grows 1.143x and the measured gap squared grows 1.250x, so the
     // two cross and one master bridges a corner the other drops.
+    //
+    // [kPointEpsilon] is a distance bounding a squared one here, which is the
+    // same comparison the old test made — it read `gap squared <=
+    // kPointEpsilon * radius squared` — carried over unchanged rather than
+    // retuned. Squaring it would move the threshold, so what this really
+    // asks is whether the turn is under sqrt(kPointEpsilon), 3.16e-5 radians
+    // or 0.0018 degrees. Well inside the smooth-junction test below, which is
+    // about a degree, so the two stay ordered.
     if (incoming.distanceToSquared(outgoing) <= kPointEpsilon) {
       return const [];
     }

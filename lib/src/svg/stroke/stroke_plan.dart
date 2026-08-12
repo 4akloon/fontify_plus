@@ -1,5 +1,6 @@
 import '../geometry/cubic.dart';
 import '../geometry/offset_plan.dart';
+import '../geometry/tolerances.dart';
 import 'stroke_capper.dart';
 import 'stroke_joiner.dart';
 import 'stroke_properties.dart';
@@ -54,20 +55,31 @@ class StrokePlan {
   ///
   /// Empty when the plan holds nothing strokeable.
   List<List<Cubic>> evaluate(double width) {
-    // Checked here rather than left to the geometry. A non-finite or
-    // non-positive width used to surface further downstream, as an
-    // incompatible-masters error: it perturbed the offset points enough to
-    // change a branch in [StrokeJoiner] and so a contour's segment count.
-    // That detection was a side effect of those branches reading the offset
-    // points at all, and it went away when they were made to read the source
-    // tangents instead — the fix for masters diverging at ordinary widths.
-    // Without an explicit check a NaN width would now replay the recorded
-    // structure exactly and hand back NaN coordinates, which reach the font.
-    if (!width.isFinite || width <= 0) {
+    // Checked here rather than left to the geometry. A degenerate width used
+    // to surface downstream as an incompatible-masters error, because it
+    // perturbed the offset points enough to change a branch in [StrokeJoiner]
+    // and so a contour's segment count. That detection was a side effect of
+    // those branches reading the offset points at all, and it went away when
+    // they were made to read the source tangents instead — the fix for
+    // masters diverging at ordinary widths. Unchecked, a NaN width would now
+    // replay the recorded structure exactly and hand back NaN coordinates,
+    // which reach the font.
+    //
+    // The radius, not the width, is what the bound is on, and it is
+    // [kZeroLength] rather than zero because that is where the geometry
+    // actually stops meaning anything: [arcToCubics] returns no segments at
+    // all below it, so a round cap or join would silently collapse from four
+    // segments to none while the plan still expected four. Rejecting the
+    // width is what makes this class's width-invariance claim complete —
+    // that early return is the last branch downstream of here whose segment
+    // count depends on the width, and no width that reaches it can now get
+    // past this line.
+    if (!width.isFinite || width / 2 <= kZeroLength) {
       throw ArgumentError.value(
         width,
         'width',
-        'A stroke width must be finite and positive',
+        'A stroke width must be finite, and wide enough for its radius to '
+            'exceed $kZeroLength',
       );
     }
 
@@ -81,9 +93,8 @@ class StrokePlan {
       miterLimit: stroke.miterLimit,
     );
 
-    // Every branch a joiner or capper takes was made width-invariant (a
-    // tangent test, or a ratio against the radius — see StrokeJoiner's own
-    // comments for the two places that took a real fix to get there), so
+    // Every branch a joiner or capper takes is a test on the source tangents,
+    // which do not depend on the width (see this class's doc comment), so
     // building fresh ones for [target] reproduces the same structure the
     // plan was made with, just scaled to the new radius.
     final joiner = StrokeJoiner(target);
