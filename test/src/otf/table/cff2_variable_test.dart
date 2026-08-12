@@ -120,6 +120,19 @@ List<_DecodedOperator> _decodeOperators(Uint8List bytes) {
 bool _hasBlendOperator(Uint8List bytes) =>
     _decodeOperators(bytes).any((decoded) => decoded.byte == blend.b0);
 
+/// How many operands each `blend` in [bytes] runs with, in order.
+///
+/// A blend of `n` values across `k` regions takes `n * (k + 1) + 1` operands
+/// — `n` bases, `n * k` deltas, and the count `n`. That makes this the one
+/// number in the charstring that encodes `k`, which is why it is worth
+/// asserting separately from the region count the `vstore` advertises: the
+/// two are written by different code and a font is only coherent if they
+/// agree.
+List<int> _blendOperandCounts(Uint8List bytes) => [
+  for (final decoded in _decodeOperators(bytes))
+    if (decoded.byte == blend.b0) decoded.precedingOperandCount,
+];
+
 /// The highest argument-stack depth any operator in [bytes] runs with.
 int _maxOperandRun(Uint8List bytes) => _decodeOperators(bytes).fold(
   0,
@@ -279,7 +292,12 @@ void main() {
           decoded.vstoreData!.store.itemVariationDataList.single.regionIndexes,
           [0, 1],
         );
-        expect(_hasBlendOperator(table.charStringsData.data.single), isTrue);
+        // Asserting the two sides separately would not catch them
+        // disagreeing. Every blend here carries one value, so with two
+        // regions it must run with 1 base + 2 deltas + the count = 4
+        // operands; a blender emitting one delta per value would leave 3
+        // here and still satisfy every assertion above.
+        expect(_blendOperandCounts(table.charStringsData.data.single), [4, 4]);
       },
     );
 

@@ -277,6 +277,20 @@ void main() {
       expect(257 * 2 + 1, greaterThan(513));
     });
 
+    test('two regions cut it to a third, and the -1 is load-bearing', () {
+      // Reachable since three-master glyphs became legal. 512 ~/ 3 is 170,
+      // not 171: the deltas alone would fit, but the operand count `blend`
+      // pushes alongside them is what the -1 reserves room for. Dropping it
+      // would yield 171, whose expansion is 514 — one over the ceiling, and
+      // an overflow that only shows up in someone else's interpreter.
+      expect(
+        CharStringInterpreterLimits(false, regionCount: 2).argumentStackLimit,
+        170,
+      );
+      expect(170 * 3 + 1, lessThanOrEqualTo(513));
+      expect(171 * 3 + 1, greaterThan(513));
+    });
+
     test('CFF1 is unaffected', () {
       expect(CharStringInterpreterLimits(true).argumentStackLimit, 48);
     });

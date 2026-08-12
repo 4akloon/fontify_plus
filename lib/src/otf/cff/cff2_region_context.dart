@@ -10,9 +10,9 @@ import 'variations/variation_store_data.dart';
 ///
 /// That count used to reach those three as independent arguments, and each
 /// one could silently disagree with the others: the charstrings would still
-/// encode, and the store would still advertise one region, while the stack
-/// limit and the deltas assumed a different count. Holding the count once
-/// here is what keeps them from drifting apart.
+/// encode, and the store would still advertise whatever count it had been
+/// handed, while the stack limit and the deltas assumed a different one.
+/// Holding the count once here is what keeps them from drifting apart.
 class Cff2RegionContext {
   factory Cff2RegionContext(int regionCount) {
     // A glyph with zero masters (`length - 1 == -1`) would otherwise reach

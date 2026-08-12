@@ -24,11 +24,16 @@ class CFF2Table extends CFFTable implements CalculatableOffsets {
   ///
   /// Each entry is one glyph's masters, default first — not a bare glyph
   /// list. A single-element entry is a glyph that does not vary; every entry
-  /// being single-element is a static table, and [vstoreData] comes out
-  /// null. Two-element entries (one region) get a `vstore` built by
-  /// `SingleRegionVariationStore`, which is currently the only region count
-  /// this factory accepts — every glyph must agree on its master count, and
-  /// that count cannot exceed two.
+  /// being single-element is a static table, and [vstoreData] comes out null.
+  ///
+  /// Entries with more than one master get a `vstore` built by
+  /// `SingleRegionVariationStore`, whose region count is one less than the
+  /// master count: two masters give one region (the default sits at the axis
+  /// maximum), three give two (the default sits at an interior width, so a
+  /// region is needed on each side of it). Those are the only two layouts
+  /// that store encodes, so four or more masters per glyph is rejected. Every
+  /// glyph must also agree with every other on its master count, since the
+  /// whole table shares one `vstore`.
   factory CFF2Table.create(List<List<GenericGlyph>> glyphMasterList) =>
       _buildCFF2Table(glyphMasterList);
 
