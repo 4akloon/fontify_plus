@@ -91,6 +91,32 @@ Future<Uint8List> capture(GlobalKey key, {required double expectedSide}) async {
   return data!.buffer.asUint8List();
 }
 
+/// Whether [pixels] contains any ink at all.
+///
+/// Every glyph this probe renders is black on white and none of them is
+/// empty, so a capture with no dark pixel did not draw its glyph. On web that
+/// means the font asset had not finished loading when the frame was
+/// rasterized — the codepoints are all in the Private Use Area, so a fallback
+/// font contributes nothing visible and the capture comes back blank rather
+/// than as tofu.
+///
+/// Worth distinguishing from "drew the wrong thing": two blank captures
+/// compare as identical, which reads as "the axis changed nothing" and can
+/// fail an assertion that is actually measuring an unloaded font.
+bool hasInk(Uint8List pixels) {
+  for (var i = 0; i < pixels.length; i++) {
+    if (i % 4 == 3) {
+      continue;
+    }
+
+    if (pixels[i] < 200) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 /// Share of colour bytes differing by more than [threshold], as a fraction
 /// of 1.
 ///

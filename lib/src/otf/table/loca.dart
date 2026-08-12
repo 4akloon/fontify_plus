@@ -22,9 +22,10 @@ class IndexToLocationTable extends FontTable {
 
     final offsets = <int>[
       for (var i = 0; i < numGlyphs + 1; i++)
-        isShort
-            ? byteData.getUint16(entry.offset + 2 * i) * 2
-            : byteData.getUint32(entry.offset + 4 * i),
+        if (isShort)
+          byteData.getUint16(entry.offset + 2 * i) * 2
+        else
+          byteData.getUint32(entry.offset + 4 * i),
     ];
 
     return IndexToLocationTable(entry, offsets, isShort);

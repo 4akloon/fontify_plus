@@ -399,7 +399,10 @@ class OpenTypeFontBuilder {
     // set to reconcile there.
     final lsbOverrides = glyf == null
         ? null
-        : [for (final g in glyf.glyphList) g.isEmpty ? null : g.header.xMin];
+        : [
+            for (final g in glyf.glyphList)
+              if (g.isEmpty) null else g.header.xMin,
+          ];
 
     final hmtx = HorizontalMetricsTable.create(
       glyphMetricsList,
