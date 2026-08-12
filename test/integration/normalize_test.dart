@@ -122,5 +122,14 @@ void main() {
 
       expect(result.font.hhea.descender, -kDefaultBaselineExtension);
     });
+
+    test('svgToOtf can keep artboard sizes with normalize: false', () {
+      final result = svgToOtf(
+        svgMap: {'full': _fullBleed, 'quarter': _quarter},
+        normalize: false,
+      );
+
+      expect(result.font.hhea.descender, 0);
+    });
   });
 }

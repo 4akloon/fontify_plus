@@ -15,6 +15,7 @@ void main() {
       );
       expect(argParser.options, contains('font'));
       expect(argParser.options, contains('config-file'));
+      expect(argParser.options, contains(kCliWatchOption));
     });
   });
 }

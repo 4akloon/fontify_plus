@@ -13,7 +13,13 @@ class FontifyPlusExampleApp extends StatelessWidget {
     return MaterialApp(
       title: 'fontify_plus example',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B4D3E)),
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF1B4D3E),
+          onPrimary: Colors.white,
+          surface: Colors.white,
+          onSurface: Color(0xFF1A1A1A),
+        ),
+        scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
       ),
       home: const IconGalleryPage(),
@@ -24,7 +30,7 @@ class FontifyPlusExampleApp extends StatelessWidget {
 class IconGalleryPage extends StatelessWidget {
   const IconGalleryPage({super.key});
 
-  static const _icons = <(String, IconData)>[
+  static const icons = <(String, IconData)>[
     ('arrowRight', MyIcons.arrowRight),
     ('plus', MyIcons.plus),
     ('check', MyIcons.check),
@@ -53,7 +59,7 @@ class IconGalleryPage extends StatelessWidget {
                 spacing: 24,
                 runSpacing: 24,
                 children: [
-                  for (final (name, icon) in _icons)
+                  for (final (name, icon) in icons)
                     SizedBox(
                       width: 96,
                       child: Column(

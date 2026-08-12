@@ -5,6 +5,7 @@ import '../job/job_field.dart';
 const kCliFontOption = 'font';
 const kCliConfigFileOption = 'config-file';
 const kCliHelpOption = 'help';
+const kCliWatchOption = 'watch';
 
 const kPositionalJobFields = [JobField.inputSvgDir, JobField.outputFontFile];
 
@@ -58,6 +59,10 @@ void defineOptions(ArgParser argParser) {
           'Font glyphs are fill-only, so outline-style icons need this.',
     )
     ..addFlag(
+      kJobCliOptions[JobField.preview]!,
+      help: 'Embed SVG previews in generated IconData dartdoc.',
+    )
+    ..addFlag(
       kJobCliOptions[JobField.useOpenType]!,
       help:
           'Stores outlines as CFF rather than TrueType. CFF holds the cubic '
@@ -90,12 +95,16 @@ void defineOptions(ArgParser argParser) {
       kJobCliOptions[JobField.recursive]!,
       abbr: 'r',
       help: 'Recursively look for .svg files.',
-      negatable: false,
     )
     ..addFlag(
       kJobCliOptions[JobField.verbose]!,
       abbr: 'v',
       help: 'Display every logging message.',
+    )
+    ..addFlag(
+      kCliWatchOption,
+      help:
+          'Watch SVG inputs (and config file, if any) and regenerate on change.',
       negatable: false,
     )
     ..addFlag(

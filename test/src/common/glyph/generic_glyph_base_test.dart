@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:fontify_plus/src/common/generic_glyph.dart';
@@ -173,6 +174,23 @@ void main() {
       );
 
       expect(glyph.metadata.name, 'arrow_up');
+    });
+
+    test('stores a base64 preview that decodes to the input SVG', () {
+      const svg =
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+          '<path d="M0 0h24v24H0z"/></svg>';
+      final glyph = GenericGlyph.fromSvg('box', svg);
+      expect(utf8.decode(base64Decode(glyph.metadata.preview!)), svg);
+    });
+
+    test('skips preview when preview is false', () {
+      final glyph = GenericGlyph.fromSvg(
+        'box',
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"/>',
+        preview: false,
+      );
+      expect(glyph.metadata.preview, isNull);
     });
   });
 

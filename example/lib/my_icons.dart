@@ -5,6 +5,9 @@
 
 import 'package:flutter/widgets.dart';
 
+/// Variable stroke width: 0.5 … 3.0 (`wght` axis).
+/// Set the width explicitly: Icon(MyIcons.arrowRight, size: 16, weight: 0.5)
+///
 /// Identifiers for the icons.
 ///
 /// Use with the [Icon] class to show specific icons.
@@ -27,14 +30,34 @@ abstract final class MyIcons {
   static const iconFontFamily = 'My Icons';
 
   /// arrow_right
-  static const IconData arrowRight = IconData(0xe000, fontFamily: iconFontFamily);
+  ///
+  /// <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KICA8cGF0aCBkPSJNNSAxMmgxNE0xMiA1bDcgNy03IDciIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==" width="32"/>
+  static const IconData arrowRight = IconData(
+    0xe000,
+    fontFamily: iconFontFamily,
+  );
 
   /// plus
-  static const IconData plus = IconData(0xe001, fontFamily: iconFontFamily);
+  ///
+  /// <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KICA8cGF0aCBkPSJNMTIgNXYxNE01IDEyaDE0IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=" width="32"/>
+  static const IconData plus = IconData(
+    0xe001,
+    fontFamily: iconFontFamily,
+  );
 
   /// check
-  static const IconData check = IconData(0xe002, fontFamily: iconFontFamily);
+  ///
+  /// <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KICA8cGF0aCBkPSJNMjAgNkw5IDE3bC01LTUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==" width="32"/>
+  static const IconData check = IconData(
+    0xe002,
+    fontFamily: iconFontFamily,
+  );
 
   /// menu
-  static const IconData menu = IconData(0xe003, fontFamily: iconFontFamily);
+  ///
+  /// <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KICA8cGF0aCBkPSJNNCA3aDE2TTQgMTJoMTZNNCAxN2gxNiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K" width="32"/>
+  static const IconData menu = IconData(
+    0xe003,
+    fontFamily: iconFontFamily,
+  );
 }

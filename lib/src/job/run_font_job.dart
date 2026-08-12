@@ -49,22 +49,29 @@ FontJobResult runFontJob(FontJob job) {
       .toList();
 
   if (svgFileList.isEmpty) {
-    logger.w(
-      "The input directory doesn't contain any SVG file (${job.inputSvgDir}).",
+    throw FontifyException(
+      "The input directory doesn't contain any SVG file "
+      '(${job.inputSvgDir}).',
     );
   }
 
   final svgMap = {
     for (final f in svgFileList)
-      p.basenameWithoutExtension(f.path): File(f.path).readAsStringSync(),
+      _svgKey(svgDir.path, f.path): File(f.path).readAsStringSync(),
   };
+
+  // head only — full readFromFile warns on unread fvar/STAT (#12).
+  final timestamps = tryReadHeadTimestamps(fontFile.path);
 
   final otfResult = svgToOtf(
     svgMap: svgMap,
     outlineStrokes: job.outlineStrokes,
+    preview: job.preview,
     normalize: job.normalize,
     useOpenType: job.useOpenType,
     fontName: job.fontName,
+    created: timestamps?.created,
+    modified: timestamps?.modified,
     strokeWidthRange: job.strokeWidthRange,
   );
 
@@ -99,6 +106,12 @@ FontJobResult runFontJob(FontJob job) {
     otf: otfResult,
     classSource: classSource,
   );
+}
+
+String _svgKey(String inputSvgDir, String filePath) {
+  final relative = p.relative(filePath, from: inputSvgDir);
+  final withoutExt = p.withoutExtension(relative);
+  return withoutExt.replaceAll(r'\', '/');
 }
 
 /// {@category api}

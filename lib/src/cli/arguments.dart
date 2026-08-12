@@ -18,12 +18,19 @@ export 'options.dart';
 
 const _kDefaultConfigPathList = ['pubspec.yaml', 'fontify_plus.yaml'];
 
-/// Parsed CLI invocation: jobs to run and global verbose flag.
+/// Parsed CLI invocation: jobs, verbose, optional [watch] and [configFilePath].
 class CliRunRequest {
-  const CliRunRequest({required this.jobs, required this.verbose});
+  const CliRunRequest({
+    required this.jobs,
+    required this.verbose,
+    this.watch = false,
+    this.configFilePath,
+  });
 
   final List<FontJob> jobs;
   final bool verbose;
+  final bool watch;
+  final String? configFilePath;
 }
 
 /// Parses argv and optional config into [CliRunRequest].
@@ -99,6 +106,8 @@ CliRunRequest parseArgsAndConfig(ArgParser argParser, List<String> args) {
       return CliRunRequest(
         jobs: [resolveFontJob(layers: layers)],
         verbose: resolveVerboseFromLayers(layers),
+        watch: argResults[kCliWatchOption] as bool,
+        configFilePath: null,
       );
     } on FontifyException catch (e) {
       throw CliArgumentException(e.message);
@@ -121,6 +130,8 @@ CliRunRequest parseArgsAndConfig(ArgParser argParser, List<String> args) {
         fontFilter: fontFilter,
       ),
       verbose: config.resolveVerbose(cliOverrides: cliOverrides),
+      watch: argResults[kCliWatchOption] as bool,
+      configFilePath: configFile.path,
     );
   } on FontifyException catch (e) {
     throw CliArgumentException(e.message);

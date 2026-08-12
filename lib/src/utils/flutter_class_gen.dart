@@ -76,17 +76,20 @@ class FlutterClassGenerator {
 
   List<String> _iconConstant(int index) {
     final metadata = glyphList[index].metadata;
-
-    final arguments = [
-      'fontFamily: iconFontFamily',
-      if (_hasPackage) 'fontPackage: iconFontPackage',
-    ].join(', ');
+    final hex = '0x${metadata.charCode!.toRadixString(16)}';
 
     return [
       '',
       '/// ${metadata.name!}',
-      'static const IconData ${_iconVarNames[index]} = '
-          'IconData(0x${metadata.charCode!.toRadixString(16)}, $arguments);',
+      if (metadata.preview != null) ...[
+        '///',
+        '/// <img src="data:image/svg+xml;base64,${metadata.preview}" width="32"/>',
+      ],
+      'static const IconData ${_iconVarNames[index]} = IconData(',
+      '$_indent$hex,',
+      '${_indent}fontFamily: iconFontFamily,',
+      if (_hasPackage) '${_indent}fontPackage: iconFontPackage,',
+      ');',
     ];
   }
 

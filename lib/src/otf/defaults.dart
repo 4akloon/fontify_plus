@@ -12,6 +12,9 @@ const kDefaultOpenTypeUnitsPerEm = 1000;
 const kDefaultBaselineExtension = 150;
 const kDefaultFontRevision = Revision(1, 0);
 
+/// Default `head.created` / `head.modified` when no existing font is reused.
+final kDefaultFontTimestamp = DateTime.utc(2020, 1, 1);
+
 /// The display name written for the `wght` axis of a variable font.
 ///
 /// Not "Weight": the axis carries literal stroke widths, so the name a font

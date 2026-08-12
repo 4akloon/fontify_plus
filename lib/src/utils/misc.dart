@@ -16,12 +16,6 @@ int combineHashCode(int hashFirst, int hashOther) {
   return hash;
 }
 
-extension MockableDateTime on DateTime {
-  static DateTime? mockedDate;
-
-  static DateTime now() => mockedDate ?? DateTime.now();
-}
-
 extension PointExt<T extends num> on math.Point<T> {
   math.Point<int> toIntPoint() => math.Point<int>(x.toInt(), y.toInt());
 

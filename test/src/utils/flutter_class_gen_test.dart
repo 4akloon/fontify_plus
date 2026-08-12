@@ -5,9 +5,11 @@ import 'package:fontify_plus/src/otf/defaults.dart';
 import 'package:fontify_plus/src/utils/flutter_class_gen.dart';
 import 'package:test/test.dart';
 
-GenericGlyph _glyph(String name, int charCode) => GenericGlyph.empty()
-  ..metadata.name = name
-  ..metadata.charCode = charCode;
+GenericGlyph _glyph(String name, int charCode, {String? preview}) =>
+    GenericGlyph.empty()
+      ..metadata.name = name
+      ..metadata.charCode = charCode
+      ..metadata.preview = preview;
 
 final _glyphList = [
   _glyph('arrow_up', 0xE001),
@@ -108,10 +110,36 @@ void main() {
       },
     );
 
-    test('encodes the char code as a hex IconData constructor argument', () {
+    test('encodes IconData with indented named arguments', () {
       final source = FlutterClassGenerator([_glyph('icon', 0xE001)]).generate();
 
-      expect(source, contains('IconData(0xe001, fontFamily: iconFontFamily)'));
+      expect(
+        source,
+        contains(
+          'static const IconData icon = IconData(\n'
+          '    0xe001,\n'
+          '    fontFamily: iconFontFamily,\n'
+          '  );',
+        ),
+      );
+    });
+
+    test('includes fontPackage when a package is set', () {
+      final source = FlutterClassGenerator(
+        [_glyph('icon', 0xE001)],
+        package: 'my_icons',
+      ).generate();
+
+      expect(
+        source,
+        contains(
+          'static const IconData icon = IconData(\n'
+          '    0xe001,\n'
+          '    fontFamily: iconFontFamily,\n'
+          '    fontPackage: iconFontPackage,\n'
+          '  );',
+        ),
+      );
     });
 
     test('documents each constant with the glyph\'s original name', () {
@@ -120,6 +148,27 @@ void main() {
       ]).generate();
 
       expect(source, contains('/// arrow_up'));
+    });
+
+    test('emits an img dartdoc line when preview is set', () {
+      final source = FlutterClassGenerator([
+        _glyph('arrow_up', 0xE001, preview: 'cHJldmlldw=='),
+      ]).generate();
+
+      expect(
+        source,
+        contains(
+          '/// <img src="data:image/svg+xml;base64,cHJldmlldw==" width="32"/>',
+        ),
+      );
+    });
+
+    test('omits img dartdoc when preview is null', () {
+      final source = FlutterClassGenerator([
+        _glyph('arrow_up', 0xE001),
+      ]).generate();
+
+      expect(source, isNot(contains('<img src=')));
     });
   });
 

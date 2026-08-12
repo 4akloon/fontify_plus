@@ -10,10 +10,20 @@ void main() {
     });
   });
 
+  group('JobField.preview', () {
+    test('maps to yaml, cli, and built-in default', () {
+      expect(kJobConfigKeys[JobField.preview], 'preview');
+      expect(kJobCliOptions[JobField.preview], 'preview');
+      expect(kJobBuiltInDefaults[JobField.preview], isTrue);
+      expect(kJobDefaultsFields, contains(JobField.preview));
+    });
+  });
+
   group('jobFieldForConfigKey', () {
     test('resolves known keys', () {
       expect(jobFieldForConfigKey('input_svg_dir'), JobField.inputSvgDir);
       expect(jobFieldForConfigKey('opentype'), JobField.useOpenType);
+      expect(jobFieldForConfigKey('preview'), JobField.preview);
     });
 
     test('returns null for unknown keys', () {

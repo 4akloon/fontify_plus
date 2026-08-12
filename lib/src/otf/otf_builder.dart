@@ -34,6 +34,8 @@ class OpenTypeFontBuilder {
     bool? useOpenType,
     bool? usePostV2,
     bool? normalize,
+    this.created,
+    this.modified,
     this.minGlyphList,
     this.strokeWidthRange,
   }) : fontName = (fontName?.isEmpty ?? true) ? kDefaultFontFamily : fontName!,
@@ -83,6 +85,8 @@ class OpenTypeFontBuilder {
   final bool useOpenType;
   final bool usePostV2;
   final bool normalize;
+  final DateTime? created;
+  final DateTime? modified;
 
   /// The same glyphs as [glyphList], drawn at [StrokeWidthRange.min].
   ///
@@ -217,6 +221,8 @@ class OpenTypeFontBuilder {
       glyf,
       revision,
       unitsPerEm,
+      created: created,
+      modified: modified,
     );
 
     // TrueType requires hmtx.lsb == glyf.xMin. glyphMetricsList's xMin comes

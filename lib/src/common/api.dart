@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../job/fontify_exception.dart';
 import '../otf.dart';
 import '../utils/flutter_class_gen.dart';
@@ -25,6 +27,9 @@ class SvgToOtfResult {
 /// * If [outlineStrokes] is set to true, stroked paths are replaced by the
 /// filled region their stroke covers. Defaults to true — font glyphs are
 /// fill-only, so a stroked icon is otherwise invisible.
+/// * If [preview] is set to true, each glyph stores a base64-encoded copy of
+/// its input SVG for dartdoc previews in the generated `IconData` class.
+/// Defaults to true.
 /// NOTE: Paint attributes other than stroke geometry (such as "fill" colour)
 /// are ignored — only the shape's outline is used.
 /// * If [normalize] is set to true, each glyph is scaled so that its own
@@ -40,6 +45,8 @@ class SvgToOtfResult {
 /// approximating each cubic curve with quadratics. Defaults to true: CFF
 /// stores cubics directly, so it is both smaller and exact.
 /// * [fontName] is a name for a generated font.
+/// * [created] / [modified] are written into the font `head` table. When
+/// rewriting an existing `.otf`, pass the previous values to avoid churn.
 /// * [strokeWidthRange], when given, builds a *variable* font whose `wght`
 /// axis is the icon's stroke width instead of one fixed width. Its `min`
 /// and `max` are literal stroke widths in the SVG's own units — the same
@@ -58,9 +65,12 @@ class SvgToOtfResult {
 SvgToOtfResult svgToOtf({
   required Map<String, String> svgMap,
   bool? outlineStrokes,
+  bool? preview,
   bool? normalize,
   bool? useOpenType,
   String? fontName,
+  DateTime? created,
+  DateTime? modified,
   StrokeWidthRange? strokeWidthRange,
 }) {
   if (strokeWidthRange != null) {
@@ -80,6 +90,7 @@ SvgToOtfResult svgToOtf({
   }
 
   normalize ??= true;
+  final embedPreview = preview ?? true;
 
   // Both branches build the same shape of [glyphList]; only the variable one
   // also produces [minGlyphList]. Keeping the no-range branch textually
@@ -100,6 +111,14 @@ SvgToOtfResult svgToOtf({
     // `minGlyphList`.
     glyphList = [for (final m in masters) m.max];
     minGlyphList = [for (final m in masters) m.min];
+
+    if (embedPreview) {
+      var i = 0;
+      for (final e in svgMap.entries) {
+        glyphList[i].metadata.preview = base64Encode(utf8.encode(e.value));
+        i++;
+      }
+    }
   } else {
     glyphList = [
       for (final e in svgMap.entries)
@@ -107,6 +126,7 @@ SvgToOtfResult svgToOtf({
           e.key,
           e.value,
           outlineStrokes: outlineStrokes ?? true,
+          preview: embedPreview,
         ),
     ];
     minGlyphList = null;
@@ -132,6 +152,8 @@ SvgToOtfResult svgToOtf({
     normalize: normalize,
     useOpenType: useOpenType,
     usePostV2: false,
+    created: created,
+    modified: modified,
     minGlyphList: minGlyphList,
     strokeWidthRange: strokeWidthRange,
   );

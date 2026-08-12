@@ -7,7 +7,6 @@ import 'package:fontify_plus/src/otf/io.dart';
 import 'package:fontify_plus/src/otf/otf.dart';
 import 'package:fontify_plus/src/otf/reader.dart';
 import 'package:fontify_plus/src/otf/table/all.dart';
-import 'package:fontify_plus/src/utils/misc.dart';
 import 'package:fontify_plus/src/utils/otf.dart';
 import 'package:test/test.dart';
 
@@ -366,7 +365,6 @@ void main() {
     late OpenTypeFont recreatedFont;
 
     setUpAll(() {
-      MockableDateTime.mockedDate = DateTime.utc(2020, 2, 2, 2, 2);
       originalByteData = ByteData.sublistView(
         File(_kTestFontAssetPath).readAsBytesSync(),
       );
@@ -383,20 +381,19 @@ void main() {
         glyphList[i].metadata.name = glyphNameList[i];
       }
 
+      final stamp = DateTime.utc(2020, 2, 2, 2, 2);
       recreatedFont = OpenTypeFont.createFromGlyphs(
         glyphList: glyphList,
         fontName: 'TestFont',
         useOpenType: false,
         usePostV2: true,
         normalize: true,
+        created: stamp,
+        modified: stamp,
       );
 
       recreatedByteData = ByteData(recreatedFont.size);
       recreatedFont.encodeToBinary(recreatedByteData);
-    });
-
-    tearDownAll(() {
-      MockableDateTime.mockedDate = null;
     });
 
     test(

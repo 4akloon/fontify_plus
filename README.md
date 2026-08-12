@@ -6,7 +6,9 @@ The fontify_plus package provides an easy way to convert SVG icons to OpenType f
 and generate Flutter-compatible class that contains identifiers for the icons
 (just like [CupertinoIcons][] or [Icons][] classes).
 
-The package is written fully in Dart and doesn't require any external dependency.
+![Example icon gallery](screenshots/example_gallery.webp)
+
+Pure Dart CLI/API (pub dependencies only; no native toolchains).
 Compatible with dart2js and dart2native.
 
 Outline-style icon sets — the kind Figma, Hugeicons, Lucide and Feather export —
@@ -23,14 +25,15 @@ a working Flutter icon font.
 ## Using CLI tool
 
 [Globally activate][] the package, then run `fontify_plus` on a directory of SVGs.
-Flags, YAML config, and `pubspec.yaml` registration are covered in
-[doc/cli.md](doc/cli.md).
+Flags and YAML config are covered in [doc/cli.md](doc/cli.md). Flutter
+`fonts:` registration is in [doc/getting_started.md](doc/getting_started.md).
 
 [globally activate]: https://dart.dev/tools/pub/cmd/pub-global
 
 ```sh
-pub global activate fontify_plus
+dart pub global activate fontify_plus
 fontify_plus assets/svg/ fonts/my_icons_font.otf --output-class-file=lib/my_icons.dart --indent=4 -r
+fontify_plus --font=icons --watch
 ```
 
 ## Using API
@@ -83,13 +86,13 @@ same way.
 - Paint attributes other than stroke geometry — `fill` colour, gradients,
 opacity — are ignored. A glyph is a single-colour region; colour comes from the
 surrounding text style at render time.
-- With `--no-normalize`, every icon should share a viewBox. See
-[doc/glyph_sizing.md](doc/glyph_sizing.md).
+- With `--no-normalize`, icons should share a viewBox; mismatched heights log
+a warning. See [doc/glyph_sizing.md](doc/glyph_sizing.md).
 - When Flutter class is generated, static variable names derive from the SVG
 file name converted to lowerCamelCase (Dart's convention for constants) with
 non-allowed characters removed.
 Name is set to 'unnamed', if it's empty.
-Suffix '_{i+1}' is added, if name already exists.
+A numeric suffix is added if the name already exists (`name2`, `name3`, …).
 
 [Non-zero fill rule]: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/fill-rule
 

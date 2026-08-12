@@ -2,13 +2,14 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:fontify_plus/src/cli/arguments.dart';
+import 'package:fontify_plus/src/cli/watch_loop.dart';
 import 'package:fontify_plus/src/job/run_font_job.dart';
 import 'package:fontify_plus/src/utils/logger.dart';
 import 'package:yaml/yaml.dart';
 
 final _argParser = ArgParser(allowTrailingOptions: true);
 
-void main(List<String> args) {
+Future<void> main(List<String> args) async {
   defineOptions(_argParser);
 
   late final CliRunRequest request;
@@ -25,24 +26,35 @@ void main(List<String> args) {
   }
 
   try {
-    _run(request);
+    await _run(request, () => parseArgsAndConfig(_argParser, args));
   } on Object catch (e) {
     logger.e(e.toString());
     exit(65);
   }
 }
 
-void _run(CliRunRequest request) {
-  final stopwatch = Stopwatch()..start();
-
+Future<void> _run(
+  CliRunRequest request,
+  CliRunRequest Function() reparse,
+) async {
   if (request.verbose) {
     logger.level = Level.trace;
   }
 
+  final stopwatch = Stopwatch()..start();
   runFontJobs(request.jobs);
-
   logger.i(
     'Finished ${request.jobs.length} job(s) in ${stopwatch.elapsedMilliseconds}ms',
+  );
+
+  if (!request.watch) {
+    return;
+  }
+
+  await runWatchLoop(
+    initial: request,
+    reparse: reparse,
+    runJobs: runFontJobs,
   );
 }
 

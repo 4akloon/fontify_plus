@@ -14,6 +14,10 @@ topics:
   - flutter
   - codegen
 
+screenshots:
+  - description: Example app gallery of generated IconData icons
+    path: screenshots/example_gallery.webp
+
 environment:
   sdk: ^3.10.0
 

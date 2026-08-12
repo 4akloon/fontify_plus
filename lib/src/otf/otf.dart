@@ -10,6 +10,8 @@ import 'otf_builder.dart';
 import 'reader.dart';
 import 'table/all.dart';
 
+export 'defaults.dart' show kDefaultFontTimestamp;
+
 /// Ordered list of table tags for encoding (Optimized Table Ordering)
 ///
 /// Anything in [OpenTypeFont.tableMap] whose tag is not listed here is
@@ -87,6 +89,9 @@ class OpenTypeFont implements BinaryCodable {
   /// * If [normalize] is set to true, each glyph is scaled so that its own
   /// longest side fills the em square, then centred. Defaults to true —
   /// see `GlyphFitting`.
+  /// * [created] / [modified] are written to the `head` table. Omit both to
+  /// use [kDefaultFontTimestamp]; when regenerating over an existing file,
+  /// pass the previous font's dates to keep bytes stable.
   /// * [minGlyphList] is the same glyphs as [glyphList], drawn at the
   /// minimum of [strokeWidthRange]. Supplying it makes the font *variable*:
   /// the outlines move to a `CFF2` table carrying both masters, and `fvar`
@@ -111,6 +116,8 @@ class OpenTypeFont implements BinaryCodable {
     bool? useOpenType,
     bool? usePostV2,
     bool? normalize,
+    DateTime? created,
+    DateTime? modified,
     List<GenericGlyph>? minGlyphList,
     StrokeWidthRange? strokeWidthRange,
   }) => OpenTypeFontBuilder(
@@ -122,6 +129,8 @@ class OpenTypeFont implements BinaryCodable {
     useOpenType: useOpenType,
     usePostV2: usePostV2,
     normalize: normalize,
+    created: created,
+    modified: modified,
     minGlyphList: minGlyphList,
     strokeWidthRange: strokeWidthRange,
   ).build();

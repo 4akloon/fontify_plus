@@ -17,6 +17,24 @@ void main() {
       );
     }
 
+    test('--watch sets request.watch', () {
+      final request = parseArgsAndConfig(argParser, [
+        './',
+        'test/fonts/my_font.otf',
+        '--watch',
+      ]);
+      expect(request.watch, isTrue);
+      expect(request.configFilePath, isNull);
+    });
+
+    test('watch defaults to false', () {
+      final request = parseArgsAndConfig(argParser, [
+        './',
+        'test/fonts/my_font.otf',
+      ]);
+      expect(request.watch, isFalse);
+    });
+
     test('ad-hoc run with flags', () {
       const args = [
         './',
@@ -57,7 +75,16 @@ void main() {
       expect(job.normalize, isTrue);
       expect(job.recursive, isFalse);
       expect(job.outlineStrokes, isTrue);
+      expect(job.preview, isTrue);
       expect(job.strokeWidthRange, isNull);
+    });
+
+    test('--no-preview disables dartdoc previews', () {
+      const args = ['./', 'test/fonts/my_font.otf', '--no-preview'];
+
+      final job = parseArgsAndConfig(argParser, args).jobs.single;
+
+      expect(job.preview, isFalse);
     });
 
     test('--stroke-width-range is parsed into a StrokeWidthRange', () {
@@ -163,6 +190,7 @@ void main() {
       expect(job.recursive, isFalse);
       expect(request.verbose, isFalse);
       expect(job.package, 'test_package');
+      expect(request.configFilePath, endsWith('test_config.yaml'));
     });
 
     test('ad-hoc and config conflict', () {
@@ -210,6 +238,30 @@ fontify_plus:
         '--config-file=test/assets/test_config.yaml',
         '--font=missing',
       ]);
+    });
+
+    test('--no-recursive / --no-verbose override YAML defaults', () {
+      final configFile = File('fontify_plus.yaml');
+      configFile.writeAsStringSync('''
+fontify_plus:
+  defaults:
+    recursive: true
+    verbose: true
+  fonts:
+    main:
+      input_svg_dir: ./
+      output_font_file: out.otf
+''');
+      addTearDown(configFile.deleteSync);
+
+      final request = parseArgsAndConfig(argParser, [
+        '--config-file=fontify_plus.yaml',
+        '--no-recursive',
+        '--no-verbose',
+      ]);
+
+      expect(request.jobs.single.recursive, isFalse);
+      expect(request.verbose, isFalse);
     });
   });
 }

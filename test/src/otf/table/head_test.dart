@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:fontify_plus/src/common/glyph/generic_glyph_metrics.dart';
+import 'package:fontify_plus/src/otf/defaults.dart';
 import 'package:fontify_plus/src/otf/table/head.dart';
 import 'package:fontify_plus/src/otf/table/table_record_entry.dart';
 import 'package:fontify_plus/src/utils/otf.dart';
@@ -60,6 +61,34 @@ void main() {
       );
 
       expect(table.created, table.modified);
+    });
+
+    test('defaults created/modified to kDefaultFontTimestamp', () {
+      final table = HeaderTable.create(
+        _metricsList(),
+        null,
+        const Revision(1, 0),
+        1000,
+      );
+
+      expect(table.created, kDefaultFontTimestamp);
+      expect(table.modified, kDefaultFontTimestamp);
+    });
+
+    test('honors explicit created and modified', () {
+      final created = DateTime.utc(2019, 5, 1);
+      final modified = DateTime.utc(2021, 6, 2);
+      final table = HeaderTable.create(
+        _metricsList(),
+        null,
+        const Revision(1, 0),
+        1000,
+        created: created,
+        modified: modified,
+      );
+
+      expect(table.created, created);
+      expect(table.modified, modified);
     });
   });
 
