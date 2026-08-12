@@ -8,11 +8,11 @@ import 'variations/variation_store_data.dart';
 /// Owns the region count that the optimizer, blender and variation store must
 /// agree on.
 ///
-/// That count used to reach those three as independent arguments. Task 17's
-/// review found two of the three silently deletable — the charstrings would
-/// still encode, and the store would still advertise one region, while the
-/// stack limit and the deltas disagreed. Holding the count once here is what
-/// keeps them from drifting apart.
+/// That count used to reach those three as independent arguments, and each
+/// one could silently disagree with the others: the charstrings would still
+/// encode, and the store would still advertise one region, while the stack
+/// limit and the deltas assumed a different count. Holding the count once
+/// here is what keeps them from drifting apart.
 class Cff2RegionContext {
   factory Cff2RegionContext(int regionCount) {
     // A glyph with zero masters (`length - 1 == -1`) would otherwise reach

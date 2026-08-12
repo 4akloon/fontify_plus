@@ -196,11 +196,11 @@ class GlyphMasterBuilder {
 /// [outlinesFromContours] indexes that recording positionally, one entry per
 /// emitted segment. A replay whose segment count differs either reads past
 /// the end of the recording or leaves part of it unread, and either way is
-/// wrong in a way the caller has no way to notice on its own. This is the gap
-/// Task 7 left open: the offsetter, joiner and capper are built to reproduce
-/// the reference's structure at any width, but nothing upstream of this
-/// checked that they actually had, so a regression there would otherwise
-/// surface as a bare `RangeError` instead of a message that names the glyph.
+/// wrong in a way the caller has no way to notice on its own. The offsetter,
+/// joiner and capper are built to reproduce the reference's structure at any
+/// width, but nothing upstream of this checks that they actually did, so a
+/// regression there would otherwise surface as a bare `RangeError` instead of
+/// a message that names the glyph.
 void _checkContoursReplayShape(
   String glyphName,
   List<List<Cubic>> reference,

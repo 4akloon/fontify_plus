@@ -49,9 +49,10 @@ const _kTableTagsToEncode = {
 /// `_kTableTagsToEncode` needs to be reachable from a test without becoming
 /// a public constant. `@visibleForTesting` was avoided because `meta` is
 /// only a transitive dependency of this package (present in `pubspec.lock`
-/// via other packages, absent from `pubspec.yaml`), and this task adds no
-/// new dependency. Instead, `lib/src/otf.dart` hides this name from its
-/// `export 'otf/otf.dart'` directive, so it never reaches
+/// via other packages, absent from `pubspec.yaml`), and using it here would
+/// add a direct dependency for one annotation. Instead, `lib/src/otf.dart`
+/// hides this name from its `export 'otf/otf.dart'` directive, so it never
+/// reaches
 /// `package:fontify_plus/fontify_plus.dart`; the test imports
 /// `package:fontify_plus/src/otf/otf.dart` directly to reach it, the same
 /// way other tests in this repo reach non-exported internals.
