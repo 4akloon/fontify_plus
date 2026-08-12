@@ -74,7 +74,8 @@ void defineOptions(ArgParser argParser) {
       help:
           'Build a variable font whose wght axis is the stroke width, as '
           'MIN,MAX in the SVG\'s own units (for example 1.33,2). The maximum '
-          'is the default instance. Omit for a static font.',
+          'is the default instance unless --default-stroke-width names '
+          'another width. Omit for a static font.',
       valueHelp: 'min,max',
     )
     ..addOption(

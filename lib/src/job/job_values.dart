@@ -215,7 +215,10 @@ double _coerceStrokeWidthEndpoint(JobField field, Object? raw) {
 
   if (value == null) {
     throw FontifyException(
-      "'${configKey(field)}' values must be numbers, got \"$raw\".",
+      // Singular: this reports the one value that failed, whether it is the
+      // whole of 'default_stroke_width' or one end of a range where the
+      // other end parsed fine.
+      "'${configKey(field)}' must be a number, got \"$raw\".",
     );
   }
 
@@ -227,7 +230,7 @@ double _coerceStrokeWidthEndpoint(JobField field, Object? raw) {
   // one surfacing later, mid-font-generation.
   if (!value.isFinite) {
     throw FontifyException(
-      "'${configKey(field)}' values must be finite numbers, got $value.",
+      "'${configKey(field)}' must be a finite number, got $value.",
     );
   }
 

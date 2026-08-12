@@ -23,7 +23,7 @@ fontify_plus assets/svg/ fonts/my_icons_font.otf \
 | `--[no-]outline-strokes` | Convert stroked paths to filled regions (default on). |
 | `--[no-]preview` | Embed SVG previews in generated IconData dartdoc (default on). |
 | `--[no-]opentype` | Emit CFF outlines (default on). |
-| `--stroke-width-range=<min,max>` | Build a variable font whose `wght` axis is the stroke width, in the SVG's own units (e.g. `1.33,2`). The maximum is the default instance. Omit for a static font. See [Variable stroke width](variable_stroke.md). |
+| `--stroke-width-range=<min,max>` | Build a variable font whose `wght` axis is the stroke width, in the SVG's own units (e.g. `1.33,2`). The maximum is the default instance unless `--default-stroke-width` names another width. Omit for a static font. See [Variable stroke width](variable_stroke.md). |
 | `--default-stroke-width=<width>` | The stroke width the variable font opens at, instead of the range maximum. Requires `--stroke-width-range` and must lie strictly inside it (e.g. `1.5` within `1.33,2`). See [Variable stroke width](variable_stroke.md). |
 | `-r`, `--[no-]recursive` | Recursively search for `.svg` files (default off). Icon names are derived from each file's path relative to the input directory (e.g. `icons/nav/arrow.svg` → `iconsNavArrow`). An empty SVG directory fails the job. Use `--no-recursive` to override YAML `recursive: true`. |
 | `-v`, `--[no-]verbose` | Print every log message (default off). Use `--no-verbose` to override YAML `verbose: true`. |
