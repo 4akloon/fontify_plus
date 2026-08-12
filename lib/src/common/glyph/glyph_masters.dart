@@ -74,13 +74,14 @@ class GlyphMasterBuilder {
   /// had already let a bad value through.
   ///
   /// Not validating is not the same as accepting silently. A width that is
-  /// non-finite, zero or negative degenerates the offset geometry enough to
-  /// change its segment count, so it surfaces as an
-  /// [IncompatibleMastersException] from the structural replay check rather
-  /// than as NaN coordinates flowing on into the font. Read that exception's
-  /// "points at a bug in the geometry pipeline" wording accordingly: reached
-  /// this way it is a symptom of an unvalidated input, not a defect in the
-  /// offsetter.
+  /// non-finite, zero or negative is rejected by `StrokePlan.evaluate` with
+  /// an [ArgumentError] naming it, which every width passes through, rather
+  /// than reaching the font as NaN coordinates. That check is explicit
+  /// because the geometry no longer catches it by accident: a degenerate
+  /// width used to perturb the offset points enough to change a join's
+  /// branch, and so a contour's segment count, but the joins now decide on
+  /// the source tangents — the fix for masters diverging at ordinary widths
+  /// — and replay a NaN width's structure exactly.
   const GlyphMasterBuilder(this.range, {this.defaultWidth});
 
   /// The stroke-width axis ends applied to every glyph this builder produces.

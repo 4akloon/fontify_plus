@@ -214,6 +214,19 @@ stroke width in motion.
 `stat` as null and a read-modify-write round trip drops the axis. Tracked in
 [issue #12](https://github.com/4akloon/fontify_plus/issues/12).
 
+**Incompatible masters:** generation can fail with `Incompatible masters for
+glyph "X": contour N diverges at segment index M`. This means the two masters
+came out with different point counts, so no variation delta can be written
+between them. Until 0.6.0 this hit real icon sets hard — around one icon in
+five of a chained-cubic set such as Hugeicons, at some ranges — and it was not
+monotonic in how wide the range was: an icon could build at `[1.4, 1.6]` and
+fail at `[1.49, 1.51]`. The cause was three branches in the stroke joiner that
+decided a corner's shape from offset *points*, whose float32 rounding depends
+on where the corner sits rather than on the stroke width, so two widths could
+disagree. They now decide from the source tangents, which are the same at every
+width. If you still see this, it is a bug worth reporting with the SVG — it no
+longer has an input-dependent cause.
+
 **Interpolation accuracy:** both masters match their own endpoint exactly. On
 interpolated widths, Phase 0 toy glyphs measured up to **2 font units** worst
 deviation at 1000 units per em (~0.048 px on a 24 px icon) — see

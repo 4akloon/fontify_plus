@@ -15,6 +15,21 @@
   Requires `stroke_width_range`; a value outside the range, or on either
   endpoint, is rejected before generation starts. See
   `doc/variable_stroke.md`.
+* Fix `stroke_width_range` failing with `IncompatibleMastersException` on a
+  large fraction of real icons — about one in five of a chained-cubic set such
+  as Hugeicons, at some ranges. Three branches in the stroke joiner decided a
+  corner's shape from offset points rather than from the source tangents;
+  those points are float32, and the rounding in subtracting two of them scales
+  with the corner's distance from the origin, not with the stroke width, so a
+  radius-relative threshold did not cancel it and the two masters could take
+  different branches at the same corner. The symptom was distinctive: failure
+  was not monotonic in the range's width, so an icon could build at
+  `[1.4, 1.6]` and fail at `[1.49, 1.51]`. All three branches now read the
+  tangents, which do not depend on width. Output for icons that already built
+  is unchanged.
+* A non-finite or non-positive stroke width is now rejected with an
+  `ArgumentError` naming it. It used to be caught only as a side effect of the
+  numerical noise the fix above removes.
 * Metrics come from the default instance, so an interior default makes ink at
   the axis maximum overflow the advertised box on both sides (single-digit
   font units at 1000 upem on the example icons). Documented, not fixed —

@@ -51,6 +51,37 @@ const _filled =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
     '<path d="M4 4H20V20H4Z" fill="#000"/></svg>';
 
+// One shape from a real icon set (Hugeicons "Airplane 02", stroke-rounded),
+// verbatim. What matters is the authoring style rather than the picture: it is
+// one smooth outline written as a long chain of cubics whose control points
+// were each rounded to four or five decimals independently, so consecutive
+// segments meet at junctions whose tangents agree only to within that
+// rounding. That is what puts the tangent difference next to the coincidence
+// threshold, and it is the shape of essentially every exported icon path —
+// which is why this reproduced across hundreds of icons in the wild while
+// none of the hand-written fixtures above ever hit it.
+//
+// Note the two duplicated-but-not-identical coordinates ("21.8065 7.27356"
+// then "21.8065 7.27358", "10.3782 14.4876" twice): the export rounded the
+// same mathematical point twice and got two answers.
+const _nearTangentialChain =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">'
+    '<path d="M8.32846 10.9843L10.2154 9.60557L14.6436 6.37707C14.6436 6.37707 '
+    '16.2785 5.17593 17.1919 4.77581C18.2765 4.30067 19.2869 4.52156 20.3739 '
+    '4.82515C20.9362 4.98218 21.2173 5.06069 21.4202 5.20717C21.742 5.43958 '
+    '21.9513 5.79728 21.9943 6.18852C22.0215 6.4351 21.9498 6.71459 21.8065 '
+    '7.27356L21.8065 7.27358C21.5294 8.35431 21.2181 9.32819 20.2588 '
+    '10.0175C19.4509 10.598 17.5793 11.3946 17.5793 11.3946L12.5317 '
+    '13.5645L10.3782 14.4876L10.3782 14.4876C9.5974 14.8223 9.207 14.9896 '
+    '8.94139 15.3002C8.31933 16.0275 8.23148 17.3438 7.99931 18.2494C7.87101 '
+    '18.7498 7.16748 19.6171 6.54058 19.4869C6.15355 19.4065 6.14613 18.922 '
+    '6.09796 18.6131L5.6342 15.6389C5.5233 14.9276 5.51479 14.9131 4.94599 '
+    '14.4627L2.56757 12.5793C2.32053 12.3836 1.89903 12.135 2.022 '
+    '11.7641C2.22119 11.1633 3.33408 10.9957 3.83747 11.1363C4.74834 11.3907 '
+    '5.94747 11.9738 6.89684 11.8058C7.3022 11.7341 7.64428 11.4842 8.32844 '
+    '10.9843L8.32846 10.9843Z" stroke="black" stroke-linecap="round" '
+    'stroke-linejoin="round" stroke-width="1.5"/></svg>';
+
 // Not `const`: the constructor validates with a body (throwing
 // `ArgumentError`), which a const constructor cannot do.
 final _range = StrokeWidthRange(1.33, 2);
@@ -166,6 +197,48 @@ void main() {
       }
     });
 
+    test('a real icon builds at every range, however narrow', () {
+      // Endpoint pairs are not interchangeable, and the failure was not
+      // monotonic in how far apart they sat: this icon built at [1.4, 1.6] but
+      // not at [1.45, 1.55], nor at [1.49, 1.51] — a hundredth either side of
+      // its own authored 1.5. What decided it was whether the two particular
+      // widths landed on the same side of a threshold inside the joiner, so a
+      // range narrow enough to look obviously safe was as likely to fail as a
+      // wide one. Only sweeping pairs can catch that; a single range cannot.
+      //
+      // The joiner's own test asserts the invariance directly, corner by
+      // corner. This asserts the property that actually matters to a caller:
+      // the masters come out interpolatable.
+      for (final range in [
+        [1.0, 2.0],
+        [1.33, 2.0],
+        [1.35, 1.65],
+        [1.4, 1.6],
+        [1.45, 1.55],
+        [1.49, 1.51],
+        [1.499, 1.501],
+        [0.5, 3.0],
+      ]) {
+        final builder = GlyphMasterBuilder(
+          StrokeWidthRange(range[0], range[1]),
+          defaultWidth: (range[0] + range[1]) / 2,
+        );
+
+        final masters = builder.fromSvg('icon', _nearTangentialChain);
+
+        expect(
+          masters.min.pointList.length,
+          masters.max.pointList.length,
+          reason: 'masters differ in point count at $range',
+        );
+        expect(
+          masters.atDefault!.pointList.length,
+          masters.max.pointList.length,
+          reason: 'the third master differs in point count at $range',
+        );
+      }
+    });
+
     test('the thick master really is thicker', () {
       final masters = GlyphMasterBuilder(_range).fromSvg('icon', _curved);
 
@@ -207,54 +280,69 @@ void main() {
       expect(atDefault.outlines.length, masters.max.outlines.length);
     });
 
-    // A degenerate default width changes the offset geometry's segment count,
-    // so the third master's replay stops matching the shape recorded at
-    // `range.max`. The two tests below cover the two directions that mismatch
-    // can go, because without the replay check they fail in two quite
-    // different ways — and only one of them fails loudly enough to be caught
-    // at all. In both, `range` itself is untouched, so the only guard that can
-    // fire is the default width's own.
+    // A degenerate default width is rejected by `StrokePlan.evaluate`, which
+    // is the one place every width — endpoint or interior — passes through.
+    // This builder deliberately does not re-check the width itself (see its
+    // dartdoc), so these two assert the backstop under that decision rather
+    // than a rule of its own. `range` is untouched in both, so nothing else
+    // can be what fires.
     //
-    // Both assert on `detail`, not merely on the exception type: the replay
-    // check is the only thing that words a failure "diverges at segment", so a
-    // later `checkCompatible` failure cannot stand in for it. Dropping that
-    // matcher would let the first test pass with the guard deleted.
-    test(
-      'a defaultWidth that under-runs the plan is named where it diverges',
-      () {
-        // Zero width: 8 segments where the plan recorded 12. The replay reads
-        // less of the recording than was written, which is not itself an error —
-        // it yields a shorter contour and surfaces only later, as
-        // `checkCompatible` reporting "contour 0 has 25 points vs 37": true, but
-        // silent about which width diverged or where.
-        expect(
-          () => GlyphMasterBuilder(
-            _range,
-            defaultWidth: 0,
-          ).fromSvg('icon', _curved),
-          throwsA(
-            isA<IncompatibleMastersException>()
-                .having((e) => e.glyphName, 'glyphName', 'icon')
-                .having(
-                  (e) => e.detail,
-                  'detail',
-                  contains('diverges at segment'),
-                ),
-          ),
-        );
-      },
-    );
+    // These used to expect an `IncompatibleMastersException` "diverges at
+    // segment", because a degenerate width perturbed the offset points enough
+    // to change a join's branch and so a contour's segment count. That was a
+    // side effect of those branches reading the offset points at all, and it
+    // disappeared when they were changed to read the source tangents — which
+    // is what stopped ordinary widths diverging. Detection by numerical
+    // accident is what got replaced here; the width is now simply checked.
+    test('a defaultWidth of zero is named, not left to the geometry', () {
+      expect(
+        () => GlyphMasterBuilder(_range, defaultWidth: 0).fromSvg(
+          'icon',
+          _curved,
+        ),
+        throwsA(
+          isA<ArgumentError>()
+              .having((e) => e.name, 'name', 'width')
+              .having((e) => e.invalidValue, 'invalidValue', 0),
+        ),
+      );
+    });
 
     test('a non-finite defaultWidth is named, not left to a RangeError', () {
-      // NaN goes the other way: 14 segments against the recorded 12. The
-      // replay reads past the end of the recording, so without the check this
-      // is a bare `RangeError (length): Invalid value: Not in inclusive range
-      // 0..11: 12` out of `outlinesFromContours`, naming neither the glyph nor
-      // the width — exactly the failure the check's own docs exist to prevent.
+      // Without the check this reached `outlinesFromContours` as a bare
+      // `RangeError (length): Invalid value: Not in inclusive range 0..11: 12`,
+      // naming neither the glyph nor the width — and, once the joins stopped
+      // reading the offset points, not even that: NaN replays the recorded
+      // structure exactly and reaches the font as NaN coordinates.
       expect(
         () => GlyphMasterBuilder(
           _range,
           defaultWidth: double.nan,
+        ).fromSvg('icon', _curved),
+        throwsA(
+          isA<ArgumentError>()
+              .having((e) => e.name, 'name', 'width')
+              .having((e) => (e.invalidValue as double).isNaN, 'isNaN', true),
+        ),
+      );
+    });
+
+    test('a width whose radius underflows to zero still diverges loudly', () {
+      // The replay check is not dead now that the joins are width-invariant.
+      // One width-dependent branch is left on purpose: `arcToCubics` returns
+      // nothing at all once `radius <= kZeroLength`, so this cap collapses
+      // from four segments to none while the plan still expects four. That is
+      // a real structural divergence rather than a numerical accident, and it
+      // is what keeps `_checkContoursReplayShape` covered — it names the
+      // glyph and the segment where the two disagree instead of letting
+      // `outlinesFromContours` read off the end of the recording.
+      //
+      // 1e-12 is a radius of 5e-13, just under `kZeroLength`; 1e-11 already
+      // builds cleanly, so this sits on the last width that can reach here.
+      expect(
+        () => GlyphMasterBuilder(
+          _range,
+          defaultWidth: 1e-12,
         ).fromSvg('icon', _curved),
         throwsA(
           isA<IncompatibleMastersException>()
