@@ -60,6 +60,18 @@ class SvgToOtfResult {
 /// `gvar`, which this package does not write. Omitted, the output is
 /// unchanged from a font with no `strokeWidthRange` at all — down to the
 /// byte.
+/// * [defaultStrokeWidth] moves the axis's default off
+/// [StrokeWidthRange.max] to a width strictly inside the range, so that a
+/// font picker opens on that width and `STAT` gives it a name. Requires
+/// [strokeWidthRange] — a width names a point *on* an axis, and with no
+/// axis it would simply be dropped — and must not equal either end: at an
+/// end it would describe a width the font already has, paying for a whole
+/// extra variation region and telling a font picker two names for one
+/// instance. Each icon is then built three times rather than twice, and
+/// [SvgToOtfResult.glyphList] holds the *interior* drawing, since that is
+/// the default instance every metric is computed from. Omitted, the default
+/// stays at [StrokeWidthRange.max] and the output is byte-identical to a
+/// build that never mentioned this parameter.
 ///
 /// Returns an instance of [SvgToOtfResult] class containing glyphs and a font.
 SvgToOtfResult svgToOtf({
@@ -72,6 +84,7 @@ SvgToOtfResult svgToOtf({
   DateTime? created,
   DateTime? modified,
   StrokeWidthRange? strokeWidthRange,
+  double? defaultStrokeWidth,
 }) {
   if (strokeWidthRange != null) {
     if (outlineStrokes == false) {
@@ -89,28 +102,74 @@ SvgToOtfResult svgToOtf({
     }
   }
 
+  // Checked here, and again in `OpenTypeFontBuilder`, on purpose. That
+  // constructor is a public boundary of its own and raises `ArgumentError`,
+  // which is the right vocabulary for a programming error against a builder;
+  // this function's own vocabulary is `FontifyException`, the one its two
+  // checks above already speak and the one the CLI knows how to report. A
+  // caller who misconfigures the axis here should be told so in the same
+  // terms as a caller who misconfigures `outlineStrokes`, not by an
+  // `ArgumentError` surfacing from inside a class they never named.
+  if (defaultStrokeWidth != null) {
+    if (strokeWidthRange == null) {
+      throw FontifyException(
+        'defaultStrokeWidth names a width on the stroke-width axis, but '
+        'without strokeWidthRange there is no axis to put it on and the '
+        'value would be silently dropped; got defaultStrokeWidth: '
+        '$defaultStrokeWidth.',
+      );
+    }
+
+    // A negated conjunction rather than two comparisons, so that a NaN width
+    // — which loses every ordering test it is given — falls into the error
+    // rather than out of it.
+    if (!(strokeWidthRange.min < defaultStrokeWidth &&
+        defaultStrokeWidth < strokeWidthRange.max)) {
+      throw FontifyException(
+        'defaultStrokeWidth must lie strictly between the ends of '
+        'strokeWidthRange: outside them the font would default to a width '
+        'no master was drawn at, and at either end the third master would '
+        'duplicate the endpoint it sits on; got defaultStrokeWidth: '
+        '$defaultStrokeWidth, strokeWidthRange: $strokeWidthRange.',
+      );
+    }
+  }
+
   normalize ??= true;
   final embedPreview = preview ?? true;
 
   // Both branches build the same shape of [glyphList]; only the variable one
-  // also produces [minGlyphList]. Keeping the no-range branch textually
-  // identical to the code before this parameter existed is what keeps its
-  // output byte-identical.
+  // also produces [minGlyphList] and [maxGlyphList]. Keeping the no-range
+  // branch textually identical to the code before these parameters existed is
+  // what keeps its output byte-identical.
   final List<GenericGlyph> glyphList;
   final List<GenericGlyph>? minGlyphList;
+  final List<GenericGlyph>? maxGlyphList;
 
   if (strokeWidthRange != null) {
     final masters = [
       for (final e in svgMap.entries)
-        GlyphMasterBuilder(strokeWidthRange).fromSvg(e.key, e.value),
+        GlyphMasterBuilder(
+          strokeWidthRange,
+          defaultWidth: defaultStrokeWidth,
+        ).fromSvg(e.key, e.value),
     ];
 
-    // `glyphList` — the default master — carries the *maximum* width: it is
-    // what `generateFlutterClass` reads charcodes from, and
-    // `createFromGlyphs` assigns those charcodes to this list, not to
-    // `minGlyphList`.
-    glyphList = [for (final m in masters) m.max];
+    // `glyphList` is the *default* master whichever width that turns out to
+    // be: the interior drawing when one was asked for, the maximum otherwise.
+    // It is the list `createFromGlyphs` assigns charcodes to — never
+    // `minGlyphList` or `maxGlyphList` — and therefore the list
+    // `generateFlutterClass` can read them back from, so the preview blobs
+    // below belong on it too.
+    glyphList = [for (final m in masters) m.atDefault ?? m.max];
     minGlyphList = [for (final m in masters) m.min];
+
+    // Needed exactly when the default moved inwards: the axis then has a
+    // maximum with no master of its own, and `OpenTypeFontBuilder` rejects
+    // either half of that pair without the other.
+    maxGlyphList = defaultStrokeWidth == null
+        ? null
+        : [for (final m in masters) m.max];
 
     if (embedPreview) {
       var i = 0;
@@ -130,6 +189,7 @@ SvgToOtfResult svgToOtf({
         ),
     ];
     minGlyphList = null;
+    maxGlyphList = null;
   }
 
   if (!normalize) {
@@ -155,7 +215,9 @@ SvgToOtfResult svgToOtf({
     created: created,
     modified: modified,
     minGlyphList: minGlyphList,
+    maxGlyphList: maxGlyphList,
     strokeWidthRange: strokeWidthRange,
+    defaultStrokeWidth: defaultStrokeWidth,
   );
 
   return SvgToOtfResult._(glyphList, font);
