@@ -14,7 +14,7 @@ void main() {
     test('maps to yaml, cli, and built-in default', () {
       expect(kJobConfigKeys[JobField.preview], 'preview');
       expect(kJobCliOptions[JobField.preview], 'preview');
-      expect(kJobBuiltInDefaults[JobField.preview], isTrue);
+      expect(kJobBuiltInDefaults.containsKey(JobField.preview), isFalse);
       expect(kJobDefaultsFields, contains(JobField.preview));
     });
   });

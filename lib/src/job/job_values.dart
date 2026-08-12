@@ -290,9 +290,7 @@ FontJob resolveFontJob({
         merged.readBool(JobField.normalize) ??
         kJobBuiltInDefaults.requireBool(JobField.normalize),
     outlineStrokes: outlineStrokes,
-    preview:
-        merged.readBool(JobField.preview) ??
-        kJobBuiltInDefaults.requireBool(JobField.preview),
+    preview: merged.readBool(JobField.preview),
     useOpenType: useOpenType,
     strokeWidthRange: strokeWidthRange,
   );

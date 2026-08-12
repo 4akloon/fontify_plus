@@ -60,7 +60,10 @@ void defineOptions(ArgParser argParser) {
     )
     ..addFlag(
       kJobCliOptions[JobField.preview]!,
-      help: 'Embed SVG previews in generated IconData dartdoc.',
+      help:
+          'Embed SVG previews in generated IconData dartdoc. On by default, '
+          'but dropped with a warning when they would push the class file '
+          'over 2 MiB; pass --preview to keep them regardless of size.',
     )
     ..addFlag(
       kJobCliOptions[JobField.useOpenType]!,
