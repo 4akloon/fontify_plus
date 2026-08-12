@@ -145,6 +145,28 @@ jobs:
       - name: Rebuild package-built proto fonts
         run: python3 tool/build_proto_fonts.py
 
+      # TEMPORARY diagnostic: the matrix reports every family rendering the
+      # same 624 bytes of ink, which means no app font is registering — and
+      # that reproduces on neither macOS nor a Linux container pinned to this
+      # runner's exact Chrome, chromedriver and Flutter. This says whether the
+      # build even shipped the fonts, which a test cannot: `flutter drive`
+      # aggregates a web run and swallows `print`.
+      - name: Diagnose the built asset bundle
+        working-directory: example
+        run: |
+          set -x
+          google-chrome --version
+          ls -la fonts/proto/
+          md5sum fonts/proto/*.otf
+          flutter build web --debug
+          echo '--- FontManifest.json ---'
+          cat build/web/assets/FontManifest.json
+          echo '--- bundled font assets ---'
+          ls -la build/web/assets/fonts/proto/ || echo 'NO fonts/proto IN BUNDLE'
+          md5sum build/web/assets/fonts/proto/*.otf || true
+          echo '--- AssetManifest keys mentioning proto ---'
+          cat build/web/assets/AssetManifest.json 2>/dev/null | tr ',' '\n' | grep -i proto || true
+
       # `-d chrome` treats Chrome as the running device and connects to it
       # through DWDS's own debug-service handshake — verified against a real
       # run on this workflow's ubuntu-latest runner, that handshake throws
