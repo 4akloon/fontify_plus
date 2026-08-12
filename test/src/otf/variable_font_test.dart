@@ -330,6 +330,13 @@ void main() {
 
       expect(font.stat!.range.min, font.fvar!.range.min);
       expect(font.stat!.range.max, font.fvar!.range.max);
+      // The default width is the same pairing one field over, and the same
+      // failure in reverse: an `fvar` default that `STAT` names no axis value
+      // for is a default instance style matching cannot reconcile with any
+      // named stop. The two `create` calls sit five lines apart in
+      // `OpenTypeFontBuilder`, so passing it to one and not the other is the
+      // realistic mistake, and it is invisible in every other assertion here.
+      expect(font.stat!.defaultWidth, font.fvar!.defaultWidth);
     });
 
     test(

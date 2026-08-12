@@ -155,13 +155,20 @@ class StyleAttributesTable extends FontTable {
   }
 
   /// Writes a format 1 `AxisValue` record naming a single point on the
-  /// (only) axis, reusing [axisNameID] as its display name: the endpoints
-  /// have no separate names of their own, and pointing at the axis label
-  /// keeps the `name` table to one added record.
+  /// (only) axis, reusing [axisNameID] as its display name: none of the
+  /// widths this table records — neither endpoint, nor an interior
+  /// [defaultWidth] — has a name of its own, and pointing every record at the
+  /// axis label keeps the `name` table to one added record.
   void _encodeAxisValue(ByteData byteData, int offset, double value) {
     byteData
       ..setUint16(offset, 1) // format
       ..setUint16(offset + 2, 0) // axisIndex: the only axis, wght
+      // No flags. ELIDABLE_AXIS_VALUE_NAME (0x0002) would belong on the
+      // default instance's record, telling consumers to drop its name from a
+      // composed style string -- but every record here shares one nameID with
+      // the axis itself, so eliding one of them is a decision about that
+      // scheme rather than about this record. Left for whoever gives these
+      // values names of their own.
       ..setUint16(offset + 4, 0) // flags
       ..setUint16(offset + 6, axisNameID) // valueNameID
       ..setInt32(offset + 8, _fixed(value));

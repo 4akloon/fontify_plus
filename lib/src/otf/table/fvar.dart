@@ -18,15 +18,18 @@ int _fixed(double value) => (value * 65536).round();
 /// `Icon(icon, weight: 1.33)` asks for a stroke width of 1.33, matching the
 /// design system's own table rather than a rescaling of it.
 ///
-/// The axis default is either [StrokeWidthRange.max] or the separately
-/// supplied [defaultWidth], and never anything else. That is not a stylistic
-/// preference: the default is the origin of normalized design space, so every
-/// width on the far side of it from a variation region needs a region of its
-/// own. Pinning the default to the maximum keeps the font at one region and
-/// one delta per varying value; an interior default costs a second of each.
-/// Those are the only two layouts the `CFF2` variation store encodes, so a
-/// default anywhere the masters do not sit would produce an axis whose
-/// interpolation the outlines cannot follow.
+/// The axis default is written from [StrokeWidthRange.max], or from the
+/// separately supplied [defaultWidth] when there is one. Callers are expected
+/// to supply only those two placements, and this table does not check that
+/// they did — see [FontVariationsTable.create].
+///
+/// The expectation is not a stylistic preference. The default is the origin of
+/// normalized design space, so every width on the far side of it from a
+/// variation region needs a region of its own: a default at the maximum keeps
+/// the font at one region and one delta per varying value, an interior default
+/// costs a second of each, and those are the only two layouts the `CFF2`
+/// variation store encodes. A default the masters do not sit at would produce
+/// an axis whose interpolation the outlines cannot follow.
 class FontVariationsTable extends FontTable {
   FontVariationsTable(
     super.entry,
@@ -46,6 +49,16 @@ class FontVariationsTable extends FontTable {
   /// its own vocabulary. Repeating them here would be one more copy to keep in
   /// step, reachable only after those checks had already let a bad value
   /// through.
+  ///
+  /// Not validating is not the same as accepting silently, and here the two
+  /// bad inputs part company. A non-finite width throws out of the 16.16
+  /// conversion — a bare `UnsupportedError: Infinity or NaN toInt`, which
+  /// names the arithmetic and not the parameter, so read it as an unvalidated
+  /// input rather than a defect in this table. A finite width outside [range],
+  /// or equal to an endpoint, does *not* throw: it encodes an axis whose
+  /// default coordinate the outlines' masters do not sit at, and the font only
+  /// goes wrong at render time. That one is the reason the boundary checks
+  /// exist.
   factory FontVariationsTable.create(
     StrokeWidthRange range, {
     double? defaultWidth,
