@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:fontify_plus/src/common/glyph/generic_glyph_base.dart';
 import 'package:fontify_plus/src/common/glyph/glyph_masters.dart';
 import 'package:fontify_plus/src/common/stroke_width_range.dart';
+import 'package:fontify_plus/src/utils/exception.dart';
 import 'package:test/test.dart';
 
 /// Runs [body] with `print` captured instead of written to stdout.
@@ -196,6 +197,75 @@ void main() {
       // two exist — same contours, same points, same on-curve flags.
       builder.checkCompatible('icon', atDefault!, masters.max);
       builder.checkCompatible('icon', atDefault, masters.min);
+
+      // Asserted directly as well, the way the point-count test above does it:
+      // the two calls above are the only place `checkCompatible` is exercised
+      // at all, so leaning on them alone would let this test decay into
+      // `isNotNull` if that method ever regressed to a no-op.
+      expect(atDefault.pointList.length, masters.max.pointList.length);
+      expect(atDefault.isOnCurveList, masters.max.isOnCurveList);
+      expect(atDefault.outlines.length, masters.max.outlines.length);
+    });
+
+    // A degenerate default width changes the offset geometry's segment count,
+    // so the third master's replay stops matching the shape recorded at
+    // `range.max`. The two tests below cover the two directions that mismatch
+    // can go, because without the replay check they fail in two quite
+    // different ways — and only one of them fails loudly enough to be caught
+    // at all. In both, `range` itself is untouched, so the only guard that can
+    // fire is the default width's own.
+    //
+    // Both assert on `detail`, not merely on the exception type: the replay
+    // check is the only thing that words a failure "diverges at segment", so a
+    // later `checkCompatible` failure cannot stand in for it. Dropping that
+    // matcher would let the first test pass with the guard deleted.
+    test(
+      'a defaultWidth that under-runs the plan is named where it diverges',
+      () {
+        // Zero width: 8 segments where the plan recorded 12. The replay reads
+        // less of the recording than was written, which is not itself an error —
+        // it yields a shorter contour and surfaces only later, as
+        // `checkCompatible` reporting "contour 0 has 25 points vs 37": true, but
+        // silent about which width diverged or where.
+        expect(
+          () => GlyphMasterBuilder(
+            _range,
+            defaultWidth: 0,
+          ).fromSvg('icon', _curved),
+          throwsA(
+            isA<IncompatibleMastersException>()
+                .having((e) => e.glyphName, 'glyphName', 'icon')
+                .having(
+                  (e) => e.detail,
+                  'detail',
+                  contains('diverges at segment'),
+                ),
+          ),
+        );
+      },
+    );
+
+    test('a non-finite defaultWidth is named, not left to a RangeError', () {
+      // NaN goes the other way: 14 segments against the recorded 12. The
+      // replay reads past the end of the recording, so without the check this
+      // is a bare `RangeError (length): Invalid value: Not in inclusive range
+      // 0..11: 12` out of `outlinesFromContours`, naming neither the glyph nor
+      // the width — exactly the failure the check's own docs exist to prevent.
+      expect(
+        () => GlyphMasterBuilder(
+          _range,
+          defaultWidth: double.nan,
+        ).fromSvg('icon', _curved),
+        throwsA(
+          isA<IncompatibleMastersException>()
+              .having((e) => e.glyphName, 'glyphName', 'icon')
+              .having(
+                (e) => e.detail,
+                'detail',
+                contains('diverges at segment'),
+              ),
+        ),
+      );
     });
 
     test('a fill is identical in all three masters', () {

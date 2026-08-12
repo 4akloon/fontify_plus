@@ -72,6 +72,15 @@ class GlyphMasterBuilder {
   /// expect. Repeating the check here would be a third copy of those rules to
   /// keep in step, in a third vocabulary, reachable only after the other two
   /// had already let a bad value through.
+  ///
+  /// Not validating is not the same as accepting silently. A width that is
+  /// non-finite, zero or negative degenerates the offset geometry enough to
+  /// change its segment count, so it surfaces as an
+  /// [IncompatibleMastersException] from the structural replay check rather
+  /// than as NaN coordinates flowing on into the font. Read that exception's
+  /// "points at a bug in the geometry pipeline" wording accordingly: reached
+  /// this way it is a symptom of an unvalidated input, not a defect in the
+  /// offsetter.
   const GlyphMasterBuilder(this.range, {this.defaultWidth});
 
   /// The stroke-width axis ends applied to every glyph this builder produces.
