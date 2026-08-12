@@ -5,6 +5,9 @@
 
 import 'package:flutter/widgets.dart';
 
+/// Variable stroke width: 1.0 … 2.0 (`wght` axis).
+/// Set the width explicitly: Icon(MyIcons.arrowRight, size: 16, weight: 1.0)
+///
 /// Identifiers for the icons.
 ///
 /// Use with the [Icon] class to show specific icons.

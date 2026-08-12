@@ -2,6 +2,7 @@ fontify_plus:
   defaults:
     recursive: false
     normalize: true
+    stroke_width_range: [1, 2]
   fonts:
     icons:
       input_svg_dir: svg/
