@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import '../job/fontify_exception.dart';
 import '../otf.dart';
+import '../svg/svg_preview.dart';
 import '../utils/flutter_class_gen.dart';
 import '../utils/logger.dart';
 import 'generic_glyph.dart';
@@ -27,8 +26,8 @@ class SvgToOtfResult {
 /// * If [outlineStrokes] is set to true, stroked paths are replaced by the
 /// filled region their stroke covers. Defaults to true — font glyphs are
 /// fill-only, so a stroked icon is otherwise invisible.
-/// * If [preview] is set to true, each glyph stores a base64-encoded copy of
-/// its input SVG for dartdoc previews in the generated `IconData` class.
+/// * If [preview] is set to true, each glyph stores a minified copy of its
+/// input SVG for dartdoc previews in the generated `IconData` class.
 /// Defaults to true.
 /// NOTE: Paint attributes other than stroke geometry (such as "fill" colour)
 /// are ignored — only the shape's outline is used.
@@ -115,7 +114,7 @@ SvgToOtfResult svgToOtf({
     if (embedPreview) {
       var i = 0;
       for (final e in svgMap.entries) {
-        glyphList[i].metadata.preview = base64Encode(utf8.encode(e.value));
+        glyphList[i].metadata.preview = minifySvgPreview(e.value);
         i++;
       }
     }

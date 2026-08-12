@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart' as vg;
@@ -7,6 +6,7 @@ import '../../otf/table/glyph/simple.dart';
 import '../../svg/outline_builder.dart';
 import '../../svg/stroke/stroke_outliner.dart';
 import '../../svg/svg_parser.dart';
+import '../../svg/svg_preview.dart';
 import '../../utils/misc.dart';
 import '../outline.dart';
 import 'generic_glyph_metadata.dart';
@@ -66,9 +66,9 @@ class GenericGlyph {
   /// by the filled region its stroke covers. Font glyphs are fill-only, so
   /// without it an outline-style icon collapses to its zero-area centreline.
   ///
-  /// When [preview] is true — the default — the input SVG is stored as a
-  /// base64-encoded string on [GenericGlyphMetadata.preview] for dartdoc
-  /// previews in the generated `IconData` class.
+  /// When [preview] is true — the default — a minified copy of the input SVG
+  /// is stored on [GenericGlyphMetadata.preview] for dartdoc previews in the
+  /// generated `IconData` class.
   ///
   /// Throws `SvgParserException` for anything the parser rejects.
   factory GenericGlyph.fromSvg(
@@ -119,7 +119,7 @@ class GenericGlyph {
       math.Rectangle<num>(0, 0, geometry.width, geometry.height),
       GenericGlyphMetadata(
         name: name,
-        preview: preview ? base64Encode(utf8.encode(xmlString)) : null,
+        preview: preview ? minifySvgPreview(xmlString) : null,
       ),
     );
   }
