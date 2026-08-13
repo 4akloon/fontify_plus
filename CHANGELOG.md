@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+* Fix filled-and-stroked paths punching a white gap under CFF nonzero
+  winding. A clockwise fill against a counter-clockwise outer stroke cancelled
+  in the inner half of the ring (visible on icons like Hugeicons
+  `unfold-more-down`). Fill contours are now wound to match the outer stroke
+  wall.
+* Fix lumpy inner curves on variable-stroke fonts. Offset plans built at the
+  range maximum froze collapsed inner walls as chords, and `ContourShape`
+  recorded at that width then dropped the control points from every narrower
+  master (visible as faceted corners on Hugeicons `account-setting-03`).
+  Narrower evaluations retry a cubic, and a segment stays a cubic on every
+  master if it is a cubic at any width.
+* Fix looping offset cubics at the stroke-width maximum. When an inner wall
+  folded through a cusp, the cubic fit placed handles on opposite sides of
+  the chord (visible as overlapping needles on Hugeicons `alien-02` at
+  `wght=3`). Handles longer than 1.5× the chord now fall back to the chord.
+  A curve that only collapses at one end is subdivided rather than replaced
+  by a single chord, so the uncollapsed half keeps its shape.
+
 ## 0.6.0
 
 * Variable stroke width: `stroke_width_range` / `--stroke-width-range` /

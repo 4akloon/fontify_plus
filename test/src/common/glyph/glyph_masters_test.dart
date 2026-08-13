@@ -191,6 +191,32 @@ double _shoelace(List<math.Point<num>> points) {
   return sum / 2;
 }
 
+int _windingAt(GenericGlyph glyph, double x, double y) {
+  var winding = 0;
+
+  for (final outline in glyph.outlines) {
+    final pts = outline.pointList;
+    if (pts.length < 3) {
+      continue;
+    }
+
+    for (var i = 0; i < pts.length; i++) {
+      final a = pts[i];
+      final b = pts[(i + 1) % pts.length];
+      final cross = (b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x);
+      if (a.y <= y) {
+        if (b.y > y && cross > 0) {
+          winding++;
+        }
+      } else if (b.y <= y && cross < 0) {
+        winding--;
+      }
+    }
+  }
+
+  return winding;
+}
+
 void main() {
   group('GlyphMasterBuilder', () {
     test('gives both masters the same point count', () {
@@ -260,6 +286,87 @@ void main() {
       final masters = GlyphMasterBuilder(_range).fromSvg('icon', _filled);
 
       expect(masters.min.pointList, masters.max.pointList);
+    });
+
+    test(
+      'a tight corner planned at a wide max keeps its cubic on the '
+      'narrow master',
+      () {
+        // Quarter-circle of radius 1.2. Offsetting inward by 1.5 collapses
+        // (distance * curvature = 1.25 > 0.95), so a ContourShape recorded
+        // at max marks those pieces straight. Replaying that shape on the
+        // narrow master drops the control points — the faceted corners on
+        // account-setting-03 at every width below max.
+        const radius = 1.2;
+        const kappa = 0.5522847498 * radius;
+        const svg =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" '
+            'fill="none"><path d="M ${4 + radius} 4 '
+            'C ${4 + radius} ${4 + kappa} ${4 + kappa} ${4 + radius} '
+            '4 ${4 + radius}" stroke="#000" stroke-width="1.5"/></svg>';
+
+        final masters = GlyphMasterBuilder(
+          StrokeWidthRange(0.5, 3),
+        ).fromSvg('corner', svg);
+
+        final offCurve = masters.min.isOnCurveList.where((on) => !on).length;
+
+        // Compatible masters share the flag list, so the max-width chord
+        // must be stored as a cubic (collinear controls) rather than as a
+        // line. A single cubic on each wall is four off-curve points; two
+        // (outer wall only) is the flattened bug.
+        expect(masters.min.isOnCurveList, masters.max.isOnCurveList);
+        expect(offCurve, greaterThan(2));
+      },
+    );
+
+    test('a closed tight corner still ends every contour on-curve', () {
+      // Same collapse as the test above, but the path is closed so the inner
+      // wall is its own contour. If that contour's last piece is a max-width
+      // chord and we keep it as a cubic while still dropping the repeated
+      // start, the contour ends off-curve and CFF encoding throws.
+      const radius = 1.2;
+      const kappa = 0.5522847498 * radius;
+      const svg =
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" '
+          'fill="none"><path d="M ${4 + radius} 4 '
+          'C ${4 + radius} ${4 + kappa} ${4 + kappa} ${4 + radius} '
+          '4 ${4 + radius} '
+          'C ${4 - kappa} ${4 + radius} ${4 - radius} ${4 + kappa} '
+          '${4 - radius} 4 '
+          'C ${4 - radius} ${4 - kappa} ${4 - kappa} ${4 - radius} '
+          '4 ${4 - radius} '
+          'C ${4 + kappa} ${4 - radius} ${4 + radius} ${4 - kappa} '
+          '${4 + radius} 4 Z" stroke="#000" stroke-width="1.5"/></svg>';
+
+      final masters = GlyphMasterBuilder(
+        StrokeWidthRange(0.5, 3),
+      ).fromSvg('ring', svg);
+
+      for (final outline in [
+        ...masters.min.outlines,
+        ...masters.max.outlines,
+      ]) {
+        expect(
+          outline.isOnCurveList.last,
+          isTrue,
+          reason: 'CFF contours cannot end off-curve',
+        );
+      }
+    });
+
+    test('fill plus stroke is solid under nonzero winding', () {
+      const svg =
+          '<svg viewBox="0 0 16 16">'
+          '<path d="M2 2H10V10H2Z" fill="#000" stroke="#000" '
+          'stroke-width="2"/></svg>';
+      final glyph = GlyphMasterBuilder(_range).fromSvg('both', svg).max;
+
+      expect(
+        _windingAt(glyph, 2.5, 10),
+        isNot(0),
+        reason: 'inner half of the stroke must stay inked',
+      );
     });
 
     test('no defaultWidth builds exactly two masters', () {

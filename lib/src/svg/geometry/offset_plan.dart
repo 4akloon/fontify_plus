@@ -14,17 +14,15 @@ class OffsetPiece {
   final bool chord;
 
   /// The offset of [curve] at [distance].
-  Cubic evaluate(double distance) {
-    if (chord) {
-      return offsetChord(curve, distance);
-    }
-
-    // Planned as a curve, so a curve is what the point count expects. The
-    // approximation can still decline at a distance it was not planned for;
-    // the chord keeps the contour closed and, being one cubic either way,
-    // leaves the point count alone.
-    return approximateOffset(curve, distance) ?? offsetChord(curve, distance);
-  }
+  ///
+  /// Tries a cubic approximation first even when this piece was recorded as a
+  /// chord. The chord is what the planning distance had to emit — typically
+  /// an inner wall whose curvature collapsed at that width — but a narrower
+  /// evaluation of the same piece is often a well-behaved cubic. Freezing the
+  /// chord made every narrower master inherit a polygonal inner wall
+  /// (account-setting-03 at 1.5 from a plan built at 3.0).
+  Cubic evaluate(double distance) =>
+      approximateOffset(curve, distance) ?? offsetChord(curve, distance);
 }
 
 /// How one source cubic was cut up when offset at a reference distance.

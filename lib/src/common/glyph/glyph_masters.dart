@@ -51,9 +51,10 @@ class GlyphMasters {
 /// stroked shape is planned once, at [StrokeWidthRange.max] — the densest
 /// subdivision and the earliest offset degeneracy both occur at the widest
 /// offset, so a plan safe there stays safe at every narrower width the axis
-/// can select — and its [ContourShape] is recorded from that same evaluation,
-/// then applied to every master, so no two of them ever make the
-/// classification decision independently and drift apart.
+/// can select — and its [ContourShape] is the intersection of every master's
+/// own classification, so a piece that is a cubic at any width stays a cubic
+/// on all of them. Recording straightness from the wide evaluation alone
+/// froze collapsed inner walls as lines.
 ///
 /// Throws [SvgParserException] for anything the parser rejects, and
 /// [IncompatibleMastersException] if the resulting masters cannot carry
@@ -126,77 +127,100 @@ class GlyphMasterBuilder {
     final atDefaultOutlines = <Outline>[];
 
     for (final shape in geometry.shapes) {
-      if (shape.filled) {
-        final fill = outlinesFromCommands(
-          shape.path.commands,
-          height: height,
-          fillRule: shape.path.fillType == vg.PathFillType.evenOdd
-              ? FillRule.evenodd
-              : FillRule.nonzero,
+      final fill = [
+        if (shape.filled)
+          ...outlinesFromCommands(
+            shape.path.commands,
+            height: height,
+            fillRule: shape.path.fillType == vg.PathFillType.evenOdd
+                ? FillRule.evenodd
+                : FillRule.nonzero,
+          ),
+      ];
+
+      final stroke = shape.stroke;
+
+      if (stroke != null) {
+        // The path's own authored stroke-width named one point on the axis, not
+        // both ends of it; the range supplies both widths here instead. Cap, join
+        // and miter limit are unaffected by width and carry over unchanged.
+        final atMax = StrokeProperties(
+          width: range.max,
+          cap: stroke.cap,
+          join: stroke.join,
+          miterLimit: stroke.miterLimit,
         );
 
-        // One computation, two independent copies: a later per-master pass
-        // (quantization, placement) mutates an Outline's point lists in place,
-        // and sharing the same instance between masters would let a mutation on
-        // one bleed into the other.
+        final plan = StrokeOutliner(atMax).plan(shape.path.commands);
+        final maxContours = plan.evaluate(range.max);
+        final minContours = plan.evaluate(range.min);
+
+        _checkContoursReplayShape(name, maxContours, minContours);
+
+        final defaultContours = defaultWidth == null
+            ? null
+            : plan.evaluate(defaultWidth);
+
+        if (defaultContours != null) {
+          _checkContoursReplayShape(name, maxContours, defaultContours);
+        }
+
+        // Straight only where every master is straight; drop the closing
+        // repeat only where every master drops it. Recording from max alone
+        // froze collapsed inner walls as lines, and keeping a cubic while
+        // still dropping its end left CFF contours ending off-curve.
+        var contourShape = planContourShape(
+          maxContours,
+          height: height,
+        ).and(planContourShape(minContours, height: height));
+
+        if (defaultContours != null) {
+          contourShape = contourShape.and(
+            planContourShape(defaultContours, height: height),
+          );
+        }
+
+        final maxStroke = outlinesFromContours(
+          maxContours,
+          height: height,
+          shape: contourShape,
+        );
+
+        // Same topology at every width, so the outer wall's winding at max
+        // orients the fill for every master.
+        alignFillWindingToStrokeOuter(fill, maxStroke);
+
+        minOutlines
+          ..addAll(fill.map((outline) => outline.copy()))
+          ..addAll(
+            outlinesFromContours(
+              minContours,
+              height: height,
+              shape: contourShape,
+            ),
+          );
+        maxOutlines
+          ..addAll(fill.map((outline) => outline.copy()))
+          ..addAll(maxStroke);
+
+        if (defaultContours != null) {
+          atDefaultOutlines
+            ..addAll(fill.map((outline) => outline.copy()))
+            ..addAll(
+              outlinesFromContours(
+                defaultContours,
+                height: height,
+                shape: contourShape,
+              ),
+            );
+        }
+      } else {
         minOutlines.addAll(fill.map((outline) => outline.copy()));
         maxOutlines.addAll(fill.map((outline) => outline.copy()));
 
         if (defaultWidth != null) {
           atDefaultOutlines.addAll(fill.map((outline) => outline.copy()));
         }
-      }
-
-      final stroke = shape.stroke;
-
-      if (stroke == null) {
-        continue;
-      }
-
-      // The path's own authored stroke-width named one point on the axis, not
-      // both ends of it; the range supplies both widths here instead. Cap, join
-      // and miter limit are unaffected by width and carry over unchanged.
-      final atMax = StrokeProperties(
-        width: range.max,
-        cap: stroke.cap,
-        join: stroke.join,
-        miterLimit: stroke.miterLimit,
-      );
-
-      final plan = StrokeOutliner(atMax).plan(shape.path.commands);
-      final maxContours = plan.evaluate(range.max);
-      final minContours = plan.evaluate(range.min);
-
-      _checkContoursReplayShape(name, maxContours, minContours);
-
-      // Recorded once, from the reference evaluation, and applied to both
-      // widths: recording it per width would reintroduce exactly the structural
-      // divergence the stroke plan exists to remove.
-      final shapeAtMax = planContourShape(maxContours, height: height);
-
-      maxOutlines.addAll(
-        outlinesFromContours(maxContours, height: height, shape: shapeAtMax),
-      );
-      minOutlines.addAll(
-        outlinesFromContours(minContours, height: height, shape: shapeAtMax),
-      );
-
-      if (defaultWidth != null) {
-        // Evaluated from the same plan, and replayed against the same
-        // recorded shape, as the two endpoints: a third master is only
-        // interpolatable with them if it was never allowed to classify its
-        // own geometry.
-        final defaultContours = plan.evaluate(defaultWidth);
-
-        _checkContoursReplayShape(name, maxContours, defaultContours);
-
-        atDefaultOutlines.addAll(
-          outlinesFromContours(
-            defaultContours,
-            height: height,
-            shape: shapeAtMax,
-          ),
-        );
       }
     }
 

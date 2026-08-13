@@ -235,4 +235,66 @@ class Outline {
 
     _hasQuadCurves = false;
   }
+
+  /// Shoelace area. Sign is winding in font y-up: positive is counter-clockwise.
+  double get signedArea {
+    var acc = 0.0;
+
+    for (var i = 0; i < pointList.length; i++) {
+      final a = pointList[i];
+      final b = pointList[(i + 1) % pointList.length];
+      acc += a.x * b.y - b.x * a.y;
+    }
+
+    return acc / 2;
+  }
+
+  /// Reverses this contour's winding, in place.
+  void reverse() {
+    final pts = pointList.reversed.toList();
+    final flags = isOnCurveList.reversed.toList();
+    pointList
+      ..clear()
+      ..addAll(pts);
+    isOnCurveList
+      ..clear()
+      ..addAll(flags);
+  }
+}
+
+/// Winds [fills] the same way as the outer stroke wall.
+///
+/// CFF uses nonzero winding. A clockwise fill against a counter-clockwise
+/// outer stroke cancels in the inner half of the ring and punches a white
+/// gap — the nested-triangle look on a filled-and-stroked path.
+void alignFillWindingToStrokeOuter(
+  List<Outline> fills,
+  List<Outline> strokes,
+) {
+  if (fills.isEmpty || strokes.isEmpty) {
+    return;
+  }
+
+  var outer = strokes.first;
+  var outerAbs = outer.signedArea.abs();
+
+  for (final stroke in strokes.skip(1)) {
+    final abs = stroke.signedArea.abs();
+    if (abs > outerAbs) {
+      outer = stroke;
+      outerAbs = abs;
+    }
+  }
+
+  final outerSign = outer.signedArea.sign;
+  if (outerSign == 0) {
+    return;
+  }
+
+  for (final fill in fills) {
+    final fillSign = fill.signedArea.sign;
+    if (fillSign != 0 && fillSign != outerSign) {
+      fill.reverse();
+    }
+  }
 }

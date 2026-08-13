@@ -71,6 +71,76 @@ void main() {
     });
 
     test(
+      'a tight corner planned at a wide offset still tracks when '
+      'evaluated narrower',
+      () {
+        // Quarter-circle of radius 1.2. Offsetting inward by 1.5 collapses
+        // (distance * curvature = 1.25 > 0.95), so the plan at that width
+        // records chords. Evaluating the same plan at 0.75 is not collapsed,
+        // and must use a cubic — replaying the chord leaves a 0.5+ unit
+        // error, the lumpy inner wall on account-setting-03.
+        const radius = 1.2;
+        const kappa = 0.5522847498 * radius;
+        final arc = Cubic(
+          Vector2(radius, 0),
+          Vector2(radius, kappa),
+          Vector2(kappa, radius),
+          Vector2(0, radius),
+        );
+
+        final plan = const CubicOffsetter(
+          distance: 1.5,
+          tolerance: kCurveTolerance,
+        ).plan(arc);
+
+        expect(plan.pieces.any((p) => p.chord), isTrue);
+
+        var worst = 0.0;
+        for (final piece in plan.pieces) {
+          final approx = piece.evaluate(0.75);
+          final deviation = maxOffsetDeviation(piece.curve, approx, 0.75);
+          if (deviation > worst) {
+            worst = deviation;
+          }
+        }
+
+        expect(worst, lessThanOrEqualTo(kCurveTolerance));
+      },
+    );
+
+    test('a collapsed inner wall does not loop the long way around', () {
+      // Same arc as above. Offsetting inward by 1.5 puts the true offset
+      // through a cusp and out the other side; a cubic that tracks that
+      // midpoint bows around the source — the needles on alien-02 at wght=3.
+      // The chord between the offset end points stays in the collapsed pocket.
+      const radius = 1.2;
+      const kappa = 0.5522847498 * radius;
+      final arc = Cubic(
+        Vector2(radius, 0),
+        Vector2(radius, kappa),
+        Vector2(kappa, radius),
+        Vector2(0, radius),
+      );
+
+      final plan = const CubicOffsetter(
+        distance: 1.5,
+        tolerance: kCurveTolerance,
+      ).plan(arc);
+
+      for (final piece in plan.pieces) {
+        final approx = piece.evaluate(1.5);
+        final mid = approx.pointAt(0.5);
+        final chordMid = (approx.p0 + approx.p3) / 2;
+
+        expect(
+          mid.distanceTo(chordMid),
+          lessThan(0.5),
+          reason: 'collapsed offset must not loop around the source',
+        );
+      }
+    });
+
+    test(
       'built at the range maximum, evaluation tracks the true offset '
       'across the whole range — built at the minimum, it does not',
       () {

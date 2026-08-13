@@ -83,12 +83,13 @@ class GenericGlyph {
 
     for (final shape in geometry.shapes) {
       final stroke = outlineStrokes ? shape.stroke : null;
+      final fillOutlines = <Outline>[];
 
       // A path can be both filled and stroked; the fill is its own region and
       // survives independently. With outlining off, the raw path is all there
       // is to emit — which is what makes a stroked icon come out blank.
       if (shape.filled || stroke == null) {
-        outlines.addAll(
+        fillOutlines.addAll(
           outlinesFromCommands(
             shape.path.commands,
             height: height,
@@ -100,18 +101,21 @@ class GenericGlyph {
       }
 
       if (stroke == null) {
+        outlines.addAll(fillOutlines);
         continue;
       }
 
       final contours = StrokeOutliner(stroke).outline(shape.path.commands);
-
-      outlines.addAll(
-        outlinesFromContours(
-          contours,
-          height: height,
-          shape: planContourShape(contours, height: height),
-        ),
+      final strokeOutlines = outlinesFromContours(
+        contours,
+        height: height,
+        shape: planContourShape(contours, height: height),
       );
+
+      alignFillWindingToStrokeOuter(fillOutlines, strokeOutlines);
+      outlines
+        ..addAll(fillOutlines)
+        ..addAll(strokeOutlines);
     }
 
     return GenericGlyph(

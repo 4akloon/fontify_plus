@@ -59,7 +59,9 @@ List<Outline> outlinesFromCommands(
 ///
 /// Both decisions are made against absolute tolerances, so the same geometry
 /// offset at two stroke widths can classify differently and produce different
-/// point counts. Recording them once keeps masters interpolatable.
+/// point counts. Recording them once — then intersecting straightness across
+/// masters via [and] — keeps masters interpolatable without freezing
+/// a wide-offset chord onto a narrower cubic.
 class ContourShape {
   const ContourShape(this.straight, this.dropsRepeatedStart);
 
@@ -68,6 +70,29 @@ class ContourShape {
 
   /// Per contour: whether its last point repeats its first and was dropped.
   final List<bool> dropsRepeatedStart;
+
+  /// Intersect structural decisions with [other]: a segment is straight only
+  /// if both say so, and a closing point is dropped only if both drop it.
+  ///
+  /// A piece that collapses to a chord at the planning width is still a cubic
+  /// at every narrower one. Recording straightness from the wide evaluation
+  /// alone froze those pieces as lines and replayed the flattening onto every
+  /// master (account-setting-03's faceted corners). If that piece was also
+  /// the contour's last, keeping it as a cubic while still dropping the
+  /// repeated start leaves the contour ending off-curve, which CFF rejects.
+  ContourShape and(ContourShape other) => ContourShape(
+    [
+      for (var c = 0; c < straight.length; c++)
+        [
+          for (var s = 0; s < straight[c].length; s++)
+            straight[c][s] && other.straight[c][s],
+        ],
+    ],
+    [
+      for (var c = 0; c < dropsRepeatedStart.length; c++)
+        dropsRepeatedStart[c] && other.dropsRepeatedStart[c],
+    ],
+  );
 }
 
 /// The classification [contours] make on their own at the width they were
