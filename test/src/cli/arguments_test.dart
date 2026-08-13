@@ -75,7 +75,7 @@ void main() {
       expect(job.normalize, isTrue);
       expect(job.recursive, isFalse);
       expect(job.outlineStrokes, isTrue);
-      expect(job.preview, isTrue);
+      expect(job.preview, isNull);
       expect(job.strokeWidthRange, isNull);
     });
 
@@ -85,6 +85,14 @@ void main() {
       final job = parseArgsAndConfig(argParser, args).jobs.single;
 
       expect(job.preview, isFalse);
+    });
+
+    test('--preview forces previews past the generator size budget', () {
+      const args = ['./', 'test/fonts/my_font.otf', '--preview'];
+
+      final job = parseArgsAndConfig(argParser, args).jobs.single;
+
+      expect(job.preview, isTrue);
     });
 
     test('--stroke-width-range is parsed into a StrokeWidthRange', () {

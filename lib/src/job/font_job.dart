@@ -15,7 +15,7 @@ class FontJob {
     this.recursive = false,
     this.normalize = true,
     this.outlineStrokes = true,
-    this.preview = true,
+    this.preview,
     this.useOpenType = true,
     this.strokeWidthRange,
     this.defaultStrokeWidth,
@@ -32,7 +32,7 @@ class FontJob {
   final bool recursive;
   final bool normalize;
   final bool outlineStrokes;
-  final bool preview;
+  final bool? preview;
   final bool useOpenType;
 
   /// When set, builds a variable font whose `wght` axis is the stroke width,

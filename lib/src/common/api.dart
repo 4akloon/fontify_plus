@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import '../job/fontify_exception.dart';
 import '../otf.dart';
+import '../svg/svg_preview.dart';
 import '../utils/flutter_class_gen.dart';
 import '../utils/logger.dart';
 import 'generic_glyph.dart';
@@ -27,8 +26,8 @@ class SvgToOtfResult {
 /// * If [outlineStrokes] is set to true, stroked paths are replaced by the
 /// filled region their stroke covers. Defaults to true — font glyphs are
 /// fill-only, so a stroked icon is otherwise invisible.
-/// * If [preview] is set to true, each glyph stores a base64-encoded copy of
-/// its input SVG for dartdoc previews in the generated `IconData` class.
+/// * If [preview] is set to true, each glyph stores a minified copy of its
+/// input SVG for dartdoc previews in the generated `IconData` class.
 /// Defaults to true.
 /// NOTE: Paint attributes other than stroke geometry (such as "fill" colour)
 /// are ignored — only the shape's outline is used.
@@ -178,7 +177,7 @@ SvgToOtfResult svgToOtf({
     if (embedPreview) {
       var i = 0;
       for (final e in svgMap.entries) {
-        glyphList[i].metadata.preview = base64Encode(utf8.encode(e.value));
+        glyphList[i].metadata.preview = minifySvgPreview(e.value);
         i++;
       }
     }
@@ -246,6 +245,9 @@ SvgToOtfResult svgToOtf({
 /// unlike [svgToOtf] it cannot tell a mistake from a caller who simply
 /// documents no axis, and inventing an axis line for a static class would be
 /// the worse failure.
+/// * [preview] — when false, dartdoc previews are omitted; when true, always
+/// emitted; when null (default), emitted unless the generated file would
+/// exceed 2 MiB, in which case they are dropped with a warning.
 ///
 /// Returns content of a class file.
 String generateFlutterClass({
@@ -257,6 +259,7 @@ String generateFlutterClass({
   int? indent,
   StrokeWidthRange? strokeWidthRange,
   double? defaultStrokeWidth,
+  bool? preview,
 }) {
   final generator = FlutterClassGenerator(
     glyphList,
@@ -267,6 +270,7 @@ String generateFlutterClass({
     package: package,
     strokeWidthRange: strokeWidthRange,
     defaultStrokeWidth: defaultStrokeWidth,
+    preview: preview,
   );
 
   return generator.generate();

@@ -21,7 +21,7 @@ fontify_plus assets/svg/ fonts/my_icons_font.otf \
 | `-f`, `--font-name=<name>` | PostScript / family name for the generated font. |
 | `--[no-]normalize` | Scale each glyph so its longest side fills the em square (default on). |
 | `--[no-]outline-strokes` | Convert stroked paths to filled regions (default on). |
-| `--[no-]preview` | Embed SVG previews in generated IconData dartdoc (default on). |
+| `--[no-]preview` | Embed SVG previews in generated IconData dartdoc (default on; dropped with a warning when the class file would exceed 2 MiB — explicit `--preview` forces them). |
 | `--[no-]opentype` | Emit CFF outlines (default on). |
 | `--stroke-width-range=<min,max>` | Build a variable font whose `wght` axis is the stroke width, in the SVG's own units (e.g. `1.33,2`). The maximum is the default instance unless `--default-stroke-width` names another width. Omit for a static font. See [Variable stroke width](variable_stroke.md). |
 | `--default-stroke-width=<width>` | The stroke width the variable font opens at, instead of the range maximum. Requires `--stroke-width-range` and must lie strictly inside it (e.g. `1.5` within `1.33,2`). See [Variable stroke width](variable_stroke.md). |

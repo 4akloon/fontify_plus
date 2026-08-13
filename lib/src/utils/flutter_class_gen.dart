@@ -1,13 +1,23 @@
+import 'dart:convert';
+
 import '../common/constant.dart';
 import '../common/generic_glyph.dart';
 import '../common/stroke_width_range.dart';
 import '../otf/defaults.dart';
+import '../svg/svg_preview.dart';
 import 'class_gen/dart_identifier.dart';
 import 'class_gen/icon_name_allocator.dart';
+import 'logger.dart';
 
 const _kDefaultIndent = 2;
 const _kDefaultClassName = 'fontify_plusIcons';
 const _kDefaultFontFileName = 'fontify_plus_icons.otf';
+
+/// UTF-8 size above which a generated file loses its previews when
+/// [FlutterClassGenerator] decides for itself: IntelliJ-family IDEs stop
+/// analyzing files over `idea.max.intellisense.filesize` (2500 KB), so the
+/// budget stays under that cliff.
+const _kPreviewSizeBudget = 2 * 1024 * 1024;
 
 /// Generates a Flutter-compatible class holding an [IconData] per glyph.
 ///
@@ -32,6 +42,10 @@ class FlutterClassGenerator {
   /// throws [ArgumentError] unless [defaultStrokeWidth] lies strictly
   /// between [StrokeWidthRange.min] and [StrokeWidthRange.max] — otherwise
   /// the generated comment would name a default the font never opens at.
+  /// * [preview] — when false, dartdoc previews are omitted; when true, they
+  /// are always emitted; when null (the default), they are emitted unless
+  /// the generated file would exceed 2 MiB, in which case they are dropped
+  /// with a warning.
   FlutterClassGenerator(
     this.glyphList, {
     String? className,
@@ -41,6 +55,7 @@ class FlutterClassGenerator {
     int? indent,
     StrokeWidthRange? strokeWidthRange,
     double? defaultStrokeWidth,
+    bool? preview,
   }) : _indent = ' ' * (indent ?? _kDefaultIndent),
        _className = toDartIdentifier(className ?? _kDefaultClassName),
        _familyName = familyName ?? kDefaultFontFamily,
@@ -48,7 +63,8 @@ class FlutterClassGenerator {
        _iconVarNames = _allocateNames(glyphList),
        _package = package?.isEmpty ?? true ? null : package,
        _strokeWidthRange = strokeWidthRange,
-       _defaultStrokeWidth = defaultStrokeWidth {
+       _defaultStrokeWidth = defaultStrokeWidth,
+       _preview = preview {
     // Mirrors `OpenTypeFontBuilder`'s own check (`lib/src/otf/otf_builder.dart`):
     // this constructor is likewise a Dart-API surface, not a CLI/YAML surface,
     // so a bad pairing is an `ArgumentError` here too. Without this,
@@ -78,6 +94,7 @@ class FlutterClassGenerator {
   final List<String> _iconVarNames;
   final StrokeWidthRange? _strokeWidthRange;
   final double? _defaultStrokeWidth;
+  final bool? _preview;
 
   static List<String> _allocateNames(List<GenericGlyph> glyphList) {
     final allocator = IconNameAllocator();
@@ -91,10 +108,34 @@ class FlutterClassGenerator {
 
   /// Generates content for a class' file.
   String generate() {
+    final content = _generate(previews: _preview ?? true);
+
+    if (_preview != null ||
+        utf8.encode(content).length <= _kPreviewSizeBudget) {
+      return content;
+    }
+
+    final stripped = _generate(previews: false);
+
+    logger.w(
+      'Dropped dartdoc previews: with them the generated class for '
+      '${glyphList.length} icons is ${utf8.encode(content).length} bytes, '
+      'over the $_kPreviewSizeBudget-byte budget that keeps IDE code '
+      'insight working; without them it is '
+      '${utf8.encode(stripped).length} bytes. Pass preview: true or '
+      '--preview to keep previews anyway, or preview: false / --no-preview '
+      'to silence this warning.',
+    );
+
+    return stripped;
+  }
+
+  String _generate({required bool previews}) {
     final members = [
       "static const iconFontFamily = '$_familyName';",
       if (_hasPackage) "static const iconFontPackage = '$_package';",
-      for (var i = 0; i < glyphList.length; i++) ..._iconConstant(i),
+      for (var i = 0; i < glyphList.length; i++)
+        ..._iconConstant(i, previews: previews),
     ];
 
     final body = members.map((e) => e.isEmpty ? '' : '$_indent$e').join('\n');
@@ -105,16 +146,16 @@ class FlutterClassGenerator {
         '}\n';
   }
 
-  List<String> _iconConstant(int index) {
+  List<String> _iconConstant(int index, {required bool previews}) {
     final metadata = glyphList[index].metadata;
     final hex = '0x${metadata.charCode!.toRadixString(16)}';
 
     return [
       '',
       '/// ${metadata.name!}',
-      if (metadata.preview != null) ...[
+      if (previews && metadata.preview != null) ...[
         '///',
-        '/// <img src="data:image/svg+xml;base64,${metadata.preview}" width="32"/>',
+        '/// ![${metadata.name!}](${svgPreviewDataUri(metadata.preview!)})',
       ],
       'static const IconData ${_iconVarNames[index]} = IconData(',
       '$_indent$hex,',

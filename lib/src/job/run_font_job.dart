@@ -114,6 +114,7 @@ FontJobResult runFontJob(FontJob job) {
       package: job.package,
       strokeWidthRange: job.strokeWidthRange,
       defaultStrokeWidth: job.defaultStrokeWidth,
+      preview: job.preview,
     );
     classFile.writeAsStringSync(classSource);
   } else {

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:fontify_plus/src/common/api.dart';
@@ -7,6 +6,7 @@ import 'package:fontify_plus/src/common/stroke_width_range.dart';
 import 'package:fontify_plus/src/job/fontify_exception.dart';
 import 'package:fontify_plus/src/otf/otf.dart';
 import 'package:fontify_plus/src/otf/writer.dart';
+import 'package:fontify_plus/src/svg/svg_preview.dart';
 import 'package:fontify_plus/src/utils/otf.dart';
 import 'package:test/test.dart';
 
@@ -469,7 +469,7 @@ void main() {
       );
       expect(
         result.glyphList.map((g) => g.metadata.preview),
-        [for (final svg in svgMap.values) base64Encode(utf8.encode(svg))],
+        [for (final svg in svgMap.values) minifySvgPreview(svg)],
       );
 
       final source = generateFlutterClass(

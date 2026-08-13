@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:fontify_plus/src/common/generic_glyph.dart';
@@ -6,6 +5,7 @@ import 'package:fontify_plus/src/common/outline.dart';
 import 'package:fontify_plus/src/otf/table/glyph/flag.dart';
 import 'package:fontify_plus/src/otf/table/glyph/header.dart';
 import 'package:fontify_plus/src/otf/table/glyph/simple.dart';
+import 'package:fontify_plus/src/svg/svg_preview.dart';
 import 'package:test/test.dart';
 
 /// A single triangular contour, all on-curve.
@@ -226,12 +226,12 @@ void main() {
       expect(glyph.metadata.name, 'arrow_up');
     });
 
-    test('stores a base64 preview that decodes to the input SVG', () {
+    test('stores a minified preview of the input SVG', () {
       const svg =
           '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
           '<path d="M0 0h24v24H0z"/></svg>';
       final glyph = GenericGlyph.fromSvg('box', svg);
-      expect(utf8.decode(base64Decode(glyph.metadata.preview!)), svg);
+      expect(glyph.metadata.preview, minifySvgPreview(svg));
     });
 
     test('skips preview when preview is false', () {

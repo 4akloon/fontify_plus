@@ -59,7 +59,6 @@ const kJobBuiltInDefaults = <JobField, Object>{
   JobField.recursive: false,
   JobField.normalize: true,
   JobField.outlineStrokes: true,
-  JobField.preview: true,
   JobField.useOpenType: true,
   JobField.verbose: false,
 };

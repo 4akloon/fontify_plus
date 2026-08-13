@@ -31,7 +31,7 @@ abstract final class MyIcons {
 
   /// arrow_right
   ///
-  /// <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KICA8cGF0aCBkPSJNNSAxMmgxNE0xMiA1bDcgNy03IDciIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==" width="32"/>
+  /// ![arrow_right](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='32'%20height='32'%20viewBox='0%200%2024%2024'%20fill='none'%3E%3Cpath%20d='M5%2012h14M12%205l7%207-7%207'%20stroke='grey'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E)
   static const IconData arrowRight = IconData(
     0xe000,
     fontFamily: iconFontFamily,
@@ -39,25 +39,16 @@ abstract final class MyIcons {
 
   /// check
   ///
-  /// <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KICA8cGF0aCBkPSJNMjAgNkw5IDE3bC01LTUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==" width="32"/>
-  static const IconData check = IconData(
-    0xe001,
-    fontFamily: iconFontFamily,
-  );
+  /// ![check](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='32'%20height='32'%20viewBox='0%200%2024%2024'%20fill='none'%3E%3Cpath%20d='M20%206L9%2017l-5-5'%20stroke='grey'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E)
+  static const IconData check = IconData(0xe001, fontFamily: iconFontFamily);
 
   /// menu
   ///
-  /// <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KICA8cGF0aCBkPSJNNCA3aDE2TTQgMTJoMTZNNCAxN2gxNiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K" width="32"/>
-  static const IconData menu = IconData(
-    0xe002,
-    fontFamily: iconFontFamily,
-  );
+  /// ![menu](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='32'%20height='32'%20viewBox='0%200%2024%2024'%20fill='none'%3E%3Cpath%20d='M4%207h16M4%2012h16M4%2017h16'%20stroke='grey'%20stroke-width='2'%20stroke-linecap='round'/%3E%3C/svg%3E)
+  static const IconData menu = IconData(0xe002, fontFamily: iconFontFamily);
 
   /// plus
   ///
-  /// <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KICA8cGF0aCBkPSJNMTIgNXYxNE01IDEyaDE0IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=" width="32"/>
-  static const IconData plus = IconData(
-    0xe003,
-    fontFamily: iconFontFamily,
-  );
+  /// ![plus](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='32'%20height='32'%20viewBox='0%200%2024%2024'%20fill='none'%3E%3Cpath%20d='M12%205v14M5%2012h14'%20stroke='grey'%20stroke-width='2'%20stroke-linecap='round'/%3E%3C/svg%3E)
+  static const IconData plus = IconData(0xe003, fontFamily: iconFontFamily);
 }
