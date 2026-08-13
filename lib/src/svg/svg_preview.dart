@@ -76,7 +76,7 @@ String minifySvgPreview(String xml) {
     final singleQuoted = [
       for (final attribute in element.attributes)
         XmlAttribute(
-          XmlName.qualified(attribute.name.qualified),
+          attribute.name.copy(),
           attribute.value,
           XmlAttributeType.SINGLE_QUOTE,
         ),
