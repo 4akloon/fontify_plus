@@ -356,4 +356,67 @@ void main() {
       },
     );
   });
+
+  group('alignFillWindingToStrokeOuter', () {
+    Outline ccwRect(double x, double y, double w, double h) => outlineOf(
+      [
+        Point(x, y),
+        Point(x + w, y),
+        Point(x + w, y + h),
+        Point(x, y + h),
+      ],
+      [true, true, true, true],
+    );
+
+    Outline cwRect(double x, double y, double w, double h) => outlineOf(
+      [
+        Point(x, y),
+        Point(x, y + h),
+        Point(x + w, y + h),
+        Point(x + w, y),
+      ],
+      [true, true, true, true],
+    );
+
+    int windingAt(List<Outline> outlines, double x, double y) {
+      var winding = 0;
+      for (final outline in outlines) {
+        final pts = outline.pointList;
+        for (var i = 0; i < pts.length; i++) {
+          final a = pts[i];
+          final b = pts[(i + 1) % pts.length];
+          if (a.y <= y) {
+            if (b.y > y && _cross(a, b, x, y) > 0) winding++;
+          } else if (b.y <= y && _cross(a, b, x, y) < 0) {
+            winding--;
+          }
+        }
+      }
+      return winding;
+    }
+
+    test('does not fill a hole to match the outer stroke', () {
+      // Outer fill already agrees with the stroke wall; the hole is the
+      // opposite sign so nonzero punches it. Reversing every disagreeing
+      // fill would flip the hole and ink its interior.
+      final fillOuter = ccwRect(0, 0, 10, 10);
+      final fillHole = cwRect(3, 3, 4, 4);
+      final strokeOuter = ccwRect(-1, -1, 12, 12);
+      final fills = [fillOuter, fillHole];
+
+      expect(windingAt(fills, 5, 5), 0);
+
+      alignFillWindingToStrokeOuter(fills, [strokeOuter]);
+
+      expect(
+        windingAt(fills, 5, 5),
+        0,
+        reason: 'hole must stay empty under nonzero winding',
+      );
+      expect(fillOuter.signedArea.sign, strokeOuter.signedArea.sign);
+    });
+  });
 }
+
+double _cross(Point<num> a, Point<num> b, double x, double y) =>
+    (b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x);

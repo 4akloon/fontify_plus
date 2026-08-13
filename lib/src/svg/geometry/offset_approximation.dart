@@ -140,9 +140,10 @@ Cubic? approximateOffset(Cubic curve, double distance) {
   // far side of the source, so the cubic bows the long way around (alien-02
   // at radius 1.5 had handles 3× the chord). A circular arc's handle is
   // ~0.4× its chord, so 1.5× leaves room without admitting a loop.
+  const maxHandleToChord = 1.5;
   final chord = start.distanceTo(end);
 
-  if (alpha > 1.5 * chord || beta > 1.5 * chord) {
+  if (alpha > maxHandleToChord * chord || beta > maxHandleToChord * chord) {
     return null;
   }
 

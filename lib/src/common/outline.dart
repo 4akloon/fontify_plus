@@ -262,11 +262,13 @@ class Outline {
   }
 }
 
-/// Winds [fills] the same way as the outer stroke wall.
+/// Winds outer [fills] the same way as the outer stroke wall.
 ///
 /// CFF uses nonzero winding. A clockwise fill against a counter-clockwise
 /// outer stroke cancels in the inner half of the ring and punches a white
-/// gap — the nested-triangle look on a filled-and-stroked path.
+/// gap — the nested-triangle look on a filled-and-stroked path. Hole
+/// contours (fills contained in a larger fill) keep their opposite winding
+/// so they stay empty.
 void alignFillWindingToStrokeOuter(
   List<Outline> fills,
   List<Outline> strokes,
@@ -292,9 +294,65 @@ void alignFillWindingToStrokeOuter(
   }
 
   for (final fill in fills) {
+    if (_containedInLargerFill(fill, fills)) {
+      continue;
+    }
     final fillSign = fill.signedArea.sign;
     if (fillSign != 0 && fillSign != outerSign) {
       fill.reverse();
     }
   }
+}
+
+Point<double>? _centroid(Outline outline) {
+  if (outline.pointList.isEmpty) {
+    return null;
+  }
+  var x = 0.0;
+  var y = 0.0;
+  for (final p in outline.pointList) {
+    x += p.x.toDouble();
+    y += p.y.toDouble();
+  }
+  final n = outline.pointList.length;
+  return Point(x / n, y / n);
+}
+
+int _contourWinding(Outline outline, double x, double y) {
+  var winding = 0;
+  final pts = outline.pointList;
+  for (var i = 0; i < pts.length; i++) {
+    final a = pts[i];
+    final b = pts[(i + 1) % pts.length];
+    if (a.y <= y) {
+      if (b.y > y && _cross(a, b, x, y) > 0) {
+        winding++;
+      }
+    } else if (b.y <= y && _cross(a, b, x, y) < 0) {
+      winding--;
+    }
+  }
+  return winding;
+}
+
+double _cross(Point<num> a, Point<num> b, double x, double y) =>
+    (b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x);
+
+bool _containedInLargerFill(Outline fill, List<Outline> fills) {
+  final c = _centroid(fill);
+  if (c == null) {
+    return false;
+  }
+  for (final other in fills) {
+    if (identical(other, fill)) {
+      continue;
+    }
+    if (other.signedArea.abs() <= fill.signedArea.abs()) {
+      continue;
+    }
+    if (_contourWinding(other, c.x, c.y) != 0) {
+      return true;
+    }
+  }
+  return false;
 }
