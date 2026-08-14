@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:fontify_plus/src/common/api.dart';
 import 'package:fontify_plus/src/common/glyph/generic_glyph_base.dart';
 import 'package:fontify_plus/src/common/glyph/glyph_masters.dart';
 import 'package:fontify_plus/src/common/stroke_width_range.dart';
@@ -40,6 +41,14 @@ const _mixedWidthSvg =
     '<path d="M12 5V19M5 12H19" stroke="#000" stroke-width="1.5" '
     'stroke-linecap="round"/>'
     '<path d="M4 4L8 4" stroke="#000" stroke-width="1" '
+    'stroke-linecap="round"/></svg>';
+
+// Same 1.5 written two ways; binary float noise, not two authored widths.
+const _nearDuplicateWidthSvg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">'
+    '<path d="M12 5V19M5 12H19" stroke="#000" stroke-width="1.5" '
+    'stroke-linecap="round"/>'
+    '<path d="M4 4L8 4" stroke="#000" stroke-width="1.5000000000000013" '
     'stroke-linecap="round"/></svg>';
 
 const _curved =
@@ -555,57 +564,59 @@ void main() {
       expect(() => StrokeWidthRange(1.5, 1.5), throwsArgumentError);
     });
 
-    test('an SVG mixing stroke widths is named in a warning', () {
-      // The axis overrides stroke-width absolutely, so an icon drawing a
-      // detail at 1 and its main strokes at 1.5 loses that hierarchy. Losing
-      // it silently is what this prevents.
-      final records = capturePrints(
-        () => GlyphMasterBuilder(_range).fromSvg('mixed', _mixedWidthSvg),
-      );
+    test('an SVG mixing stroke widths records both of them', () {
+      final masters = GlyphMasterBuilder(
+        _range,
+      ).fromSvg('mixed', _mixedWidthSvg);
 
-      expect(records.join('\n'), contains('mixed'));
-      expect(records.join('\n'), contains('1.0'));
-      expect(records.join('\n'), contains('1.5'));
+      expect(masters.mixedStrokeWidths, [1.0, 1.5]);
     });
 
-    test('a single authored width warns about nothing', () {
-      final records = capturePrints(
-        () => GlyphMasterBuilder(_range).fromSvg('plain', _strokedSvg),
-      );
+    test('a single authored width records no mix', () {
+      final masters = GlyphMasterBuilder(_range).fromSvg('plain', _strokedSvg);
+
+      expect(masters.mixedStrokeWidths, isEmpty);
+    });
+
+    test('widths that differ only by float noise are not a mix', () {
+      final masters = GlyphMasterBuilder(
+        _range,
+      ).fromSvg('noise', _nearDuplicateWidthSvg);
+
+      expect(masters.mixedStrokeWidths, isEmpty);
+    });
+
+    test('fromSvg itself does not warn about mixed widths', () {
+      // The warning is one line for the whole font, emitted by svgToOtf.
+      final records = capturePrints(() {
+        GlyphMasterBuilder(_range).fromSvg('mixed', _mixedWidthSvg);
+      });
 
       expect(records, isEmpty);
     });
 
-    test('two mixed-width files are each named in their own warning', () {
-      // Each file's message carries its own name, so this cannot tell
-      // `logger.w` apart from `logger.logOnce` (the two messages differ and
-      // so are never deduplicated either way) — but it does pin the
-      // "collapsing across an icon set would hide every file but the first"
-      // property the CHANGELOG describes: building an icon set must not
-      // lose either file's warning.
-      final records = capturePrints(() {
-        GlyphMasterBuilder(_range).fromSvg('first', _mixedWidthSvg);
-        GlyphMasterBuilder(_range).fromSvg('second', _mixedWidthSvg);
-      });
+    test('svgToOtf names every mixed-width file in one warning', () {
+      // Collapsing to one line is what keeps a 4000-icon set readable;
+      // naming every file is what keeps the loss of hierarchy from hiding
+      // behind a count.
+      final records = capturePrints(
+        () => svgToOtf(
+          svgMap: {
+            'first': _mixedWidthSvg,
+            'second': _mixedWidthSvg,
+            'plain': _strokedSvg,
+          },
+          strokeWidthRange: _range,
+          preview: false,
+        ),
+      );
 
-      final joined = records.join('\n');
-
-      expect(joined, contains('first'));
-      expect(joined, contains('second'));
-    });
-
-    test('the same name warns every time, not only the first', () {
-      // This is what actually distinguishes `logger.w` from `logger.logOnce`:
-      // with the file's name baked into the message, two *different* names
-      // never collide in `logOnce`'s dedup set regardless of which method is
-      // used (see the test above), so only two calls that would produce the
-      // exact same message can tell them apart.
-      final records = capturePrints(() {
-        GlyphMasterBuilder(_range).fromSvg('same', _mixedWidthSvg);
-        GlyphMasterBuilder(_range).fromSvg('same', _mixedWidthSvg);
-      });
-
-      expect(records, hasLength(2));
+      expect(records, hasLength(1));
+      expect(records.single, contains('first'));
+      expect(records.single, contains('second'));
+      expect(records.single, isNot(contains('plain')));
+      expect(records.single, contains('1.0'));
+      expect(records.single, contains('1.5'));
     });
   });
 }

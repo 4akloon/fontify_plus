@@ -150,13 +150,28 @@ SvgToOtfResult svgToOtf({
   final List<GenericGlyph>? maxGlyphList;
 
   if (strokeWidthRange != null) {
-    final masters = [
-      for (final e in svgMap.entries)
-        GlyphMasterBuilder(
-          strokeWidthRange,
-          defaultWidth: defaultStrokeWidth,
-        ).fromSvg(e.key, e.value),
-    ];
+    final mixed = <String>[];
+    final masters = <GlyphMasters>[];
+
+    for (final e in svgMap.entries) {
+      final built = GlyphMasterBuilder(
+        strokeWidthRange,
+        defaultWidth: defaultStrokeWidth,
+      ).fromSvg(e.key, e.value);
+      masters.add(built);
+
+      if (built.mixedStrokeWidths.isNotEmpty) {
+        mixed.add('${e.key} (${built.mixedStrokeWidths.join(', ')})');
+      }
+    }
+
+    if (mixed.isNotEmpty) {
+      logger.w(
+        '${mixed.length} ${mixed.length == 1 ? 'icon mixes' : 'icons mix'} '
+        'stroke widths; the stroke_width_range axis applies one width to all '
+        'strokes in each, so those differences are lost: ${mixed.join('; ')}.',
+      );
+    }
 
     // `glyphList` is the *default* master whichever width that turns out to
     // be: the interior drawing when one was asked for, the maximum otherwise.

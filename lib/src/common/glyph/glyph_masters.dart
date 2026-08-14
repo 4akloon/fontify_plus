@@ -8,7 +8,6 @@ import '../../svg/stroke/stroke_outliner.dart';
 import '../../svg/stroke/stroke_properties.dart';
 import '../../svg/svg_parser.dart';
 import '../../utils/exception.dart';
-import '../../utils/logger.dart';
 import '../outline.dart';
 import '../stroke_width_range.dart';
 import 'generic_glyph_base.dart';
@@ -22,7 +21,12 @@ import 'generic_glyph_metadata.dart';
 /// share a topology in the first place. [atDefault] is a third drawing of the
 /// same topology, present only when the caller asked for one.
 class GlyphMasters {
-  const GlyphMasters({required this.min, required this.max, this.atDefault});
+  const GlyphMasters({
+    required this.min,
+    required this.max,
+    this.atDefault,
+    this.mixedStrokeWidths = const [],
+  });
 
   /// The glyph stroked at the range's minimum width.
   final GenericGlyph min;
@@ -39,6 +43,14 @@ class GlyphMasters {
   /// instance, and a `wght` default, at a width other than an axis end
   /// without moving either end.
   final GenericGlyph? atDefault;
+
+  /// Distinct authored `stroke-width` values, sorted, when this SVG mixed
+  /// more than one. Empty when every stroke used the same width.
+  ///
+  /// [svgToOtf] reads this after every glyph is built and emits one warning
+  /// for the font. The axis still replaces every width with one value; this
+  /// list is only the names of what that replacement discards.
+  final List<double> mixedStrokeWidths;
 }
 
 /// Builds both endpoint masters of a glyph across a fixed [StrokeWidthRange],
@@ -98,23 +110,14 @@ class GlyphMasterBuilder {
 
     // The axis replaces every authored stroke-width with one value, so an icon
     // that deliberately drew a hairline detail against thicker main strokes
-    // loses that hierarchy. The override is what "strokeWidth = 1.33" means and
-    // is not up for negotiation here, but the loss is a real design decision
-    // being taken on the author's behalf, so it is not taken quietly.
+    // loses that hierarchy. Recorded here, warned once per font by `svgToOtf`.
     final authoredWidths = {
       for (final shape in geometry.shapes)
-        if (shape.stroke != null) shape.stroke!.width,
+        if (shape.stroke != null) _canonicalStrokeWidth(shape.stroke!.width),
     };
-
-    if (authoredWidths.length > 1) {
-      final widths = (authoredWidths.toList()..sort()).join(', ');
-
-      logger.w(
-        '$name: draws strokes at more than one width ($widths). The '
-        'stroke_width_range axis applies one width to all of them, so the '
-        'difference between them is lost.',
-      );
-    }
+    final mixedStrokeWidths = authoredWidths.length > 1
+        ? (authoredWidths.toList()..sort())
+        : const <double>[];
 
     // Read once into a local so the null check below promotes it, and so the
     // "is there a third master" question is asked in exactly one form.
@@ -255,6 +258,7 @@ class GlyphMasterBuilder {
       min: minGlyph,
       max: maxGlyph,
       atDefault: atDefaultGlyph,
+      mixedStrokeWidths: mixedStrokeWidths,
     );
   }
 
@@ -294,6 +298,12 @@ class GlyphMasterBuilder {
     }
   }
 }
+
+/// Stroke widths that differ only in binary float noise compare equal.
+///
+/// 1e-6 is well below any `stroke-width` a designer would write and well
+/// above `1.5` vs `1.5000000000000013`.
+double _canonicalStrokeWidth(double width) => (width * 1e6).round() / 1e6;
 
 /// Throws unless every contour in [replay] has the same segment count as the
 /// contour at the same position in [reference] — the evaluation

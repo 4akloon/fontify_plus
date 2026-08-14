@@ -4,6 +4,9 @@
 
 ## 0.6.0
 
+* Mixed-width SVGs under `stroke_width_range` produce one warning listing
+  every file, not one warning per file. Widths that differ only by float
+  noise are treated as the same.
 * Generated class constants are `fontFamily` / `fontPackage` (was
   `iconFontFamily` / `iconFontPackage`).
 

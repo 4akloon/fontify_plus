@@ -176,7 +176,8 @@ Pairing `stroke_width_range` with `outline_strokes: false` or `opentype: false`
 is rejected before generation starts.
 
 If one SVG file mixes several authored `stroke-width` values, the axis overrides
-them all with a single range and a warning names the file and every width found.
+them all with a single range. One warning lists every mixed-width file and the
+widths it contained.
 
 Omitting `stroke_width_range` / `strokeWidthRange` leaves output **byte-identical**
 to a static font. Omitting only `default_stroke_width` / `defaultStrokeWidth`
