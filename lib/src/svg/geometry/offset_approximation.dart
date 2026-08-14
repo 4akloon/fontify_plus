@@ -135,6 +135,18 @@ Cubic? approximateOffset(Cubic curve, double distance) {
     return null;
   }
 
+  // The 2x2 solve can still return huge positive handles when the true
+  // offset has folded through a cusp: the midpoint constraint sits on the
+  // far side of the source, so the cubic bows the long way around (alien-02
+  // at radius 1.5 had handles 3× the chord). A circular arc's handle is
+  // ~0.4× its chord, so 1.5× leaves room without admitting a loop.
+  const maxHandleToChord = 1.5;
+  final chord = start.distanceTo(end);
+
+  if (alpha > maxHandleToChord * chord || beta > maxHandleToChord * chord) {
+    return null;
+  }
+
   return Cubic(
     start,
     start + startTangent * alpha,

@@ -62,7 +62,10 @@ whose `wght` axis is the literal width in SVG units — `Icon(MyIcons.home,
 size: 16, weight: 1.33)` renders the icon drawn at width 1.33. YAML:
 `stroke_width_range: [1.33, 2]`; CLI: `--stroke-width-range=1.33,2`; API:
 `strokeWidthRange: StrokeWidthRange(1.33, 2)`. Requires outlining and OpenType
-outlines (both defaults). Full guide: [doc/variable_stroke.md](doc/variable_stroke.md).
+outlines (both defaults). By default the font's default instance is the
+range's maximum; `default_stroke_width` / `--default-stroke-width` /
+`defaultStrokeWidth` moves it to a width strictly inside the range instead.
+Full guide: [doc/variable_stroke.md](doc/variable_stroke.md).
 
 ## Glyph sizing
 

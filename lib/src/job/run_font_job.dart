@@ -55,9 +55,33 @@ FontJobResult runFontJob(FontJob job) {
     );
   }
 
-  final svgMap = {
+  // Sorted, because [Directory.listSync] returns entries in whatever order
+  // the filesystem holds them and that order is not a promise. It is close
+  // enough to insertion order on APFS and on overlayfs to look stable, but
+  // ext4 stores directory entries in a hash order that depends on the names
+  // themselves, so a checkout on Linux can hand these back in a different
+  // order than the machine the icons were authored on — and, observed on a
+  // CI runner, in a different order on two runs of the same commit.
+  //
+  // Nothing downstream re-sorts. Charcodes are handed out by position from
+  // kUnicodePrivateUseAreaStart, so this order *is* the codepoint
+  // assignment: reordering the list silently renumbers every icon. A font
+  // regenerated after that renders the wrong glyph for every IconData
+  // constant already shipped against the old numbering, with no error
+  // anywhere — the codepoints all still exist, they just mean something
+  // else now.
+  //
+  // Sorted by the icon's own name rather than by path so the numbering
+  // follows what the generated class shows the caller, and so it does not
+  // change with where the directory happens to live.
+  final svgEntries = [
     for (final f in svgFileList)
-      _svgKey(svgDir.path, f.path): File(f.path).readAsStringSync(),
+      (key: _svgKey(svgDir.path, f.path), path: f.path),
+  ]..sort((a, b) => a.key.compareTo(b.key));
+
+  final svgMap = {
+    for (final entry in svgEntries)
+      entry.key: File(entry.path).readAsStringSync(),
   };
 
   // head only — full readFromFile warns on unread fvar/STAT (#12).
@@ -73,6 +97,7 @@ FontJobResult runFontJob(FontJob job) {
     created: timestamps?.created,
     modified: timestamps?.modified,
     strokeWidthRange: job.strokeWidthRange,
+    defaultStrokeWidth: job.defaultStrokeWidth,
   );
 
   writeToFile(job.outputFontFile, otfResult.font);
@@ -88,6 +113,8 @@ FontJobResult runFontJob(FontJob job) {
       familyName: otfResult.font.familyName,
       package: job.package,
       strokeWidthRange: job.strokeWidthRange,
+      defaultStrokeWidth: job.defaultStrokeWidth,
+      preview: job.preview,
     );
     classFile.writeAsStringSync(classSource);
   } else {

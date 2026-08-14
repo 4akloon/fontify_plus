@@ -16,6 +16,10 @@ doc/api/
 # Internal design specs / plans (not the published doc/ guides)
 docs/
 
+# Python bytecode from tool/ oracle and proto scripts
+__pycache__/
+*.pyc
+
 # Avoid committing generated JavaScript files
 *.dart.js
 *.info.json

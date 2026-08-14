@@ -1,6 +1,6 @@
-import 'dart:convert';
-
 import 'package:fontify_plus/src/common/api.dart';
+import 'package:fontify_plus/src/common/stroke_width_range.dart';
+import 'package:fontify_plus/src/svg/svg_preview.dart';
 import 'package:test/test.dart';
 
 String svgWithViewBox(String viewBox) =>
@@ -92,10 +92,7 @@ void main() {
       final svg = svgWithViewBox('0 0 16 16');
       final result = svgToOtf(svgMap: {'a': svg});
 
-      expect(
-        utf8.decode(base64Decode(result.glyphList.single.metadata.preview!)),
-        svg,
-      );
+      expect(result.glyphList.single.metadata.preview, minifySvgPreview(svg));
     });
 
     test('skips preview when preview is false', () {
@@ -105,6 +102,20 @@ void main() {
       );
 
       expect(result.glyphList.single.metadata.preview, isNull);
+    });
+
+    test('stores the same minified preview for variable-font builds', () {
+      const svg =
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+          '<path d="M5 12h14" stroke="black" stroke-width="2" fill="none"/>'
+          '</svg>';
+
+      final result = svgToOtf(
+        svgMap: {'a': svg},
+        strokeWidthRange: StrokeWidthRange(1, 2),
+      );
+
+      expect(result.glyphList.single.metadata.preview, minifySvgPreview(svg));
     });
   });
 

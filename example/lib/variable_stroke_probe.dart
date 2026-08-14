@@ -91,6 +91,32 @@ Future<Uint8List> capture(GlobalKey key, {required double expectedSide}) async {
   return data!.buffer.asUint8List();
 }
 
+/// How many colour bytes in [pixels] are dark.
+///
+/// Reported alongside the comparisons below, because the comparisons are
+/// differences and a difference cannot say what was drawn. Two renders that
+/// come out identical give 0 whether they are the same correct glyph, the
+/// same wrong glyph, or the same fallback box — and the fix differs in each
+/// case. This is what told the three apart when the render matrix went red:
+/// every family and every weight reported exactly 624, which no set of three
+/// genuinely different masters can do, and pointed at the fonts holding the
+/// wrong glyphs rather than at the axis.
+int inkCount(Uint8List pixels) {
+  var dark = 0;
+
+  for (var i = 0; i < pixels.length; i++) {
+    if (i % 4 == 3) {
+      continue;
+    }
+
+    if (pixels[i] < 200) {
+      dark++;
+    }
+  }
+
+  return dark;
+}
+
 /// Share of colour bytes differing by more than [threshold], as a fraction
 /// of 1.
 ///

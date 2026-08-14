@@ -7,7 +7,7 @@ class GenericGlyphMetadata {
 
   String? name;
 
-  /// Base64-encoded SVG source, for dartdoc previews.
+  /// Minified SVG source, for dartdoc previews.
   String? preview;
 
   /// Deep copy

@@ -7,7 +7,7 @@ import 'operand.dart';
 /// Charstrings extend the DICT operand encoding with a 16.16 fixed-point form
 /// introduced by `b0 == 255`, which is why this cannot simply be [CFFOperand].
 class CharStringOperand extends CFFOperand {
-  // Not const: [CFFOperand] caches [_size] lazily.
+  // Not const: [CFFOperand] caches its size lazily.
   CharStringOperand(super.value, [super.size]);
 
   factory CharStringOperand.fromByteData(

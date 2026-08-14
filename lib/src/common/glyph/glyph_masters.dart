@@ -8,130 +8,223 @@ import '../../svg/stroke/stroke_outliner.dart';
 import '../../svg/stroke/stroke_properties.dart';
 import '../../svg/svg_parser.dart';
 import '../../utils/exception.dart';
-import '../../utils/logger.dart';
 import '../outline.dart';
 import '../stroke_width_range.dart';
 import 'generic_glyph_base.dart';
 import 'generic_glyph_metadata.dart';
 
-/// A glyph drawn at both ends of a [StrokeWidthRange].
+/// A glyph drawn at the ends of a [StrokeWidthRange], and optionally at one
+/// width in between.
 ///
-/// These are the only two drawings a variable font stores: every width
-/// between them is reached by interpolating, point for point, between [min]
-/// and [max] — which is only possible because [GlyphMasterBuilder] built them
-/// to share a topology in the first place.
+/// [min] and [max] are the drawings the axis interpolates between, point for
+/// point — which is only possible because [GlyphMasterBuilder] built them to
+/// share a topology in the first place. [atDefault] is a third drawing of the
+/// same topology, present only when the caller asked for one.
 class GlyphMasters {
-  const GlyphMasters({required this.min, required this.max});
+  const GlyphMasters({
+    required this.min,
+    required this.max,
+    this.atDefault,
+    this.mixedStrokeWidths = const [],
+  });
 
   /// The glyph stroked at the range's minimum width.
   final GenericGlyph min;
 
   /// The glyph stroked at the range's maximum width.
   final GenericGlyph max;
+
+  /// The glyph stroked at [GlyphMasterBuilder.defaultWidth], or null when no
+  /// default width was supplied.
+  ///
+  /// The interpolated outline at any intermediate width is already exact —
+  /// the offsetter's control points are affine in the stroke width — so this
+  /// master adds no new geometry. It exists so the font can carry a named
+  /// instance, and a `wght` default, at a width other than an axis end
+  /// without moving either end.
+  final GenericGlyph? atDefault;
+
+  /// Distinct authored `stroke-width` values, sorted, when this SVG mixed
+  /// more than one. Empty when every stroke used the same width.
+  ///
+  /// [svgToOtf] reads this after every glyph is built and emits one warning
+  /// for the font. The axis still replaces every width with one value; this
+  /// list is only the names of what that replacement discards.
+  final List<double> mixedStrokeWidths;
 }
 
-/// Builds both endpoint masters of a glyph across a fixed [StrokeWidthRange].
+/// Builds both endpoint masters of a glyph across a fixed [StrokeWidthRange],
+/// plus an optional third master at [defaultWidth].
 ///
-/// [range] is configuration reused across every glyph in a font. A path can be
-/// both filled and stroked, and the two are independent: the fill is built
-/// once from the source commands and shared verbatim by both masters, because
-/// a fill's area does not depend on stroke width. Each stroked shape is
-/// planned once, at [StrokeWidthRange.max] — the densest subdivision and the
-/// earliest offset degeneracy both occur at the widest offset, so a plan safe
-/// there stays safe at every narrower width the axis can select — and its
-/// [ContourShape] is recorded from that same evaluation, then applied to both
-/// masters, so the two never make the classification decision independently
-/// and drift apart.
+/// [range] and [defaultWidth] are configuration reused across every glyph in a
+/// font. A path can be both filled and stroked, and the two are independent:
+/// the fill is built once from the source commands and shared verbatim by
+/// every master, because a fill's area does not depend on stroke width. Each
+/// stroked shape is planned once, at [StrokeWidthRange.max] — the densest
+/// subdivision and the earliest offset degeneracy both occur at the widest
+/// offset, so a plan safe there stays safe at every narrower width the axis
+/// can select — and its [ContourShape] is the intersection of every master's
+/// own classification, so a piece that is a cubic at any width stays a cubic
+/// on all of them. Recording straightness from the wide evaluation alone
+/// froze collapsed inner walls as lines.
 ///
 /// Throws [SvgParserException] for anything the parser rejects, and
 /// [IncompatibleMastersException] if the resulting masters cannot carry
 /// variation deltas between them — which points at a bug in the geometry
 /// pipeline, not at the input SVG.
 class GlyphMasterBuilder {
-  const GlyphMasterBuilder(this.range);
+  /// Builds masters at the ends of [range], and at [defaultWidth] when one is
+  /// given.
+  ///
+  /// Assumes [defaultWidth], if non-null, is already validated by the caller:
+  /// finite, inside [range], and distinct from both of its ends. Nothing here
+  /// re-checks that. The rules are enforced once, at the boundary the value
+  /// arrives through — the Dart API raising [ArgumentError], the YAML/CLI
+  /// config raising a `FontifyException` that names the offending key — each
+  /// of which can say what went wrong in the vocabulary its own callers
+  /// expect. Repeating the check here would be a third copy of those rules to
+  /// keep in step, in a third vocabulary, reachable only after the other two
+  /// had already let a bad value through.
+  ///
+  /// Not validating is not the same as accepting silently. A width that is
+  /// non-finite, zero or negative is rejected by `StrokePlan.evaluate` with
+  /// an [ArgumentError] naming it, which every width passes through, rather
+  /// than reaching the font as NaN coordinates. That check is explicit
+  /// because the geometry no longer catches it by accident: a degenerate
+  /// width used to perturb the offset points enough to change a join's
+  /// branch, and so a contour's segment count, but the joins now decide on
+  /// the source tangents — the fix for masters diverging at ordinary widths
+  /// — and replay a NaN width's structure exactly.
+  const GlyphMasterBuilder(this.range, {this.defaultWidth});
 
   /// The stroke-width axis ends applied to every glyph this builder produces.
   final StrokeWidthRange range;
 
-  /// Builds both endpoint masters of glyph [name] from [xmlString].
+  /// The width of the third master, or null to build only the two endpoints.
+  final double? defaultWidth;
+
+  /// Builds the masters of glyph [name] from [xmlString].
   GlyphMasters fromSvg(String name, String xmlString) {
     final geometry = parseSvgGeometry(name, xmlString);
     final height = geometry.height;
 
     // The axis replaces every authored stroke-width with one value, so an icon
     // that deliberately drew a hairline detail against thicker main strokes
-    // loses that hierarchy. The override is what "strokeWidth = 1.33" means and
-    // is not up for negotiation here, but the loss is a real design decision
-    // being taken on the author's behalf, so it is not taken quietly.
+    // loses that hierarchy. Recorded here, warned once per font by `svgToOtf`.
     final authoredWidths = {
       for (final shape in geometry.shapes)
-        if (shape.stroke != null) shape.stroke!.width,
+        if (shape.stroke != null) _canonicalStrokeWidth(shape.stroke!.width),
     };
+    final mixedStrokeWidths = authoredWidths.length > 1
+        ? (authoredWidths.toList()..sort())
+        : const <double>[];
 
-    if (authoredWidths.length > 1) {
-      final widths = (authoredWidths.toList()..sort()).join(', ');
-
-      logger.w(
-        '$name: draws strokes at more than one width ($widths). The '
-        'stroke_width_range axis applies one width to all of them, so the '
-        'difference between them is lost.',
-      );
-    }
+    // Read once into a local so the null check below promotes it, and so the
+    // "is there a third master" question is asked in exactly one form.
+    final defaultWidth = this.defaultWidth;
 
     final minOutlines = <Outline>[];
     final maxOutlines = <Outline>[];
 
-    for (final shape in geometry.shapes) {
-      if (shape.filled) {
-        final fill = outlinesFromCommands(
-          shape.path.commands,
-          height: height,
-          fillRule: shape.path.fillType == vg.PathFillType.evenOdd
-              ? FillRule.evenodd
-              : FillRule.nonzero,
-        );
+    // Left empty, and never read, when no default width was supplied.
+    final atDefaultOutlines = <Outline>[];
 
-        // One computation, two independent copies: a later per-master pass
-        // (quantization, placement) mutates an Outline's point lists in place,
-        // and sharing the same instance between masters would let a mutation on
-        // one bleed into the other.
-        minOutlines.addAll(fill.map((outline) => outline.copy()));
-        maxOutlines.addAll(fill.map((outline) => outline.copy()));
-      }
+    for (final shape in geometry.shapes) {
+      final fill = [
+        if (shape.filled)
+          ...outlinesFromCommands(
+            shape.path.commands,
+            height: height,
+            fillRule: shape.path.fillType == vg.PathFillType.evenOdd
+                ? FillRule.evenodd
+                : FillRule.nonzero,
+          ),
+      ];
 
       final stroke = shape.stroke;
 
-      if (stroke == null) {
-        continue;
+      if (stroke != null) {
+        // The path's own authored stroke-width named one point on the axis, not
+        // both ends of it; the range supplies both widths here instead. Cap, join
+        // and miter limit are unaffected by width and carry over unchanged.
+        final atMax = StrokeProperties(
+          width: range.max,
+          cap: stroke.cap,
+          join: stroke.join,
+          miterLimit: stroke.miterLimit,
+        );
+
+        final plan = StrokeOutliner(atMax).plan(shape.path.commands);
+        final maxContours = plan.evaluate(range.max);
+        final minContours = plan.evaluate(range.min);
+
+        _checkContoursReplayShape(name, maxContours, minContours);
+
+        final defaultContours = defaultWidth == null
+            ? null
+            : plan.evaluate(defaultWidth);
+
+        if (defaultContours != null) {
+          _checkContoursReplayShape(name, maxContours, defaultContours);
+        }
+
+        // Straight only where every master is straight; drop the closing
+        // repeat only where every master drops it. Recording from max alone
+        // froze collapsed inner walls as lines, and keeping a cubic while
+        // still dropping its end left CFF contours ending off-curve.
+        var contourShape = planContourShape(
+          maxContours,
+          height: height,
+        ).and(planContourShape(minContours, height: height));
+
+        if (defaultContours != null) {
+          contourShape = contourShape.and(
+            planContourShape(defaultContours, height: height),
+          );
+        }
+
+        final maxStroke = outlinesFromContours(
+          maxContours,
+          height: height,
+          shape: contourShape,
+        );
+
+        // Same topology at every width, so the outer wall's winding at max
+        // orients the fill for every master.
+        alignFillWindingToStrokeOuter(fill, maxStroke);
+
+        minOutlines
+          ..addAll(fill.map((outline) => outline.copy()))
+          ..addAll(
+            outlinesFromContours(
+              minContours,
+              height: height,
+              shape: contourShape,
+            ),
+          );
+        maxOutlines
+          ..addAll(fill.map((outline) => outline.copy()))
+          ..addAll(maxStroke);
+
+        if (defaultContours != null) {
+          atDefaultOutlines
+            ..addAll(fill.map((outline) => outline.copy()))
+            ..addAll(
+              outlinesFromContours(
+                defaultContours,
+                height: height,
+                shape: contourShape,
+              ),
+            );
+        }
+      } else {
+        minOutlines.addAll(fill.map((outline) => outline.copy()));
+        maxOutlines.addAll(fill.map((outline) => outline.copy()));
+
+        if (defaultWidth != null) {
+          atDefaultOutlines.addAll(fill.map((outline) => outline.copy()));
+        }
       }
-
-      // The path's own authored stroke-width named one point on the axis, not
-      // both ends of it; the range supplies both widths here instead. Cap, join
-      // and miter limit are unaffected by width and carry over unchanged.
-      final atMax = StrokeProperties(
-        width: range.max,
-        cap: stroke.cap,
-        join: stroke.join,
-        miterLimit: stroke.miterLimit,
-      );
-
-      final plan = StrokeOutliner(atMax).plan(shape.path.commands);
-      final maxContours = plan.evaluate(range.max);
-      final minContours = plan.evaluate(range.min);
-
-      _checkContoursReplayShape(name, maxContours, minContours);
-
-      // Recorded once, from the reference evaluation, and applied to both
-      // widths: recording it per width would reintroduce exactly the structural
-      // divergence the stroke plan exists to remove.
-      final shapeAtMax = planContourShape(maxContours, height: height);
-
-      maxOutlines.addAll(
-        outlinesFromContours(maxContours, height: height, shape: shapeAtMax),
-      );
-      minOutlines.addAll(
-        outlinesFromContours(minContours, height: height, shape: shapeAtMax),
-      );
     }
 
     final bounds = math.Rectangle<num>(0, 0, geometry.width, geometry.height);
@@ -147,9 +240,26 @@ class GlyphMasterBuilder {
       GenericGlyphMetadata(name: name),
     );
 
+    final atDefaultGlyph = defaultWidth == null
+        ? null
+        : GenericGlyph(
+            atDefaultOutlines,
+            bounds,
+            GenericGlyphMetadata(name: name),
+          );
+
     checkCompatible(name, minGlyph, maxGlyph);
 
-    return GlyphMasters(min: minGlyph, max: maxGlyph);
+    if (atDefaultGlyph != null) {
+      checkCompatible(name, atDefaultGlyph, maxGlyph);
+    }
+
+    return GlyphMasters(
+      min: minGlyph,
+      max: maxGlyph,
+      atDefault: atDefaultGlyph,
+      mixedStrokeWidths: mixedStrokeWidths,
+    );
   }
 
   /// Throws unless [a] and [b] can carry variation deltas between them.
@@ -189,6 +299,12 @@ class GlyphMasterBuilder {
   }
 }
 
+/// Stroke widths that differ only in binary float noise compare equal.
+///
+/// 1e-6 is well below any `stroke-width` a designer would write and well
+/// above `1.5` vs `1.5000000000000013`.
+double _canonicalStrokeWidth(double width) => (width * 1e6).round() / 1e6;
+
 /// Throws unless every contour in [replay] has the same segment count as the
 /// contour at the same position in [reference] — the evaluation
 /// [planContourShape] recorded a [ContourShape] from.
@@ -201,6 +317,18 @@ class GlyphMasterBuilder {
 /// width, but nothing upstream of this checks that they actually did, so a
 /// regression there would otherwise surface as a bare `RangeError` instead of
 /// a message that names the glyph.
+///
+/// No input can currently reach it. Every branch downstream of
+/// `StrokePlan.evaluate` decides on the source tangents, which do not depend
+/// on the width, and the one that did not — `arcToCubics` emitting nothing
+/// below [kZeroLength] — is now unreachable because `evaluate` rejects a
+/// width whose radius is that small. That is the point rather than a reason
+/// to delete this: it guards against a *code* change reintroducing a
+/// width-dependent branch, which is exactly the defect that made real icons
+/// fail to build, and it went unnoticed because nothing asserted the
+/// invariant it was supposed to protect. It is deliberately untested for
+/// want of any way to reach it; `checkCompatible` above covers the same
+/// exception on a path that is reachable.
 void _checkContoursReplayShape(
   String glyphName,
   List<List<Cubic>> reference,

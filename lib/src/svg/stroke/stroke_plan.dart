@@ -1,5 +1,6 @@
 import '../geometry/cubic.dart';
 import '../geometry/offset_plan.dart';
+import '../geometry/tolerances.dart';
 import 'stroke_capper.dart';
 import 'stroke_joiner.dart';
 import 'stroke_properties.dart';
@@ -24,15 +25,24 @@ class SubPathPlan {
 
 /// A stroked path's topology, fixed once so it can be drawn at any width.
 ///
-/// Joins and caps are not recorded: every branch they take was made a ratio
-/// against the stroke radius or a test on the source curve's tangents, so
-/// re-running them at another width takes the same branch. That took two
-/// fixes in [StrokeJoiner] to actually hold — a coincidence test compared a
-/// squared distance to a fixed threshold, and a round join's sweep was
-/// recovered from offset points whose float32 rounding scales with the
-/// radius — because neither is width-invariant by nature, only by
-/// construction, and it is easy to write one that quietly is not. Only the
+/// Joins and caps are not recorded: every branch they take is a test on the
+/// source curve's tangents, which do not depend on the width at all, so
+/// re-running them at another width takes the same branch. Only the
 /// offsetter's subdivision is recorded, in [SubPathPlan].
+///
+/// Reaching that took four fixes in [StrokeJoiner], and the first three
+/// shared a root cause worth stating once: a branch that reads `from`, `to`
+/// or an intersection derived from them is *not* width-invariant, however
+/// carefully its threshold is scaled. Those are float32 offset points, and
+/// the rounding error in subtracting two of them is set by the vertex's
+/// coordinate magnitude, not by the radius — so it does not scale out, and
+/// near a threshold the two masters land on opposite sides. A coincidence
+/// test compared their squared gap against a radius-squared bound, a miter
+/// fallback and an inner-crossing test each divided their distance by the
+/// radius, and a round join's sweep came from their angles. All four now
+/// read `incoming` and `outgoing`, which come off the source curve and are
+/// identical at every width. The offset points are still what the geometry
+/// is *drawn* to; they are no longer what any branch is decided on.
 class StrokePlan {
   const StrokePlan({required this.stroke, required this.subPaths});
 
@@ -45,6 +55,34 @@ class StrokePlan {
   ///
   /// Empty when the plan holds nothing strokeable.
   List<List<Cubic>> evaluate(double width) {
+    // Checked here rather than left to the geometry. A degenerate width used
+    // to surface downstream as an incompatible-masters error, because it
+    // perturbed the offset points enough to change a branch in [StrokeJoiner]
+    // and so a contour's segment count. That detection was a side effect of
+    // those branches reading the offset points at all, and it went away when
+    // they were made to read the source tangents instead — the fix for
+    // masters diverging at ordinary widths. Unchecked, a NaN width would now
+    // replay the recorded structure exactly and hand back NaN coordinates,
+    // which reach the font.
+    //
+    // The radius, not the width, is what the bound is on, and it is
+    // [kZeroLength] rather than zero because that is where the geometry
+    // actually stops meaning anything: [arcToCubics] returns no segments at
+    // all below it, so a round cap or join would silently collapse from four
+    // segments to none while the plan still expected four. Rejecting the
+    // width is what makes this class's width-invariance claim complete —
+    // that early return is the last branch downstream of here whose segment
+    // count depends on the width, and no width that reaches it can now get
+    // past this line.
+    if (!width.isFinite || width / 2 <= kZeroLength) {
+      throw ArgumentError.value(
+        width,
+        'width',
+        'A stroke width must be finite, and wide enough for its radius to '
+            'exceed $kZeroLength',
+      );
+    }
+
     // [stroke] with its width replaced: joins and caps read cap, join and
     // miterLimit from this, and the radius that scales them follows from
     // [width] rather than the width the plan was made at.
@@ -55,9 +93,8 @@ class StrokePlan {
       miterLimit: stroke.miterLimit,
     );
 
-    // Every branch a joiner or capper takes was made width-invariant (a
-    // tangent test, or a ratio against the radius — see StrokeJoiner's own
-    // comments for the two places that took a real fix to get there), so
+    // Every branch a joiner or capper takes is a test on the source tangents,
+    // which do not depend on the width (see this class's doc comment), so
     // building fresh ones for [target] reproduces the same structure the
     // plan was made with, just scaled to the new radius.
     final joiner = StrokeJoiner(target);

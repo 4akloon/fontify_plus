@@ -20,7 +20,7 @@ void main() {
     // Widget tests default to Ahem (tofu blocks). Load Roboto from the SDK
     // and the generated icon font for a readable pub.dev screenshot.
     await _loadFileFont('Roboto', _robotoPath());
-    await _loadAssetFont(MyIcons.iconFontFamily, 'fonts/my_icons.otf');
+    await _loadAssetFont(MyIcons.fontFamily, 'fonts/my_icons.otf');
   });
 
   testWidgets('write example gallery screenshot', (tester) async {

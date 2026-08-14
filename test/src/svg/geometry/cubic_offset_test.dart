@@ -162,6 +162,80 @@ void main() {
       expect(offset, isNotEmpty, reason: 'the contour still has to close');
     });
 
+    test('does not chord a whole scallop because one end collapsed', () {
+      // Same alien-02 wave. Only the last ~12% has distance*curvature ≥ 0.95;
+      // the rest is a gentle outer wall. Treating any collapse as "the whole
+      // cubic is degenerate" replaced the wave with one 3.7-unit chord —
+      // triangular lobes at wght=3, even after looping handles were rejected.
+      final scallop = Cubic(
+        Vector2(12.0332, 21.9946),
+        Vector2(13.3719, 21.8831),
+        Vector2(14.4022, 20.2769),
+        Vector2(15.4258, 20.2769),
+      );
+
+      const distance = 1.5;
+      final offset = const CubicOffsetter(
+        distance: distance,
+        tolerance: tolerance,
+      ).offset(scallop);
+
+      expect(offset.length, greaterThan(1));
+
+      final target =
+          scallop.pointAt(0.35) +
+          leftNormal(scallop.tangentAt(0.35)) * distance;
+      var nearest = double.infinity;
+      for (final piece in offset) {
+        for (var j = 0; j <= 20; j++) {
+          final d = piece.pointAt(j / 20).distanceTo(target);
+          if (d < nearest) {
+            nearest = d;
+          }
+        }
+      }
+
+      expect(
+        nearest,
+        lessThanOrEqualTo(tolerance),
+        reason: 'the uncollapsed half must still track the true offset',
+      );
+    });
+
+    test('does not emit looping handles on a collapsed scallop', () {
+      // Bottom-right wave of Hugeicons alien-02. Offsetting this at radius
+      // 1.5 produced a cubic whose handles sat on opposite sides of a 3.7
+      // unit chord (x=23 and x=7) — the overlapping needles at wght=3.
+      final scallop = Cubic(
+        Vector2(12.0332, 21.9946),
+        Vector2(13.3719, 21.8831),
+        Vector2(14.4022, 20.2769),
+        Vector2(15.4258, 20.2769),
+      );
+
+      for (final distance in [1.5, -1.5]) {
+        final pieces = CubicOffsetter(
+          distance: distance,
+          tolerance: tolerance,
+        ).offset(scallop);
+
+        for (final piece in pieces) {
+          final chord = piece.p0.distanceTo(piece.p3);
+
+          expect(
+            piece.p0.distanceTo(piece.p1),
+            lessThanOrEqualTo(chord * 1.5 + 1e-6),
+            reason: 'start handle must not loop past the chord',
+          );
+          expect(
+            piece.p3.distanceTo(piece.p2),
+            lessThanOrEqualTo(chord * 1.5 + 1e-6),
+            reason: 'end handle must not loop past the chord',
+          );
+        }
+      }
+    });
+
     test('still offsets the outer side of a tight turn accurately', () {
       final tight = Cubic(
         Vector2(0, 0),

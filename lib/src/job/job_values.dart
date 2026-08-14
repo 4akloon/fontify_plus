@@ -25,6 +25,9 @@ extension JobValueReaders on Map<JobField, Object?> {
   /// The string at [field], or null when the config does not set it.
   String? readString(JobField field) => _read<String>(field, 'a string');
 
+  /// The number at [field], or null when the config does not set it.
+  double? readDouble(JobField field) => _read<double>(field, 'a number');
+
   /// The [StrokeWidthRange] at [field], or null when the config does not set
   /// it.
   StrokeWidthRange? readStrokeWidthRange(JobField field) =>
@@ -148,6 +151,12 @@ Object? _coerceField(JobField field, Object? value) {
       return value;
     case JobField.strokeWidthRange:
       return _coerceStrokeWidthRange(field, value);
+    case JobField.defaultStrokeWidth:
+      // A single stroke width, accepted from exactly the same forms as one
+      // end of the range — a YAML number or a CLI string — and rejected for
+      // the same non-finite values, so the two keys cannot disagree about
+      // what counts as a width.
+      return _coerceStrokeWidthEndpoint(field, value);
   }
 }
 
@@ -206,7 +215,10 @@ double _coerceStrokeWidthEndpoint(JobField field, Object? raw) {
 
   if (value == null) {
     throw FontifyException(
-      "'${configKey(field)}' values must be numbers, got \"$raw\".",
+      // Singular: this reports the one value that failed, whether it is the
+      // whole of 'default_stroke_width' or one end of a range where the
+      // other end parsed fine.
+      "'${configKey(field)}' must be a number, got \"$raw\".",
     );
   }
 
@@ -218,7 +230,7 @@ double _coerceStrokeWidthEndpoint(JobField field, Object? raw) {
   // one surfacing later, mid-font-generation.
   if (!value.isFinite) {
     throw FontifyException(
-      "'${configKey(field)}' values must be finite numbers, got $value.",
+      "'${configKey(field)}' must be a finite number, got $value.",
     );
   }
 
@@ -274,6 +286,34 @@ FontJob resolveFontJob({
     }
   }
 
+  final defaultStrokeWidth = merged.readDouble(JobField.defaultStrokeWidth);
+
+  if (defaultStrokeWidth != null) {
+    // svgToOtf rejects both of these too, but only by its own parameter
+    // names. Checking here lets the message name the keys the user wrote,
+    // and fails the whole run at config time rather than after the first
+    // font set has already been written.
+    if (strokeWidthRange == null) {
+      throw const FontifyException(
+        "'default_stroke_width' names a width on the stroke width axis, but "
+        "without 'stroke_width_range' there is no axis to put it on.",
+      );
+    }
+
+    // Negated conjunction rather than two comparisons, so a NaN width — which
+    // loses every ordering test — falls into the error instead of out of it.
+    if (!(strokeWidthRange.min < defaultStrokeWidth &&
+        defaultStrokeWidth < strokeWidthRange.max)) {
+      throw FontifyException(
+        "'default_stroke_width' must lie strictly between the ends of "
+        "'stroke_width_range': outside them the font would default to a "
+        'width no master was drawn at, and at either end it would just '
+        'duplicate that end; got $defaultStrokeWidth for the range '
+        '[${strokeWidthRange.min}, ${strokeWidthRange.max}].',
+      );
+    }
+  }
+
   return FontJob(
     name: name,
     inputSvgDir: merged.requireString(JobField.inputSvgDir),
@@ -290,11 +330,10 @@ FontJob resolveFontJob({
         merged.readBool(JobField.normalize) ??
         kJobBuiltInDefaults.requireBool(JobField.normalize),
     outlineStrokes: outlineStrokes,
-    preview:
-        merged.readBool(JobField.preview) ??
-        kJobBuiltInDefaults.requireBool(JobField.preview),
+    preview: merged.readBool(JobField.preview),
     useOpenType: useOpenType,
     strokeWidthRange: strokeWidthRange,
+    defaultStrokeWidth: defaultStrokeWidth,
   );
 }
 

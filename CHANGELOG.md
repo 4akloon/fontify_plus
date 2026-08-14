@@ -1,26 +1,47 @@
 # Changelog
 
+## Unreleased
+
 ## 0.6.0
+
+* Mixed-width SVGs under `stroke_width_range` produce one warning listing
+  every file, not one warning per file. Widths that differ only by float
+  noise are treated as the same.
+* Generated class constants are `fontFamily` / `fontPackage` (was
+  `iconFontFamily` / `iconFontPackage`).
 
 * Variable stroke width: `stroke_width_range` / `--stroke-width-range` /
   `strokeWidthRange` emits a CFF2 font whose `wght` axis is the SVG stroke
-  width (e.g. `Icon(..., weight: 1.33)`). See `doc/variable_stroke.md`.
-* Smaller outlined fonts — less subdivision on near-straight edges and exact
-  90° round joins.
+  width (e.g. `Icon(..., weight: 1.33)`). Optional `default_stroke_width` /
+  `--default-stroke-width` / `defaultStrokeWidth` moves the default off the
+  range maximum to a width strictly inside it. Omitting it leaves output
+  **byte-identical** to the range-only path. See `doc/variable_stroke.md`.
+* **Fix icon codepoints depending on directory listing order.** Icons are
+  now sorted by name before charcodes are assigned. **If your icons were
+  numbered on a filesystem that did not return them alphabetically,
+  regenerating will renumber them once**; regenerate the font and its class
+  together.
+* Fix stroke outlining: joiners follow source tangents (was
+  `IncompatibleMastersException` on ~1/5 of chained-cubic sets like
+  Hugeicons); fill holes stay empty; collapsed inner walls and looping
+  handles at the width maximum no longer distort. Smaller outlined fonts
+  (less subdivision, exact 90° round joins). Non-finite stroke widths throw
+  `ArgumentError`.
 * IDE SVG previews in generated `IconData` dartdoc (`--[no-]preview` /
-  YAML `preview:`, default on).
-* CLI `--watch` (debounced SVG regen + config reload); negatable
-  `--[no-]recursive` / `--[no-]verbose`; empty SVG dirs fail; recursive icon
-  names use the path relative to the input dir.
-* Reuse `head` created/modified when rewriting an existing font; otherwise a
-  fixed default timestamp (no wall clock).
-* Docs: README fixes; example gallery screenshot.
-* **Breaking for `src/` importers:** many table constructors take named
-  parameters; `OS2Table` uses nested version groups; `.glyf` / `.loca` /
-  `.cff` / `.cff2` / `.fvar` / `.stat` are nullable; `tableMap` is read-only.
-  Static encoded output without a stroke range stays byte-identical aside from
-  the size wins above.
-* Known limits: no fvar/STAT read-back yet (#12); OS/2 v2/v3 truncation (#13).
+  YAML `preview:`, default on): minified markdown images, auto-dropped with
+  a warning over 2 MiB — explicit `--preview` forces them.
+* CLI `--watch`; negatable `--[no-]recursive` / `--[no-]verbose`; empty SVG
+  dirs fail; recursive icon names use the path relative to the input dir.
+* Reuse `head` timestamps when rewriting a font; otherwise a fixed default
+  (no wall clock).
+* **Breaking for `src/` importers:** named table constructors; nested
+  `OS2Table` version groups; `.glyf` / `.loca` / `.cff` / `.cff2` / `.fvar`
+  / `.stat` nullable; `tableMap` read-only. Static output without a stroke
+  range stays byte-identical aside from the size wins above.
+* SDK floor is Dart 3.11 (`xml` 7).
+* Known limits: no fvar/STAT read-back yet (#12); OS/2 v2/v3 truncation
+  (#13); interior-default metrics can overflow at the axis maximum
+  (documented, not fixed).
 
 ## 0.5.2
 

@@ -19,6 +19,33 @@ const _kSmoothJunctionCosine = 0.9998;
 /// it is abandoned.
 const _kMaxInnerCrossingRadii = 4;
 
+/// How far from the corner its two offset edges cross, in stroke radii.
+///
+/// Both the miter tip and the inner crossing sit at `radius / sin(theta / 2)`
+/// from the vertex, where `theta` is the corner's interior angle, so the
+/// ratio to the radius depends on the turn alone and the radius cancels
+/// exactly. Measuring it from [lineIntersection]'s output instead — the way
+/// both callers below used to — puts the radius back in through the back
+/// door: [from] and [to] are float32 offset points whose rounding is set by
+/// the vertex's coordinate magnitude rather than by the radius, so the
+/// measured ratio drifts with width. At one fixed 28° corner around
+/// (19, 12) it ranges over 1.0306132994 to 1.0306140083 across radii
+/// 0.5-1.0. A corner sitting that close to [StrokeProperties.miterLimit] or
+/// to [_kMaxInnerCrossingRadii] then takes one branch at one master's width
+/// and the other branch at the next, which changes the segment count and
+/// leaves the two masters un-interpolatable.
+double _crossingRadii(Vector2 incoming, Vector2 outgoing) {
+  // Clamped because a float32 dot product can leave [-1, 1] by an ulp.
+  // Below -1 the square root would take a negative argument, and the
+  // resulting NaN compares false against every threshold, quietly keeping
+  // the degenerate crossing both thresholds exist to reject. At exactly -1 —
+  // a full reversal — this is infinity, which both thresholds reject, as
+  // they should.
+  final dot = incoming.dot(outgoing).clamp(-1.0, 1.0);
+
+  return math.sqrt(2 / (1 + dot));
+}
+
 /// Bridges the gap between two offset segments meeting at a corner.
 ///
 /// The two sides of a corner behave differently. On the outer side the offset
@@ -40,15 +67,29 @@ class StrokeJoiner {
     required Vector2 incoming,
     required Vector2 outgoing,
   }) {
-    // The true gap between from and to scales linearly with the radius — it
-    // is radius * (leftNormal(incoming) - leftNormal(outgoing)) — so a fixed
-    // absolute threshold here is really a width-dependent angle threshold: at
-    // a large enough radius it stops catching corners it caught at a small
-    // one. Scaling the bound by radius squared, to match the squared
-    // distance on the left, keeps the equivalent angle threshold the same at
-    // every width.
-    if (from.distanceToSquared(to) <=
-        kPointEpsilon * stroke.radius * stroke.radius) {
+    // The gap between from and to is radius * (leftNormal(incoming) -
+    // leftNormal(outgoing)), and leftNormal is a rotation, so dividing the
+    // radius out of both sides of the old test leaves exactly this: the same
+    // inequality with the radius cancelled rather than squared into the
+    // bound. Cancelling it is what makes the branch width-invariant;
+    // squaring it into the bound only appeared to. Measuring the gap
+    // directly cannot cancel anything, because from and to are float32
+    // offset points and subtracting two of them at a vertex around (16, 10)
+    // loses most of the significance — the ulp there is about 1.9e-6 against
+    // a true gap of about 2.5e-5 — leaving noise set by the vertex's
+    // magnitude, not by the radius. The bound then scales as radius squared
+    // while the measured gap does not: between widths 1.45 and 1.55 the
+    // bound grows 1.143x and the measured gap squared grows 1.250x, so the
+    // two cross and one master bridges a corner the other drops.
+    //
+    // [kPointEpsilon] is a distance bounding a squared one here, which is the
+    // same comparison the old test made — it read `gap squared <=
+    // kPointEpsilon * radius squared` — carried over unchanged rather than
+    // retuned. Squaring it would move the threshold, so what this really
+    // asks is whether the turn is under sqrt(kPointEpsilon), 3.16e-5 radians
+    // or 0.0018 degrees. Well inside the smooth-junction test below, which is
+    // about a degree, so the two stay ordered.
+    if (incoming.distanceToSquared(outgoing) <= kPointEpsilon) {
       return const [];
     }
 
@@ -63,11 +104,10 @@ class StrokeJoiner {
     // Offsetting to the left makes a right turn the outer side.
     return cross < 0
         ? _outer(vertex, from, to, incoming, outgoing)
-        : _inner(vertex, from, to, incoming, outgoing);
+        : _inner(from, to, incoming, outgoing);
   }
 
   List<Cubic> _inner(
-    Vector2 vertex,
     Vector2 from,
     Vector2 to,
     Vector2 incoming,
@@ -78,7 +118,7 @@ class StrokeJoiner {
     // A very sharp inner corner puts the crossing far from the path, where
     // using it would distort more than the overlap it removes.
     if (crossing == null ||
-        crossing.distanceTo(vertex) > stroke.radius * _kMaxInnerCrossingRadii) {
+        _crossingRadii(incoming, outgoing) > _kMaxInnerCrossingRadii) {
       return [Cubic.line(from, to)];
     }
 
@@ -123,9 +163,12 @@ class StrokeJoiner {
         final tip = lineIntersection(from, incoming, to, outgoing);
 
         // stroke-miterlimit is the ratio of miter length to stroke width; past
-        // it SVG requires falling back to a bevel.
+        // it SVG requires falling back to a bevel. The ratio comes from the
+        // tangents rather than from tip's own distance so that both masters
+        // fall back at the same corners — see [_crossingRadii]. tip is still
+        // where the miter is drawn to; only the decision moved.
         if (tip == null ||
-            tip.distanceTo(vertex) / stroke.radius > stroke.miterLimit) {
+            _crossingRadii(incoming, outgoing) > stroke.miterLimit) {
           return [Cubic.line(from, to)];
         }
 

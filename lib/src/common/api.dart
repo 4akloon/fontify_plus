@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import '../job/fontify_exception.dart';
 import '../otf.dart';
+import '../svg/svg_preview.dart';
 import '../utils/flutter_class_gen.dart';
 import '../utils/logger.dart';
 import 'generic_glyph.dart';
@@ -27,8 +26,8 @@ class SvgToOtfResult {
 /// * If [outlineStrokes] is set to true, stroked paths are replaced by the
 /// filled region their stroke covers. Defaults to true — font glyphs are
 /// fill-only, so a stroked icon is otherwise invisible.
-/// * If [preview] is set to true, each glyph stores a base64-encoded copy of
-/// its input SVG for dartdoc previews in the generated `IconData` class.
+/// * If [preview] is set to true, each glyph stores a minified copy of its
+/// input SVG for dartdoc previews in the generated `IconData` class.
 /// Defaults to true.
 /// NOTE: Paint attributes other than stroke geometry (such as "fill" colour)
 /// are ignored — only the shape's outline is used.
@@ -51,8 +50,10 @@ class SvgToOtfResult {
 /// axis is the icon's stroke width instead of one fixed width. Its `min`
 /// and `max` are literal stroke widths in the SVG's own units — the same
 /// units as its authored `stroke-width` — and [StrokeWidthRange.max] is the
-/// font's default instance, the one every metric is computed from. Each
-/// icon is built twice, once per end of the range, via [GlyphMasterBuilder].
+/// font's default instance, the one every metric is computed from, unless
+/// [defaultStrokeWidth] names another width. Each icon is built twice, once
+/// per end of the range, via [GlyphMasterBuilder] — three times when
+/// [defaultStrokeWidth] is also given.
 /// Requires stroke outlining and OpenType: passing `outlineStrokes: false`
 /// alongside it throws, because a fill does not depend on stroke width and
 /// there would be nothing left to vary; passing `useOpenType: false`
@@ -60,6 +61,20 @@ class SvgToOtfResult {
 /// `gvar`, which this package does not write. Omitted, the output is
 /// unchanged from a font with no `strokeWidthRange` at all — down to the
 /// byte.
+/// * [defaultStrokeWidth] moves the axis's default off
+/// [StrokeWidthRange.max] to a width strictly inside the range, so that a
+/// font picker opens on that width. `STAT` gains a third axis-value record
+/// for it, but that record shares its name with the two endpoints — none of
+/// the three widths this axis records has a distinguishing name of its own.
+/// Requires [strokeWidthRange] — a width names a point *on* an axis, and
+/// with no axis it would simply be dropped — and must not equal either end:
+/// at an end it would describe a width the font already has, paying for a whole
+/// extra variation region and telling a font picker two names for one
+/// instance. Each icon is then built three times rather than twice, and
+/// [SvgToOtfResult.glyphList] holds the *interior* drawing, since that is
+/// the default instance every metric is computed from. Omitted, the default
+/// stays at [StrokeWidthRange.max] and the output is byte-identical to a
+/// build that never mentioned this parameter.
 ///
 /// Returns an instance of [SvgToOtfResult] class containing glyphs and a font.
 SvgToOtfResult svgToOtf({
@@ -72,6 +87,7 @@ SvgToOtfResult svgToOtf({
   DateTime? created,
   DateTime? modified,
   StrokeWidthRange? strokeWidthRange,
+  double? defaultStrokeWidth,
 }) {
   if (strokeWidthRange != null) {
     if (outlineStrokes == false) {
@@ -89,33 +105,94 @@ SvgToOtfResult svgToOtf({
     }
   }
 
+  // Checked here, and again in `OpenTypeFontBuilder`, on purpose. That
+  // constructor is a public boundary of its own and raises `ArgumentError`,
+  // which is the right vocabulary for a programming error against a builder;
+  // this function's own vocabulary is `FontifyException`, the one its two
+  // checks above already speak and the one the CLI knows how to report. A
+  // caller who misconfigures the axis here should be told so in the same
+  // terms as a caller who misconfigures `outlineStrokes`, not by an
+  // `ArgumentError` surfacing from inside a class they never named.
+  if (defaultStrokeWidth != null) {
+    if (strokeWidthRange == null) {
+      throw FontifyException(
+        'defaultStrokeWidth names a width on the stroke-width axis, but '
+        'without strokeWidthRange there is no axis to put it on and the '
+        'value would be silently dropped; got defaultStrokeWidth: '
+        '$defaultStrokeWidth.',
+      );
+    }
+
+    // A negated conjunction rather than two comparisons, so that a NaN width
+    // — which loses every ordering test it is given — falls into the error
+    // rather than out of it.
+    if (!(strokeWidthRange.min < defaultStrokeWidth &&
+        defaultStrokeWidth < strokeWidthRange.max)) {
+      throw FontifyException(
+        'defaultStrokeWidth must lie strictly between the ends of '
+        'strokeWidthRange: outside them the font would default to a width '
+        'no master was drawn at, and at either end the third master would '
+        'duplicate the endpoint it sits on; got defaultStrokeWidth: '
+        '$defaultStrokeWidth, strokeWidthRange: $strokeWidthRange.',
+      );
+    }
+  }
+
   normalize ??= true;
   final embedPreview = preview ?? true;
 
   // Both branches build the same shape of [glyphList]; only the variable one
-  // also produces [minGlyphList]. Keeping the no-range branch textually
-  // identical to the code before this parameter existed is what keeps its
-  // output byte-identical.
+  // also produces [minGlyphList] and [maxGlyphList]. Keeping the no-range
+  // branch textually identical to the code before these parameters existed is
+  // what keeps its output byte-identical.
   final List<GenericGlyph> glyphList;
   final List<GenericGlyph>? minGlyphList;
+  final List<GenericGlyph>? maxGlyphList;
 
   if (strokeWidthRange != null) {
-    final masters = [
-      for (final e in svgMap.entries)
-        GlyphMasterBuilder(strokeWidthRange).fromSvg(e.key, e.value),
-    ];
+    final mixed = <String>[];
+    final masters = <GlyphMasters>[];
 
-    // `glyphList` — the default master — carries the *maximum* width: it is
-    // what `generateFlutterClass` reads charcodes from, and
-    // `createFromGlyphs` assigns those charcodes to this list, not to
-    // `minGlyphList`.
-    glyphList = [for (final m in masters) m.max];
+    for (final e in svgMap.entries) {
+      final built = GlyphMasterBuilder(
+        strokeWidthRange,
+        defaultWidth: defaultStrokeWidth,
+      ).fromSvg(e.key, e.value);
+      masters.add(built);
+
+      if (built.mixedStrokeWidths.isNotEmpty) {
+        mixed.add('${e.key} (${built.mixedStrokeWidths.join(', ')})');
+      }
+    }
+
+    if (mixed.isNotEmpty) {
+      logger.w(
+        '${mixed.length} ${mixed.length == 1 ? 'icon mixes' : 'icons mix'} '
+        'stroke widths; the stroke_width_range axis applies one width to all '
+        'strokes in each, so those differences are lost: ${mixed.join('; ')}.',
+      );
+    }
+
+    // `glyphList` is the *default* master whichever width that turns out to
+    // be: the interior drawing when one was asked for, the maximum otherwise.
+    // It is the list `createFromGlyphs` assigns charcodes to — never
+    // `minGlyphList` or `maxGlyphList` — and therefore the list
+    // `generateFlutterClass` can read them back from, so the preview blobs
+    // below belong on it too.
+    glyphList = [for (final m in masters) m.atDefault ?? m.max];
     minGlyphList = [for (final m in masters) m.min];
+
+    // Needed exactly when the default moved inwards: the axis then has a
+    // maximum with no master of its own, and `OpenTypeFontBuilder` rejects
+    // either half of that pair without the other.
+    maxGlyphList = defaultStrokeWidth == null
+        ? null
+        : [for (final m in masters) m.max];
 
     if (embedPreview) {
       var i = 0;
       for (final e in svgMap.entries) {
-        glyphList[i].metadata.preview = base64Encode(utf8.encode(e.value));
+        glyphList[i].metadata.preview = minifySvgPreview(e.value);
         i++;
       }
     }
@@ -130,6 +207,7 @@ SvgToOtfResult svgToOtf({
         ),
     ];
     minGlyphList = null;
+    maxGlyphList = null;
   }
 
   if (!normalize) {
@@ -155,7 +233,9 @@ SvgToOtfResult svgToOtf({
     created: created,
     modified: modified,
     minGlyphList: minGlyphList,
+    maxGlyphList: maxGlyphList,
     strokeWidthRange: strokeWidthRange,
+    defaultStrokeWidth: defaultStrokeWidth,
   );
 
   return SvgToOtfResult._(glyphList, font);
@@ -171,6 +251,18 @@ SvgToOtfResult svgToOtf({
 /// * [fontFileName] is font file's name. Used in generated docs for class.
 /// * [indent] is a number of spaces in leading indentation for class' members. Defaults to 2.
 /// * [strokeWidthRange], when given, documents the variable `wght` axis in the class comment.
+/// * [defaultStrokeWidth], when given alongside [strokeWidthRange], names the
+/// width the axis opens at in that same comment. Pass the same value passed
+/// to [svgToOtf]: the generated class is the only place a reader of the app's
+/// source can learn what `Icon(MyIcons.home)` with no `weight` renders, and
+/// the range alone no longer answers that once the default moved inwards.
+/// Ignored without [strokeWidthRange] — this function never sees the font, so
+/// unlike [svgToOtf] it cannot tell a mistake from a caller who simply
+/// documents no axis, and inventing an axis line for a static class would be
+/// the worse failure.
+/// * [preview] — when false, dartdoc previews are omitted; when true, always
+/// emitted; when null (default), emitted unless the generated file would
+/// exceed 2 MiB, in which case they are dropped with a warning.
 ///
 /// Returns content of a class file.
 String generateFlutterClass({
@@ -181,6 +273,8 @@ String generateFlutterClass({
   String? package,
   int? indent,
   StrokeWidthRange? strokeWidthRange,
+  double? defaultStrokeWidth,
+  bool? preview,
 }) {
   final generator = FlutterClassGenerator(
     glyphList,
@@ -190,6 +284,8 @@ String generateFlutterClass({
     familyName: familyName,
     package: package,
     strokeWidthRange: strokeWidthRange,
+    defaultStrokeWidth: defaultStrokeWidth,
+    preview: preview,
   );
 
   return generator.generate();

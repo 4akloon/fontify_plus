@@ -1,10 +1,61 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:fontify_plus/src/common/stroke_width_range.dart';
 import 'package:fontify_plus/src/job/font_job.dart';
 import 'package:fontify_plus/src/job/fontify_exception.dart';
 import 'package:fontify_plus/src/job/run_font_job.dart';
 import 'package:fontify_plus/src/otf/io.dart';
 import 'package:test/test.dart';
+
+/// The `wght` axis as the written font file actually encodes it.
+typedef WghtAxis = ({double min, double defaultValue, double max});
+
+/// Reads the `wght` axis straight out of a written font's `fvar` table.
+///
+/// [readFromFile] deliberately skips `fvar` (#12), and `FontJobResult` hands
+/// back the in-memory table the builder was given — neither one proves what
+/// landed on disk. Parsing the bytes is what makes this a test of the whole
+/// hand-off, from [FontJob] through `svgToOtf` to the file a font tool would
+/// open.
+WghtAxis _wghtAxisOf(String fontPath) {
+  final bytes = File(fontPath).readAsBytesSync();
+  final data = ByteData.sublistView(bytes);
+
+  // sfnt header: sfntVersion (4), numTables (2), then searchRange /
+  // entrySelector / rangeShift (2 each) before the table records at 12.
+  final numTables = data.getUint16(4);
+  int? fvarOffset;
+  for (var i = 0; i < numTables; i++) {
+    final record = 12 + i * 16;
+    final tag = String.fromCharCodes(bytes.sublist(record, record + 4));
+    if (tag == 'fvar') {
+      fvarOffset = data.getUint32(record + 8);
+      break;
+    }
+  }
+
+  if (fvarOffset == null) {
+    fail('The font at $fontPath has no fvar table, so it is not variable.');
+  }
+
+  // fvar: a 16-byte header, then one 20-byte axis record whose values are
+  // 16.16 fixed point after the 4-byte tag.
+  final axis = fvarOffset + data.getUint16(fvarOffset + 4);
+  double fixed(int at) => data.getInt32(at) / 65536;
+
+  expect(
+    String.fromCharCodes(bytes.sublist(axis, axis + 4)),
+    'wght',
+    reason: 'the one axis this package writes is the stroke width axis',
+  );
+
+  return (
+    min: fixed(axis + 4),
+    defaultValue: fixed(axis + 8),
+    max: fixed(axis + 12),
+  );
+}
 
 void main() {
   late Directory tempDir;
@@ -34,6 +85,50 @@ void main() {
     expect(File(fontPath).lengthSync(), greaterThan(0));
     expect(result.classSource, contains('class TestIcons'));
     expect(File(classPath).readAsStringSync(), contains('class TestIcons'));
+  });
+
+  test('codepoints follow the icon names, not the directory listing', () {
+    // Charcodes are handed out by position, so whatever order the SVGs reach
+    // the builder in *is* the numbering. Taking that order from
+    // `Directory.listSync` makes it a property of the filesystem: this
+    // machine returns these five names as mango, zebra, banana, apple,
+    // cherry — neither alphabetical nor the order they were created in — and
+    // a CI runner on ext4 produced two different orders on two runs of the
+    // same commit. The font built by the second run renders a different
+    // glyph for every IconData constant the first one generated, silently,
+    // because the codepoints all still exist and merely mean something else.
+    //
+    // Names chosen so that creation order, alphabetical order and this
+    // filesystem's listing order are three different orders; asserting
+    // alphabetical therefore pins the sort rather than an accident.
+    final svgDir = Directory('${tempDir.path}/icons')..createSync();
+    const circle =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+        '<circle cx="12" cy="12" r="8" fill="#000"/></svg>';
+
+    for (final name in ['zebra', 'mango', 'apple', 'banana', 'cherry']) {
+      File('${svgDir.path}/$name.svg').writeAsStringSync(circle);
+    }
+
+    final result = runFontJob(
+      FontJob(
+        inputSvgDir: svgDir.path,
+        outputFontFile: '${tempDir.path}/fruit.otf',
+      ),
+    );
+
+    expect(
+      [for (final glyph in result.otf.glyphList) glyph.metadata.name],
+      ['apple', 'banana', 'cherry', 'mango', 'zebra'],
+    );
+
+    // The numbering itself, not just the order: an icon's codepoint is what
+    // a generated IconData carries, and the whole point is that rebuilding
+    // hands the same name the same number.
+    expect(
+      [for (final glyph in result.otf.glyphList) glyph.metadata.charCode],
+      [0xe000, 0xe001, 0xe002, 0xe003, 0xe004],
+    );
   });
 
   test('runFontJob throws when the SVG directory has no .svg files', () {
@@ -100,6 +195,92 @@ void main() {
     );
 
     expect(result.otf.glyphList.single.metadata.name, 'arrow');
+  });
+
+  // The two lines these cover - `strokeWidthRange:` and
+  // `defaultStrokeWidth:` on runFontJob's svgToOtf call - are the seam
+  // between a resolved job and font generation. Everything on either side of
+  // them is tested elsewhere; drop either line and the CLI silently emits a
+  // font with a narrower axis, or none at all, with nothing else to notice.
+  test('runFontJob writes a wght axis spanning the job range', () {
+    final fontPath = '${tempDir.path}/ranged.otf';
+
+    runFontJob(
+      FontJob(
+        inputSvgDir: 'example/svg',
+        outputFontFile: fontPath,
+        strokeWidthRange: StrokeWidthRange(1.33, 2),
+      ),
+    );
+
+    final axis = _wghtAxisOf(fontPath);
+    expect(axis.min, closeTo(1.33, 1e-4));
+    expect(axis.max, closeTo(2, 1e-4));
+    // With no defaultStrokeWidth the axis defaults to the range maximum.
+    expect(axis.defaultValue, closeTo(2, 1e-4));
+  });
+
+  test('runFontJob defaults the wght axis to the job default width', () {
+    final defaulted = '${tempDir.path}/defaulted.otf';
+    final undefaulted = '${tempDir.path}/undefaulted.otf';
+    const range = (min: 1.33, max: 2.0);
+
+    runFontJob(
+      FontJob(
+        inputSvgDir: 'example/svg',
+        outputFontFile: defaulted,
+        strokeWidthRange: StrokeWidthRange(range.min, range.max),
+        defaultStrokeWidth: 1.5,
+      ),
+    );
+    runFontJob(
+      FontJob(
+        inputSvgDir: 'example/svg',
+        outputFontFile: undefaulted,
+        strokeWidthRange: StrokeWidthRange(range.min, range.max),
+      ),
+    );
+
+    final axis = _wghtAxisOf(defaulted);
+    expect(axis.defaultValue, closeTo(1.5, 1e-4));
+    expect(axis.min, closeTo(range.min, 1e-4));
+    expect(axis.max, closeTo(range.max, 1e-4));
+
+    // The interior default is not just an fvar edit: it adds a third master
+    // and a second variation region, so the same job without it cannot
+    // produce the same file.
+    expect(
+      File(defaulted).readAsBytesSync(),
+      isNot(File(undefaulted).readAsBytesSync()),
+    );
+  });
+
+  // The `defaultStrokeWidth:` line on runFontJob's *generateFlutterClass*
+  // call, which is a second, separate hand-off from the svgToOtf one above.
+  // Drop it and the font still opens at the interior width while the class
+  // its users read keeps claiming the maximum — a silent contradiction no
+  // font-level assertion can see.
+  test('runFontJob names the job default width in the generated class', () {
+    final result = runFontJob(
+      FontJob(
+        inputSvgDir: 'example/svg',
+        outputFontFile: '${tempDir.path}/documented.otf',
+        outputClassFile: '${tempDir.path}/documented.dart',
+        className: 'Documented',
+        strokeWidthRange: StrokeWidthRange(1.33, 2),
+        defaultStrokeWidth: 1.5,
+      ),
+    );
+
+    final source = result.classSource!;
+    expect(source, contains('Variable stroke width: 1.33 … 2.0'));
+    expect(source, contains('default 1.5'));
+    // The written file, not just the returned string: the class the user
+    // compiles against is the one on disk.
+    expect(
+      File('${tempDir.path}/documented.dart').readAsStringSync(),
+      contains('default 1.5'),
+    );
   });
 
   test('runFontJob reuses head timestamps from an existing output font', () {

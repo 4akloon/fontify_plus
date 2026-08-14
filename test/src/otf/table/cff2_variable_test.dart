@@ -120,6 +120,19 @@ List<_DecodedOperator> _decodeOperators(Uint8List bytes) {
 bool _hasBlendOperator(Uint8List bytes) =>
     _decodeOperators(bytes).any((decoded) => decoded.byte == blend.b0);
 
+/// How many operands each `blend` in [bytes] runs with, in order.
+///
+/// A blend of `n` values across `k` regions takes `n * (k + 1) + 1` operands
+/// — `n` bases, `n * k` deltas, and the count `n`. That makes this the one
+/// number in the charstring that encodes `k`, which is why it is worth
+/// asserting separately from the region count the `vstore` advertises: the
+/// two are written by different code and a font is only coherent if they
+/// agree.
+List<int> _blendOperandCounts(Uint8List bytes) => [
+  for (final decoded in _decodeOperators(bytes))
+    if (decoded.byte == blend.b0) decoded.precedingOperandCount,
+];
+
 /// The highest argument-stack depth any operator in [bytes] runs with.
 int _maxOperandRun(Uint8List bytes) => _decodeOperators(bytes).fold(
   0,
@@ -248,15 +261,58 @@ void main() {
     );
 
     test(
-      'more than two masters is rejected — the store this builder attaches '
-      'only ever encodes one region',
+      'three masters attach a two-region store the reader agrees with',
       () {
+        // Three masters means two deltas behind every blended value, so the
+        // store has to advertise two regions. Reading the encoded table back
+        // is what proves the count the charstrings were built for and the
+        // count the store publishes are the same number.
         final varies = _triangle('M0 0 L13 0 L13 12 Z');
         final variesMore = _triangle('M0 0 L16 0 L16 14 Z');
 
+        final table = CFF2Table.create([
+          [_triangle(), varies, variesMore],
+        ]);
+        final bytes = ByteData(table.size);
+        table.encodeToBinary(bytes);
+
+        final decoded = CFF2Table.fromByteData(
+          bytes,
+          TableRecordEntry(
+            kCFF2Tag,
+            checkSum: 0,
+            offset: 0,
+            length: bytes.lengthInBytes,
+          ),
+        );
+        final regions = decoded.vstoreData!.store.variationRegionList.regions;
+
+        expect(regions.map((r) => r.peakCoord), [0xC000, 0x4000]);
+        expect(
+          decoded.vstoreData!.store.itemVariationDataList.single.regionIndexes,
+          [0, 1],
+        );
+        // Asserting the two sides separately would not catch them
+        // disagreeing. Every blend here carries one value, so with two
+        // regions it must run with 1 base + 2 deltas + the count = 4
+        // operands; a blender emitting one delta per value would leave 3
+        // here and still satisfy every assertion above.
+        expect(_blendOperandCounts(table.charStringsData.data.single), [4, 4]);
+      },
+    );
+
+    test(
+      'more than three masters is rejected — the store this builder attaches '
+      'encodes at most two regions',
+      () {
         expect(
           () => CFF2Table.create([
-            [_triangle(), varies, variesMore],
+            [
+              _triangle(),
+              _triangle('M0 0 L13 0 L13 12 Z'),
+              _triangle('M0 0 L16 0 L16 14 Z'),
+              _triangle('M0 0 L19 0 L19 17 Z'),
+            ],
           ]),
           throwsA(
             isA<ArgumentError>().having(

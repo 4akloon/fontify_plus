@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:fontify_plus/src/common/generic_glyph.dart';
@@ -6,6 +5,7 @@ import 'package:fontify_plus/src/common/outline.dart';
 import 'package:fontify_plus/src/otf/table/glyph/flag.dart';
 import 'package:fontify_plus/src/otf/table/glyph/header.dart';
 import 'package:fontify_plus/src/otf/table/glyph/simple.dart';
+import 'package:fontify_plus/src/svg/svg_preview.dart';
 import 'package:test/test.dart';
 
 /// A single triangular contour, all on-curve.
@@ -26,6 +26,37 @@ SimpleGlyph triangleGlyph() => SimpleGlyph(
   ],
   pointList: [const Point(0, 0), const Point(10, 0), const Point(10, 10)],
 );
+
+/// Nonzero winding of [glyph] at ([x], [y]), treating each contour as a
+/// polygon through its stored points. Good enough for a rectangular fixture
+/// whose inner-stroke sample sits far from the round joins.
+int windingAt(GenericGlyph glyph, double x, double y) {
+  var winding = 0;
+
+  for (final outline in glyph.outlines) {
+    final pts = outline.pointList;
+    if (pts.length < 3) {
+      continue;
+    }
+
+    for (var i = 0; i < pts.length; i++) {
+      final a = pts[i];
+      final b = pts[(i + 1) % pts.length];
+      if (a.y <= y) {
+        if (b.y > y && _cross(a, b, x, y) > 0) {
+          winding++;
+        }
+      } else if (b.y <= y && _cross(a, b, x, y) < 0) {
+        winding--;
+      }
+    }
+  }
+
+  return winding;
+}
+
+double _cross(Point<num> a, Point<num> b, double x, double y) =>
+    (b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x);
 
 void main() {
   group('GenericGlyph constructors', () {
@@ -155,6 +186,25 @@ void main() {
       expect(glyph.outlines.length, greaterThanOrEqualTo(3));
     });
 
+    test('fill plus stroke is solid under nonzero winding', () {
+      // Clockwise closed path (the usual SVG rect). Stroke radius 1: the
+      // inner wall sits at x=3, the fill edge at x=2. A point between them
+      // is in both the fill and the stroke ring. Nonzero must keep it inked;
+      // opposite fill/outer winding punches a white gap — unfold-more-down.
+      const svg =
+          '<svg viewBox="0 0 16 16">'
+          '<path d="M2 2H10V10H2Z" fill="#000" stroke="#000" '
+          'stroke-width="2"/></svg>';
+      final glyph = GenericGlyph.fromSvg('both', svg);
+
+      // SVG (2.5, 6) → font y-up (2.5, 10).
+      expect(
+        windingAt(glyph, 2.5, 10),
+        isNot(0),
+        reason: 'inner half of the stroke must stay inked',
+      );
+    });
+
     test('takes its bounds from the viewport', () {
       final glyph = GenericGlyph.fromSvg(
         'box',
@@ -176,12 +226,12 @@ void main() {
       expect(glyph.metadata.name, 'arrow_up');
     });
 
-    test('stores a base64 preview that decodes to the input SVG', () {
+    test('stores a minified preview of the input SVG', () {
       const svg =
           '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
           '<path d="M0 0h24v24H0z"/></svg>';
       final glyph = GenericGlyph.fromSvg('box', svg);
-      expect(utf8.decode(base64Decode(glyph.metadata.preview!)), svg);
+      expect(glyph.metadata.preview, minifySvgPreview(svg));
     });
 
     test('skips preview when preview is false', () {

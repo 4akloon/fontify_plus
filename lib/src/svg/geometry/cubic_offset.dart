@@ -62,8 +62,10 @@ class CubicOffsetter {
     // converge on. This is the normal case at a rounded corner narrower than
     // the stroke, not an error: the inner wall folds over itself and the
     // nonzero rule absorbs the overlap, so take the best approximation and
-    // stop.
-    if (_isDegenerate(curve)) {
+    // stop. Only stop when the *whole* piece has collapsed — a wave that
+    // tightens at one end (alien-02's scallops) must still split, or the
+    // healthy half becomes one chord and the outline goes triangular.
+    if (_isFullyCollapsed(curve)) {
       out.add(OffsetPiece(curve, chord: candidate == null));
       return;
     }
@@ -81,16 +83,16 @@ class CubicOffsetter {
     _plan(right, out, depth + 1);
   }
 
-  /// Whether offsetting [curve] collapses somewhere along it.
-  bool _isDegenerate(Cubic curve) {
+  /// Whether offsetting [curve] collapses along its entire length.
+  bool _isFullyCollapsed(Cubic curve) {
     for (var i = 0; i <= _curvatureSamples; i++) {
       final curvature = curve.curvatureAt(i / _curvatureSamples);
 
-      if (distance * curvature >= _degenerateCurvature) {
-        return true;
+      if (distance * curvature < _degenerateCurvature) {
+        return false;
       }
     }
 
-    return false;
+    return true;
   }
 }

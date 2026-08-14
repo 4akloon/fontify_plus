@@ -36,7 +36,10 @@ void main() {
     /// Longest side of each non-default glyph, in font units.
     List<num> longestSides(List<GenericGlyph> glyphList) => [
       for (final g in glyphList)
-        g.metrics.height > g.metrics.width ? g.metrics.height : g.metrics.width,
+        if (g.metrics.height > g.metrics.width)
+          g.metrics.height
+        else
+          g.metrics.width,
     ];
 
     test('Metrics, normalization is off', () {

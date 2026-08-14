@@ -71,8 +71,8 @@ class OpenTypeFont implements BinaryCodable {
   /// Generates new OpenType font.
   ///
   /// Mutates every [glyphList] glyph's metadata,
-  /// so that it contains newly generated charcode. [minGlyphList], when
-  /// given, is left alone.
+  /// so that it contains newly generated charcode. [minGlyphList] and
+  /// [maxGlyphList], when given, are left alone.
   ///
   /// * [glyphList] is a list of generic glyphs. Required.
   /// * [fontName] is a font name.
@@ -95,17 +95,30 @@ class OpenTypeFont implements BinaryCodable {
   /// pass the previous font's dates to keep bytes stable.
   /// * [minGlyphList] is the same glyphs as [glyphList], drawn at the
   /// minimum of [strokeWidthRange]. Supplying it makes the font *variable*:
-  /// the outlines move to a `CFF2` table carrying both masters, and `fvar`
+  /// the outlines move to a `CFF2` table carrying every master, and `fvar`
   /// and `STAT` declare a `wght` axis whose values are literal stroke
-  /// widths. [glyphList] stays the default master (the maximum width),
-  /// which is the instance `fvar` selects and the one every metric is
-  /// computed from. Both lists are indexed together and must have the same
-  /// length. Omitted for a static font.
+  /// widths. [glyphList] stays the default master — the instance `fvar`
+  /// selects and the one every metric is computed from. All the lists are
+  /// indexed together and must have the same length. Omitted for a static
+  /// font.
   /// * [strokeWidthRange] is the span that axis covers. It must be given
   /// exactly when [minGlyphList] is — a second master with no axis would be
   /// dropped, an axis with no second master would vary nothing — and it
   /// requires `useOpenType: true`, since a TrueType variable font would need
   /// `gvar`, which this package does not write.
+  /// * [defaultStrokeWidth] moves the axis's default off the range's maximum
+  /// to a width strictly inside it, so a font picker opens on that instance
+  /// and `STAT` names it. Requires [strokeWidthRange] and [maxGlyphList].
+  /// * [maxGlyphList] is the same glyphs drawn at the maximum of
+  /// [strokeWidthRange]. It is needed exactly when [defaultStrokeWidth] is
+  /// used, and useless without it, so the two must be given together:
+  /// [glyphList] then holds the interior default drawing instead of the
+  /// widest one, and the axis needs a master at each end to interpolate
+  /// towards — which is what makes the `CFF2` variation store two-region.
+  /// Supplying [defaultStrokeWidth] alone would leave one region, peaking at
+  /// the axis minimum and ending at the default, so every width above the
+  /// default would render identically to it while `fvar` and `STAT` still
+  /// advertised a maximum. Also requires [minGlyphList].
   ///
   /// Throws [ArgumentError] for any of those combinations.
   factory OpenTypeFont.createFromGlyphs({
@@ -120,7 +133,9 @@ class OpenTypeFont implements BinaryCodable {
     DateTime? created,
     DateTime? modified,
     List<GenericGlyph>? minGlyphList,
+    List<GenericGlyph>? maxGlyphList,
     StrokeWidthRange? strokeWidthRange,
+    double? defaultStrokeWidth,
   }) => OpenTypeFontBuilder(
     glyphList: glyphList,
     fontName: fontName,
@@ -133,7 +148,9 @@ class OpenTypeFont implements BinaryCodable {
     created: created,
     modified: modified,
     minGlyphList: minGlyphList,
+    maxGlyphList: maxGlyphList,
     strokeWidthRange: strokeWidthRange,
+    defaultStrokeWidth: defaultStrokeWidth,
   ).build();
 
   final OffsetTable offsetTable;

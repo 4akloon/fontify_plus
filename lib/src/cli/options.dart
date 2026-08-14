@@ -60,7 +60,10 @@ void defineOptions(ArgParser argParser) {
     )
     ..addFlag(
       kJobCliOptions[JobField.preview]!,
-      help: 'Embed SVG previews in generated IconData dartdoc.',
+      help:
+          'Embed SVG previews in generated IconData dartdoc. On by default, '
+          'but dropped with a warning when they would push the class file '
+          'over 2 MiB; pass --preview to keep them regardless of size.',
     )
     ..addFlag(
       kJobCliOptions[JobField.useOpenType]!,
@@ -74,8 +77,17 @@ void defineOptions(ArgParser argParser) {
       help:
           'Build a variable font whose wght axis is the stroke width, as '
           'MIN,MAX in the SVG\'s own units (for example 1.33,2). The maximum '
-          'is the default instance. Omit for a static font.',
+          'is the default instance unless --default-stroke-width names '
+          'another width. Omit for a static font.',
       valueHelp: 'min,max',
+    )
+    ..addOption(
+      kJobCliOptions[JobField.defaultStrokeWidth]!,
+      help:
+          'The stroke width the variable font opens at, instead of the '
+          'range maximum. Requires --stroke-width-range and must lie '
+          'strictly inside it (for example 1.5 within 1.33,2).',
+      valueHelp: 'width',
     )
     ..addSeparator('Other options:')
     ..addOption(

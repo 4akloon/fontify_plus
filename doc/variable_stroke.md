@@ -7,14 +7,16 @@ geometry the designer drew at stroke width 1.33.
 
 ## Configure the range
 
-Only **two** numbers are configured: the minimum and maximum stroke width.
-Every width between them is reproduced by interpolation between two masters
-built at those endpoints. Intermediate stops are not emitted and would not add
-reachable widths.
+Two numbers set the axis: the minimum and maximum stroke width. Every width
+between them is reproduced by interpolation between masters built at the
+configured widths — no other stop is emitted, and none would add a reachable
+width.
 
-The **maximum** is the default instance: `Icon` without `weight` draws the
-thickest width, matching `fvar`'s default and the metrics the font is built
-from.
+By default the **maximum** is the default instance: `Icon` without `weight`
+draws the thickest width, matching `fvar`'s default and the metrics the font
+is built from. A third number, `default_stroke_width`, moves that default to a
+width strictly inside the range; see
+[Default at an interior width](#default-at-an-interior-width) below.
 
 ### YAML
 
@@ -60,6 +62,84 @@ final source = generateFlutterClass(
 The generated class comment documents the axis when `strokeWidthRange` is
 passed to `generateFlutterClass` (or when the CLI/YAML path sets a range).
 
+## Default at an interior width
+
+Widest-by-default suits an icon set whose thickest drawing is the everyday
+one. When the everyday width sits in the middle of the range and the ends are
+the exceptional settings, name it explicitly:
+
+```yaml
+fontify_plus:
+  defaults:
+    stroke_width_range: [1.33, 2]
+    default_stroke_width: 1.5
+```
+
+```sh
+fontify_plus assets/svg/ fonts/icons.otf \
+  --stroke-width-range=1.33,2 \
+  --default-stroke-width=1.5
+```
+
+```dart
+final result = svgToOtf(
+  svgMap: {'home': await File('home.svg').readAsString()},
+  strokeWidthRange: StrokeWidthRange(1.33, 2),
+  defaultStrokeWidth: 1.5,
+);
+
+final source = generateFlutterClass(
+  glyphList: result.glyphList,
+  className: 'MyIcons',
+  familyName: result.font.familyName,
+  fontFileName: 'icons.otf',
+  strokeWidthRange: StrokeWidthRange(1.33, 2),
+  defaultStrokeWidth: 1.5,
+);
+```
+
+`Icon(MyIcons.home, size: 16)` then draws 1.5, a font picker opens on it, and
+the generated class comment names it (`default 1.5`) instead of leaving a
+reader to assume the maximum. Pass the same value to `generateFlutterClass`
+that you passed to `svgToOtf` — the CLI and YAML paths do this for you.
+
+**Validation.** `default_stroke_width` requires `stroke_width_range` (a width
+names a point *on* an axis; with no axis it would be silently dropped) and
+must lie **strictly between** the range's ends. Outside them the font would
+open at a width no master was drawn at; at either end the extra master would
+duplicate the endpoint it sits on, paying for a whole variation region and
+telling a font picker two names for one instance. Both mistakes are rejected
+before generation starts — by the CLI/YAML resolver, by `svgToOtf`, and again
+by `OpenTypeFontBuilder`.
+
+**What changes in the font.** Each icon is built three times rather than
+twice, and the axis gets a second variation region (min→default and
+default→max) instead of one. `fvar`'s `defaultValue` becomes the interior
+width, and `STAT` names **three** stops on the axis rather than two — though
+all three share the one axis name (`Stroke Width`); the interior default gets
+its own axis-value record, not a distinguishing name. (`fvar` named
+instances are still not written — see below.) On this package's
+four example icons, measured at `[1.33, 2]` with the default at 1.665 (the
+range's midpoint), the third master costs about **9%** more bytes whole-file
+and about **15%** more after `pyftsubset` than the same font with the default
+left at the maximum — 240 B either way, on files of 2.7 kB and 1.6 kB. Gated
+in `test/integration/variable_size_gate_test.dart`.
+
+**Metrics are computed from the default instance**, which is now an interior
+width rather than the widest one. The consequence is that ink at the *maximum*
+width bleeds outside the metrics the font advertises, on **both** sides:
+glyphs extend to the left of the origin and past their advance width, and the
+tallest ones exceed `head`'s `yMin`/`yMax` box. With a default at the maximum
+the overflow is one-sided (thinner strokes only ever pull ink inward). On the
+four example icons at `[1.33, 2]` with the default at the midpoint, every icon
+crosses its advance box horizontally at the maximum and two of the four dip
+below the font-wide `head.yMin` — single-digit font units at 1000 upem, so
+sub-pixel at icon sizes, but it is real clipping if your renderer trusts
+`head`. This is not a general bound: the overflow scales with how far the
+default sits from the maximum, so a default placed near the minimum of a wide
+range overflows by proportionally more. Leave the default at the maximum if
+you need the advertised box to contain every reachable width.
+
 ## Use in Flutter
 
 Register the font in `pubspec.yaml` as for any icon font, then:
@@ -75,7 +155,7 @@ For widgets that do not take `Icon.weight`, pass the same axis value through
 Text(
   String.fromCharCode(MyIcons.home.codePoint),
   style: TextStyle(
-    fontFamily: MyIcons.iconFontFamily,
+    fontFamily: MyIcons.fontFamily,
     fontSize: 16,
     fontVariations: [FontVariation('wght', 1.33)],
   ),
@@ -96,18 +176,29 @@ Pairing `stroke_width_range` with `outline_strokes: false` or `opentype: false`
 is rejected before generation starts.
 
 If one SVG file mixes several authored `stroke-width` values, the axis overrides
-them all with a single range and a warning names the file and every width found.
+them all with a single range. One warning lists every mixed-width file and the
+widths it contained.
 
 Omitting `stroke_width_range` / `strokeWidthRange` leaves output **byte-identical**
-to a static font.
+to a static font. Omitting only `default_stroke_width` / `defaultStrokeWidth`
+leaves output byte-identical to a two-master variable font built before the
+option existed.
 
-## Why only two masters
+## Why two masters, and when a third
 
 Stroke outlining is planned once at the maximum width; the same subdivision
-decisions are replayed at the minimum. Offset control points are affine in the
-stroke width, so linear interpolation between the two masters reproduces every
-intermediate width. Named `fvar` instances are not written — they would add data
-without adding widths the axis cannot already reach.
+decisions are replayed at every other width. Offset control points are affine
+in the stroke width, so linear interpolation between two masters reproduces
+every intermediate width, and a two-master font is the whole axis. Named
+`fvar` instances are not written — they would add data without adding widths
+the axis cannot already reach.
+
+A third master therefore buys no new widths, and is emitted for exactly one
+reason: OpenType puts the default instance at a *region boundary*, so a
+default at an interior width needs a master there. That is why
+`default_stroke_width` is the only thing that adds one, why it must be
+strictly inside the range (at an end there is already a master), and why the
+axis then has two regions rather than one.
 
 ## Honest caveats
 
@@ -123,6 +214,19 @@ stroke width in motion.
 `OpenTypeFont.fromByteData` on a variable font produced here returns `fvar` and
 `stat` as null and a read-modify-write round trip drops the axis. Tracked in
 [issue #12](https://github.com/4akloon/fontify_plus/issues/12).
+
+**Incompatible masters:** generation can fail with `Incompatible masters for
+glyph "X": contour N diverges at segment index M`. This means the two masters
+came out with different point counts, so no variation delta can be written
+between them. Until 0.6.0 this hit real icon sets hard — around one icon in
+five of a chained-cubic set such as Hugeicons, at some ranges — and it was not
+monotonic in how wide the range was: an icon could build at `[1.4, 1.6]` and
+fail at `[1.49, 1.51]`. The cause was three branches in the stroke joiner that
+decided a corner's shape from offset *points*, whose float32 rounding depends
+on where the corner sits rather than on the stroke width, so two widths could
+disagree. They now decide from the source tangents, which are the same at every
+width. If you still see this, it is a bug worth reporting with the SVG — it no
+longer has an input-dependent cause.
 
 **Interpolation accuracy:** both masters match their own endpoint exactly. On
 interpolated widths, Phase 0 toy glyphs measured up to **2 font units** worst

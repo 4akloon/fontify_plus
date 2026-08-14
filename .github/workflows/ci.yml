@@ -14,9 +14,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 3.10 is the package's declared floor; stable catches new lints and
+        # 3.11 is the package's declared floor; stable catches new lints and
         # deprecations before they reach users.
-        sdk: ['3.10', stable]
+        sdk: ['3.11', stable]
 
     steps:
       - uses: actions/checkout@v5
@@ -63,6 +63,34 @@ jobs:
           python3 tool/oracle/validate_font.py example/fonts/my_icons.otf
           python3 tool/oracle/validate_font.py \
             --variable example/fonts/proto/variable_cff2.otf \
+            --static-prefix example/fonts/proto/static_
+
+      # Same gate set against a three-master font (interior default). Built to
+      # a temp path rather than example/fonts/proto/ because nothing renders
+      # it — committing it would only add weight to the pub tarball.
+      #
+      # Must stay after "Rebuild package-built proto fonts", and not only for
+      # the static references: the SVG input directory below is gitignored
+      # build output that exists solely as a side effect of that step. Reorder
+      # these and the CLI exits 65 with "input directory is not a directory or
+      # it doesn't exist".
+      #
+      # --default-stroke-width is 1.5 to match the oracle's hard-coded mid
+      # stop. That is what turns validate_interpolation's lerp check into a
+      # real test of the third master: it asserts the interior master lands
+      # where interpolating the two endpoints to 1.5 would, i.e. that an
+      # interior default does not bend the axis. Change one of the two numbers
+      # without the other and the check quietly stops proving that.
+      - name: Validate a three-master variable font against fonttools
+        if: matrix.sdk == 'stable'
+        run: |
+          dart run bin/fontify_plus.dart \
+            tool/variable_prototype/out/render_matrix_svgs/width_2.0 \
+            "$RUNNER_TEMP/variable_cff2_default.otf" \
+            --font-name=ProtoCff2Default --no-normalize \
+            --stroke-width-range=1.33,2 --default-stroke-width=1.5
+          python3 tool/oracle/validate_font.py \
+            --variable "$RUNNER_TEMP/variable_cff2_default.otf" \
             --static-prefix example/fonts/proto/static_
 
   variable-stroke-render-matrix:

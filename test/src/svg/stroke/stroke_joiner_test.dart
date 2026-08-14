@@ -109,12 +109,24 @@ Iterable<Vector2> samples(List<Cubic> chain) sync* {
 void main() {
   group('StrokeJoiner', () {
     test('bridges nothing when the two edges already meet', () {
-      final joined = const StrokeJoiner(StrokeProperties(width: 2)).join(
-        vertex: Vector2.zero(),
-        from: Vector2(0, 1),
-        to: Vector2(0, 1),
-        incoming: Vector2(1, 0),
-        outgoing: Vector2(0, 1),
+      // from and to are not free parameters: an offset point is
+      // vertex + radius * leftNormal(tangent), so equal tangents put both at
+      // the same place and there is nothing to bridge. Stating the corner
+      // that way round — rather than passing from == to next to tangents a
+      // quarter turn apart, which no offset chain can produce — is what
+      // joinOuter's own doc comment warns is otherwise untellable from real
+      // geometry.
+      const stroke = StrokeProperties(width: 2);
+      final vertex = Vector2(5, 3);
+      final tangent = Vector2(1, 0);
+      final offset = vertex + leftNormal(tangent) * stroke.radius;
+
+      final joined = const StrokeJoiner(stroke).join(
+        vertex: vertex,
+        from: offset,
+        to: offset,
+        incoming: tangent,
+        outgoing: tangent,
       );
 
       expect(joined, isEmpty);
@@ -124,19 +136,116 @@ void main() {
       // A curve written as a chain of cubics meets itself tangentially at each
       // junction. Inserting join geometry there would litter the outline with
       // degenerate arcs.
-      final joined =
-          const StrokeJoiner(
-            StrokeProperties(width: 2, join: LineJoin.round),
-          ).join(
-            vertex: Vector2(5, 0),
-            from: Vector2(5, 1),
-            to: Vector2(5.0001, 1),
-            incoming: Vector2(1, 0),
-            outgoing: Vector2(1, 0),
-          );
+      //
+      // The turn has to be small enough to read as one curve and large enough
+      // not to be treated as no turn at all: above kPointEpsilon in squared
+      // tangent distance, below _kSmoothJunctionCosine in dot product.
+      const stroke = StrokeProperties(width: 2, join: LineJoin.round);
+      final vertex = Vector2(5, 0);
+      final incoming = Vector2(1, 0);
+      final outgoing = Vector2(math.cos(0.001), math.sin(0.001));
 
+      final joined = const StrokeJoiner(stroke).join(
+        vertex: vertex,
+        from: vertex + leftNormal(incoming) * stroke.radius,
+        to: vertex + leftNormal(outgoing) * stroke.radius,
+        incoming: incoming,
+        outgoing: outgoing,
+      );
+
+      expect(incoming.distanceToSquared(outgoing), greaterThan(1e-9));
+      expect(incoming.dot(outgoing), greaterThan(0.9998));
       expect(joined, hasLength(1));
       expect(joined.single.curvatureAt(0.5).abs(), lessThan(_kEpsilon));
+    });
+
+    test('takes the same branch at every width, however the corner sits', () {
+      // The property the whole plan/replay design rests on: two masters must
+      // agree on every corner's segment count, or their point counts diverge
+      // and they cannot carry variation deltas. A branch decided on from/to
+      // rather than on the tangents does not have that property, because the
+      // rounding in subtracting two float32 offset points is set by the
+      // vertex's coordinate magnitude and so does not scale out of a
+      // radius-relative threshold.
+      //
+      // Sampling has to be dense and aimed, not broad: whole-degree turns all
+      // pass even unfixed. Each band below brackets one threshold —
+      //   * ~0.0018°, where |incoming - outgoing|^2 meets kPointEpsilon and a
+      //     junction reads as coincident rather than merely smooth;
+      //   * ~151.045°, exactly 2 * acos(0.25), where the crossing reaches four
+      //     radii — both _kMaxInnerCrossingRadii and the default miter limit.
+      //
+      // Both turn directions are swept, and that is load-bearing rather than
+      // symmetry for its own sake: `join` routes on the sign of the tangent
+      // cross product, so a sweep of positive turns alone reaches only
+      // `_inner` and never enters `_outer` at all. Half the branches this
+      // guards — the miter fallback and the round join — would then have no
+      // coverage here, which is what a first version of this test did.
+      //
+      // Against the code before the fix this reports 34 disagreeing
+      // (vertex, turn, join) triples out of 9648: 30 in the coincidence band
+      // and 4 in the four-radii band, split 18 inner and 16 outer.
+      //
+      // The far-from-origin vertices are not padding. At the origin the
+      // coincidence band produces no flip at all — the cancellation needs two
+      // large, closely spaced coordinates, which is why real icons at
+      // viewBox scale hit this and a fixture at the origin does not.
+      const bands = [
+        [1e-6, 1e-3],
+        [151.0 * math.pi / 180, 151.09 * math.pi / 180],
+      ];
+
+      for (final vertex in [
+        Vector2.zero(),
+        Vector2(19, 12),
+        Vector2(8.32846, 10.9843),
+        Vector2(500, 900),
+      ]) {
+        for (final band in bands) {
+          for (var i = 0; i <= 200; i++) {
+            for (final sign in [1.0, -1.0]) {
+              final phi = sign * (band[0] + (band[1] - band[0]) * i / 200);
+
+              for (final join in LineJoin.values) {
+                final counts = <int>{};
+
+                for (final width in [1.33, 1.45, 1.49, 1.5, 1.51, 1.55, 2.0]) {
+                  final stroke = StrokeProperties(width: width, join: join);
+                  final incoming = Cubic.line(
+                    vertex - Vector2(8, 0),
+                    vertex,
+                  ).tangentAt(1);
+                  final outgoing = Cubic.line(
+                    vertex,
+                    vertex + Vector2(math.cos(phi), math.sin(phi)) * 8,
+                  ).tangentAt(0);
+
+                  counts.add(
+                    StrokeJoiner(stroke)
+                        .join(
+                          vertex: vertex,
+                          from: vertex + leftNormal(incoming) * stroke.radius,
+                          to: vertex + leftNormal(outgoing) * stroke.radius,
+                          incoming: incoming,
+                          outgoing: outgoing,
+                        )
+                        .length,
+                  );
+                }
+
+                expect(
+                  counts,
+                  hasLength(1),
+                  reason:
+                      'vertex $vertex, turn ${phi * 180 / math.pi}°, $join '
+                      'produced $counts segment counts across widths; every '
+                      'width must agree',
+                );
+              }
+            }
+          }
+        }
+      }
     });
 
     test('starts and ends exactly where it was told to', () {
@@ -261,35 +370,66 @@ void main() {
     });
 
     test('abandons an inner crossing that sits far from the corner', () {
-      // The two edges converge so slowly that they meet fifteen radii away.
-      // Running out to that point would distort far more than the overlap it
-      // removes, so the joiner bridges straight across instead.
-      final geometry = const StrokeJoiner(StrokeProperties(width: 2)).join(
-        vertex: Vector2.zero(),
-        from: Vector2(0, 1),
-        to: Vector2(10, 0.5),
-        incoming: Vector2(1, 0),
-        outgoing: Vector2(0.995, 0.0995),
+      // A hairpin: the stroke doubles back, and the inner edges only meet
+      // well outside the corner. Running out to that point would distort far
+      // more than the overlap it removes, so the joiner bridges straight
+      // across instead.
+      //
+      // The turn is what puts the crossing there — at sqrt(2 / (1 + cos t))
+      // radii, the bound of four radii is a turn of about 151°, so 160° is
+      // past it while an ordinary corner is nowhere near. Placing `to` by
+      // hand instead, far from where its own tangent puts it, manufactures a
+      // distant crossing out of a 5.7° turn that would really cross at 1.001
+      // radii — geometry no offset chain can produce.
+      const stroke = StrokeProperties(width: 2);
+      final vertex = Vector2.zero();
+      final incoming = Vector2(1, 0);
+      const turn = 160 * math.pi / 180;
+      final outgoing = Vector2(math.cos(turn), math.sin(turn));
+      final to = vertex + leftNormal(outgoing) * stroke.radius;
+
+      final geometry = const StrokeJoiner(stroke).join(
+        vertex: vertex,
+        from: vertex + leftNormal(incoming) * stroke.radius,
+        to: to,
+        incoming: incoming,
+        outgoing: outgoing,
       );
 
+      expect(math.sqrt(2 / (1 + incoming.dot(outgoing))), greaterThan(4));
       expect(geometry, hasLength(1));
-      expect(
-        geometry.single.p3.distanceTo(Vector2(10, 0.5)),
-        lessThan(_kEpsilon),
-      );
+      expect(geometry.single.p3.distanceTo(to), lessThan(_kEpsilon));
     });
 
-    test('bridges straight across when the inner tangents never cross', () {
-      // Anti-parallel tangents have no crossing at all.
-      final geometry = const StrokeJoiner(StrokeProperties(width: 2)).join(
-        vertex: Vector2.zero(),
-        from: Vector2(0, 1),
-        to: Vector2(5, 1),
-        incoming: Vector2(1, 0),
-        outgoing: Vector2(1, 0.0001),
-      );
+    test('bridges straight across when the tangents never cross', () {
+      // An exact reversal: the stroke doubles back on itself, so the two
+      // offset lines are parallel and lineIntersection returns null.
+      //
+      // Stated as a reversal rather than as the near-parallel pair this used
+      // to use, which named itself "never cross" but did cross — its tangents
+      // were 0.0057° apart, its `to` sat five units from where its own
+      // tangent put it, and their dot product came to exactly 1.0, so it
+      // returned at the smooth-junction gate without ever reaching the
+      // crossing logic it claimed to test.
+      const stroke = StrokeProperties(width: 2);
+      final vertex = Vector2.zero();
+      final incoming = Vector2(1, 0);
+      final outgoing = Vector2(-1, 0);
 
-      expect(geometry, hasLength(1));
+      for (final join in LineJoin.values) {
+        final geometry =
+            StrokeJoiner(
+              StrokeProperties(width: 2, join: join),
+            ).join(
+              vertex: vertex,
+              from: vertex + leftNormal(incoming) * stroke.radius,
+              to: vertex + leftNormal(outgoing) * stroke.radius,
+              incoming: incoming,
+              outgoing: outgoing,
+            );
+
+        expect(geometry, hasLength(1), reason: '$join');
+      }
     });
 
     test('the join style does not affect the inner side', () {

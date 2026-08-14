@@ -1,13 +1,23 @@
+import 'dart:convert';
+
 import '../common/constant.dart';
 import '../common/generic_glyph.dart';
 import '../common/stroke_width_range.dart';
 import '../otf/defaults.dart';
+import '../svg/svg_preview.dart';
 import 'class_gen/dart_identifier.dart';
 import 'class_gen/icon_name_allocator.dart';
+import 'logger.dart';
 
 const _kDefaultIndent = 2;
 const _kDefaultClassName = 'fontify_plusIcons';
 const _kDefaultFontFileName = 'fontify_plus_icons.otf';
+
+/// UTF-8 size above which a generated file loses its previews when
+/// [FlutterClassGenerator] decides for itself: IntelliJ-family IDEs stop
+/// analyzing files over `idea.max.intellisense.filesize` (2500 KB), so the
+/// budget stays under that cliff.
+const _kPreviewSizeBudget = 2 * 1024 * 1024;
 
 /// Generates a Flutter-compatible class holding an [IconData] per glyph.
 ///
@@ -23,6 +33,19 @@ class FlutterClassGenerator {
   /// members. Defaults to 2.
   /// * [strokeWidthRange], when given, documents the variable `wght` axis in the
   /// class comment.
+  /// * [defaultStrokeWidth], when given alongside [strokeWidthRange], names
+  /// the width the axis opens at. Without it a reader has to know the
+  /// convention that the range's maximum is the default; with an interior
+  /// default that convention is wrong and there is nothing in the generated
+  /// file to correct it from. Ignored without [strokeWidthRange], since a
+  /// width with no axis to sit on describes nothing. When both are given,
+  /// throws [ArgumentError] unless [defaultStrokeWidth] lies strictly
+  /// between [StrokeWidthRange.min] and [StrokeWidthRange.max] — otherwise
+  /// the generated comment would name a default the font never opens at.
+  /// * [preview] — when false, dartdoc previews are omitted; when true, they
+  /// are always emitted; when null (the default), they are emitted unless
+  /// the generated file would exceed 2 MiB, in which case they are dropped
+  /// with a warning.
   FlutterClassGenerator(
     this.glyphList, {
     String? className,
@@ -31,13 +54,36 @@ class FlutterClassGenerator {
     String? package,
     int? indent,
     StrokeWidthRange? strokeWidthRange,
+    double? defaultStrokeWidth,
+    bool? preview,
   }) : _indent = ' ' * (indent ?? _kDefaultIndent),
        _className = toDartIdentifier(className ?? _kDefaultClassName),
        _familyName = familyName ?? kDefaultFontFamily,
        _fontFileName = fontFileName ?? _kDefaultFontFileName,
        _iconVarNames = _allocateNames(glyphList),
        _package = package?.isEmpty ?? true ? null : package,
-       _strokeWidthRange = strokeWidthRange;
+       _strokeWidthRange = strokeWidthRange,
+       _defaultStrokeWidth = defaultStrokeWidth,
+       _preview = preview {
+    // Mirrors `OpenTypeFontBuilder`'s own check (`lib/src/otf/otf_builder.dart`):
+    // this constructor is likewise a Dart-API surface, not a CLI/YAML surface,
+    // so a bad pairing is an `ArgumentError` here too. Without this,
+    // `_axisDocComment` would render a default the font never opens at — a
+    // reader could copy it straight into `weight:` and get silently clamped
+    // to something else. `strokeWidthRange == null` is left alone: that carve
+    // out belongs to `_axisDocComment` (a width with no axis to sit on
+    // describes nothing), not to this check.
+    if (strokeWidthRange != null &&
+        defaultStrokeWidth != null &&
+        !(strokeWidthRange.min < defaultStrokeWidth &&
+            defaultStrokeWidth < strokeWidthRange.max)) {
+      throw ArgumentError(
+        'defaultStrokeWidth must lie strictly between the ends of '
+        'strokeWidthRange; got defaultStrokeWidth: $defaultStrokeWidth, '
+        'strokeWidthRange: $strokeWidthRange',
+      );
+    }
+  }
 
   final List<GenericGlyph> glyphList;
   final String _fontFileName;
@@ -47,6 +93,8 @@ class FlutterClassGenerator {
   final String? _package;
   final List<String> _iconVarNames;
   final StrokeWidthRange? _strokeWidthRange;
+  final double? _defaultStrokeWidth;
+  final bool? _preview;
 
   static List<String> _allocateNames(List<GenericGlyph> glyphList) {
     final allocator = IconNameAllocator();
@@ -60,10 +108,34 @@ class FlutterClassGenerator {
 
   /// Generates content for a class' file.
   String generate() {
+    final content = _generate(previews: _preview ?? true);
+
+    if (_preview != null ||
+        utf8.encode(content).length <= _kPreviewSizeBudget) {
+      return content;
+    }
+
+    final stripped = _generate(previews: false);
+
+    logger.w(
+      'Dropped dartdoc previews: with them the generated class for '
+      '${glyphList.length} icons is ${utf8.encode(content).length} bytes, '
+      'over the $_kPreviewSizeBudget-byte budget that keeps IDE code '
+      'insight working; without them it is '
+      '${utf8.encode(stripped).length} bytes. Pass preview: true or '
+      '--preview to keep previews anyway, or preview: false / --no-preview '
+      'to silence this warning.',
+    );
+
+    return stripped;
+  }
+
+  String _generate({required bool previews}) {
     final members = [
-      "static const iconFontFamily = '$_familyName';",
-      if (_hasPackage) "static const iconFontPackage = '$_package';",
-      for (var i = 0; i < glyphList.length; i++) ..._iconConstant(i),
+      "static const fontFamily = '$_familyName';",
+      if (_hasPackage) "static const fontPackage = '$_package';",
+      for (var i = 0; i < glyphList.length; i++)
+        ..._iconConstant(i, previews: previews),
     ];
 
     final body = members.map((e) => e.isEmpty ? '' : '$_indent$e').join('\n');
@@ -74,21 +146,21 @@ class FlutterClassGenerator {
         '}\n';
   }
 
-  List<String> _iconConstant(int index) {
+  List<String> _iconConstant(int index, {required bool previews}) {
     final metadata = glyphList[index].metadata;
     final hex = '0x${metadata.charCode!.toRadixString(16)}';
 
     return [
       '',
       '/// ${metadata.name!}',
-      if (metadata.preview != null) ...[
+      if (previews && metadata.preview != null) ...[
         '///',
-        '/// <img src="data:image/svg+xml;base64,${metadata.preview}" width="32"/>',
+        '/// ![${metadata.name!}](${svgPreviewDataUri(metadata.preview!)})',
       ],
       'static const IconData ${_iconVarNames[index]} = IconData(',
       '$_indent$hex,',
-      '${_indent}fontFamily: iconFontFamily,',
-      if (_hasPackage) '${_indent}fontPackage: iconFontPackage,',
+      '${_indent}fontFamily: fontFamily,',
+      if (_hasPackage) '${_indent}fontPackage: fontPackage,',
       ');',
     ];
   }
@@ -115,7 +187,26 @@ import 'package:flutter/widgets.dart';
     final max = _formatAxisValue(range.max);
     final exampleIcon = _iconVarNames.firstOrNull ?? 'icon';
 
-    return '/// Variable stroke width: $min … $max (`wght` axis).\n'
+    // Added to the existing lines rather than replacing them, so that the
+    // no-default wording stays exactly the string it has always been —
+    // generated classes are committed files, and rewording one reruns every
+    // user's diff. The "not the maximum" half earns its line: the maximum is
+    // what this axis defaults to everywhere else, so a reader who knows the
+    // convention would otherwise read the wrong width off the range.
+    final defaultWidth = _defaultStrokeWidth;
+
+    var defaultClause = '';
+    var defaultLine = '';
+    if (defaultWidth != null) {
+      final formatted = _formatAxisValue(defaultWidth);
+      defaultClause = ', default $formatted';
+      defaultLine =
+          '/// `Icon` with no `weight` draws $formatted, not the maximum.\n';
+    }
+
+    return '/// Variable stroke width: $min … $max (`wght` axis)'
+        '$defaultClause.\n'
+        '$defaultLine'
         '/// Set the width explicitly: '
         'Icon($_className.$exampleIcon, '
         'size: 16, weight: $min)\n'
@@ -123,8 +214,23 @@ import 'package:flutter/widgets.dart';
   }
 
   /// Formats axis values for generated docs: `2` reads as `2.0`, `1.33` as `1.33`.
+  ///
+  /// Every value this prints is meant to be copied into `weight:`, so it may
+  /// never name a width the font does not have. Two decimals are enough for
+  /// the widths icon sets are actually drawn at and read better than a raw
+  /// `toString`, but they cannot be *rounded* to: at three decimals — the
+  /// midpoint of `[1.33, 2]` is 1.665, which the size gate builds — 1.67 is a
+  /// different instance from the default it would be labelling, and a range
+  /// starting at 1.005 would print a minimum of 1.0 that sits below the axis
+  /// and gets silently clamped. So two decimals are used only when they are
+  /// lossless, and anything else falls back to the shortest decimal that
+  /// round-trips.
   static String _formatAxisValue(double value) {
     final rounded = (value * 100).roundToDouble() / 100;
+
+    if (rounded != value) {
+      return value.toString();
+    }
 
     if (rounded == rounded.roundToDouble()) {
       return rounded.toStringAsFixed(1);

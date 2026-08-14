@@ -63,13 +63,26 @@ void main() {
     return capture(key, expectedSide: probeSize * 2);
   }
 
-  /// How much rebuilding the font at the two widths changes the raster.
+  /// How much rebuilding the font at the two widths changes the raster, and
+  /// how much ink each of those two renders covered.
   ///
-  /// Every threshold below is a fraction of this rather than an absolute
-  /// constant, so the assertions survive a change of render size, window
-  /// size, antialiasing or glyph geometry — none of which say anything about
-  /// whether the axis works.
-  Future<double> staticSpan(
+  /// [span] is what every threshold below is a fraction of, rather than an
+  /// absolute constant, so the assertions survive a change of render size,
+  /// window size, antialiasing or glyph geometry — none of which say anything
+  /// about whether the axis works.
+  ///
+  /// The ink counts come back with it because a span of 0 has two very
+  /// different causes and the span alone cannot tell them apart: two correct
+  /// renders that happen to match, or two renders of a font that never
+  /// loaded. A missing font is not reliably blank — a platform that draws
+  /// .notdef as a filled box yields two identical tofu captures — so the
+  /// counts are what distinguishes them. The masters are drawn at 1.33 and
+  /// 2.0, so a working pair differs by roughly a third.
+  ///
+  /// They travel to the log through an assertion's `reason`, because on web
+  /// `flutter drive` aggregates the run and a bare `print` from inside a test
+  /// never reaches it.
+  Future<({double span, int thinInk, int thickInk})> staticSpan(
     WidgetTester tester,
     _Candidate candidate,
     int glyph,
@@ -77,7 +90,11 @@ void main() {
     final thin = await render(tester, candidate.thin, codePoint: glyph);
     final thick = await render(tester, candidate.thick, codePoint: glyph);
 
-    return difference(thin, thick);
+    return (
+      span: difference(thin, thick),
+      thinInk: inkCount(thin),
+      thickInk: inkCount(thick),
+    );
   }
 
   for (final candidate in _candidates) {
@@ -88,7 +105,7 @@ void main() {
         tester,
       ) async {
         for (final glyph in [kRing, kPlus]) {
-          final span = await staticSpan(tester, candidate, glyph);
+          final static = await staticSpan(tester, candidate, glyph);
           final variable = await render(
             tester,
             family,
@@ -103,24 +120,31 @@ void main() {
 
           expect(
             difference(variable, reference),
-            lessThan(0.2 * span),
-            reason: 'glyph $glyph drifted from its static reference',
+            lessThan(0.2 * static.span),
+            reason:
+                'glyph $glyph drifted from its static reference. ink: '
+                '${candidate.thin}=${static.thinInk}, '
+                '${candidate.thick}=${static.thickInk}, '
+                'variable@1.5=${inkCount(variable)}, '
+                '${candidate.mid}=${inkCount(reference)}',
           );
         }
       });
 
       testWidgets('the axis is not silently ignored', (tester) async {
         for (final glyph in [kRing, kPlus]) {
-          final span = await staticSpan(tester, candidate, glyph);
+          final static = await staticSpan(tester, candidate, glyph);
 
           // Without this floor, a font that failed to load zeroes both sides
           // of the comparison below and the test passes on nothing.
           expect(
-            span,
+            static.span,
             greaterThan(0.005),
             reason:
                 'the static pair itself shows no width change — did the '
-                'fonts load?',
+                'fonts load? ink: ${candidate.thin}=${static.thinInk}, '
+                '${candidate.thick}=${static.thickInk} (equal counts mean '
+                'both captured the same picture)',
           );
 
           final thin = await render(
@@ -142,8 +166,13 @@ void main() {
           // axis move the raster as much as rebuilding the font does?
           expect(
             difference(thin, thick),
-            greaterThan(0.6 * span),
-            reason: 'glyph $glyph did not change with the axis',
+            greaterThan(0.6 * static.span),
+            reason:
+                'glyph $glyph did not change with the axis. ink: '
+                'variable@1.33=${inkCount(thin)}, '
+                'variable@2.0=${inkCount(thick)}, '
+                '${candidate.thin}=${static.thinInk}, '
+                '${candidate.thick}=${static.thickInk}',
           );
         }
       });
@@ -165,11 +194,19 @@ void main() {
       testWidgets('a weight outside the axis clamps instead of failing', (
         tester,
       ) async {
-        final span = await staticSpan(tester, candidate, kRing);
+        final static = await staticSpan(tester, candidate, kRing);
         final beyond = await render(tester, family, weight: 8);
         final atMax = await render(tester, family, weight: 2);
 
-        expect(difference(beyond, atMax), lessThan(0.2 * span));
+        expect(
+          difference(beyond, atMax),
+          lessThan(0.2 * static.span),
+          reason:
+              'ink: variable@8=${inkCount(beyond)}, '
+              'variable@2.0=${inkCount(atMax)}, '
+              '${candidate.thin}=${static.thinInk}, '
+              '${candidate.thick}=${static.thickInk}',
+        );
       });
     });
   }

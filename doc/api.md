@@ -56,11 +56,12 @@ Converts a map of SVG strings into an OpenType font.
 |-----------|------|---------|-------------|
 | `svgMap` | `Map<String, String>` | *(required)* | Glyph name to SVG source. Keys become glyph identifiers. |
 | `outlineStrokes` | `bool?` | `true` | Convert stroked paths into the filled region the stroke covers. |
-| `preview` | `bool?` | `true` | Store base64-encoded SVG on each glyph for dartdoc previews in the generated `IconData` class. |
+| `preview` | `bool?` | `true` | Store a minified copy of the input SVG on each glyph for dartdoc previews in the generated `IconData` class. |
 | `normalize` | `bool?` | `true` | Scale each glyph so its longest side fills the em square, then centre it. |
 | `useOpenType` | `bool?` | `true` | Emit CFF (OpenType) outlines. When `false`, TrueType outlines are generated with cubic-to-quadratic approximation. |
 | `fontName` | `String?` | `null` | PostScript / family name for the generated font. |
-| `strokeWidthRange` | `StrokeWidthRange?` | `null` | Build a variable font whose `wght` axis is the stroke width (`min` and `max` in SVG units). Omit for a static font. See [Variable stroke width](variable_stroke.md). |
+| `strokeWidthRange` | `StrokeWidthRange?` | `null` | Build a variable font whose `wght` axis is the stroke width (`min` and `max` in SVG units). The maximum is the default instance unless `defaultStrokeWidth` names another width. Omit for a static font. See [Variable stroke width](variable_stroke.md). |
+| `defaultStrokeWidth` | `double?` | `null` | The width the axis opens at, instead of the range maximum. Requires `strokeWidthRange` and must lie strictly inside it; adds a third master. |
 
 Returns a `SvgToOtfResult` containing:
 
@@ -80,6 +81,8 @@ Emits Dart source for a class of `IconData` constants.
 | `fontFileName` | `String?` | `null` | Font file name referenced in generated docs. |
 | `indent` | `int?` | `2` | Leading spaces for class members. |
 | `strokeWidthRange` | `StrokeWidthRange?` | `null` | When set, documents the variable `wght` axis in the class comment. |
+| `defaultStrokeWidth` | `double?` | `null` | When set alongside `strokeWidthRange`, names the width the axis opens at in that comment. Pass the same value given to `svgToOtf`. Ignored without a range. |
+| `preview` | `bool?` | `null` | `false` omits previews, `true` always emits them, `null` emits them unless the file would exceed 2 MiB (dropped with a warning). |
 
 Returns the class file contents as a `String`.
 

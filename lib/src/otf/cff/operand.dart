@@ -10,7 +10,10 @@ import 'real_number_codec.dart';
 /// number encoding; which one applies is decided by the leading byte, and by
 /// the value's magnitude when writing.
 class CFFOperand extends BinaryCodable {
-  CFFOperand(this.value, this._size);
+  // `size` is spelled out rather than written as `this._size`, so that
+  // subclasses can forward it as `super.size`: a super parameter takes the
+  // name of the parameter it forwards to, and a private one cannot be named.
+  CFFOperand(this.value, [int? size]) : _size = size;
 
   CFFOperand.fromValue(this.value);
 
