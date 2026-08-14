@@ -92,15 +92,15 @@ void main() {
 
       expect(
         source,
-        contains("static const iconFontPackage = 'design_system'"),
+        contains("static const fontPackage = 'design_system'"),
       );
-      expect(source, contains('fontPackage: iconFontPackage'));
+      expect(source, contains('fontPackage: fontPackage'));
     });
 
     test('omits the font package when none is given', () {
       final source = generate(['icon']);
 
-      expect(source, isNot(contains('iconFontPackage')));
+      expect(source, isNot(contains('fontPackage')));
     });
   });
 }

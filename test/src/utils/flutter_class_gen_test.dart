@@ -27,26 +27,25 @@ void main() {
       expect(source, contains('abstract final class fontify_plusIcons {'));
     });
 
-    test('uses kDefaultFontFamily for iconFontFamily when none is given', () {
+    test('uses kDefaultFontFamily for fontFamily when none is given', () {
       final source = FlutterClassGenerator([_glyph('icon', 0xE001)]).generate();
 
       expect(
         source,
-        contains("static const iconFontFamily = '$kDefaultFontFamily';"),
+        contains("static const fontFamily = '$kDefaultFontFamily';"),
       );
     });
 
     test('omits the font package constant and argument when none is given', () {
       final source = FlutterClassGenerator([_glyph('icon', 0xE001)]).generate();
 
-      expect(source, isNot(contains('iconFontPackage')));
-      expect(source, isNot(contains('fontPackage:')));
+      expect(source, isNot(contains('fontPackage')));
     });
 
     test('indents members by 2 spaces by default', () {
       final source = FlutterClassGenerator([_glyph('icon', 0xE001)]).generate();
 
-      expect(source, contains('\n  static const iconFontFamily'));
+      expect(source, contains('\n  static const fontFamily'));
     });
   });
 
@@ -62,9 +61,9 @@ void main() {
       expect(source, contains('abstract final class MyIcons {'));
       expect(
         source,
-        contains("static const iconFontFamily = 'My Icon Font';"),
+        contains("static const fontFamily = 'My Icon Font';"),
       );
-      expect(source, contains('\n    static const iconFontFamily'));
+      expect(source, contains('\n    static const fontFamily'));
     });
 
     test('adds the font package constant and argument when given', () {
@@ -75,9 +74,9 @@ void main() {
 
       expect(
         source,
-        contains("static const iconFontPackage = 'design_system';"),
+        contains("static const fontPackage = 'design_system';"),
       );
-      expect(source, contains('fontPackage: iconFontPackage'));
+      expect(source, contains('fontPackage: fontPackage'));
     });
 
     test('treats an empty package string the same as no package', () {
@@ -86,7 +85,7 @@ void main() {
         package: '',
       ).generate();
 
-      expect(source, isNot(contains('iconFontPackage')));
+      expect(source, isNot(contains('fontPackage')));
     });
 
     test('mentions the given font file name in the doc comment', () {
@@ -121,7 +120,7 @@ void main() {
         contains(
           'static const IconData icon = IconData(\n'
           '    0xe001,\n'
-          '    fontFamily: iconFontFamily,\n'
+          '    fontFamily: fontFamily,\n'
           '  );',
         ),
       );
@@ -138,8 +137,8 @@ void main() {
         contains(
           'static const IconData icon = IconData(\n'
           '    0xe001,\n'
-          '    fontFamily: iconFontFamily,\n'
-          '    fontPackage: iconFontPackage,\n'
+          '    fontFamily: fontFamily,\n'
+          '    fontPackage: fontPackage,\n'
           '  );',
         ),
       );

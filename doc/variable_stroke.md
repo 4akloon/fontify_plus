@@ -155,7 +155,7 @@ For widgets that do not take `Icon.weight`, pass the same axis value through
 Text(
   String.fromCharCode(MyIcons.home.codePoint),
   style: TextStyle(
-    fontFamily: MyIcons.iconFontFamily,
+    fontFamily: MyIcons.fontFamily,
     fontSize: 16,
     fontVariations: [FontVariation('wght', 1.33)],
   ),

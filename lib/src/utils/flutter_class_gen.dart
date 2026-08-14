@@ -132,8 +132,8 @@ class FlutterClassGenerator {
 
   String _generate({required bool previews}) {
     final members = [
-      "static const iconFontFamily = '$_familyName';",
-      if (_hasPackage) "static const iconFontPackage = '$_package';",
+      "static const fontFamily = '$_familyName';",
+      if (_hasPackage) "static const fontPackage = '$_package';",
       for (var i = 0; i < glyphList.length; i++)
         ..._iconConstant(i, previews: previews),
     ];
@@ -159,8 +159,8 @@ class FlutterClassGenerator {
       ],
       'static const IconData ${_iconVarNames[index]} = IconData(',
       '$_indent$hex,',
-      '${_indent}fontFamily: iconFontFamily,',
-      if (_hasPackage) '${_indent}fontPackage: iconFontPackage,',
+      '${_indent}fontFamily: fontFamily,',
+      if (_hasPackage) '${_indent}fontPackage: fontPackage,',
       ');',
     ];
   }

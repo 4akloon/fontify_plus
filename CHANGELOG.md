@@ -4,6 +4,9 @@
 
 ## 0.6.0
 
+* Generated class constants are `fontFamily` / `fontPackage` (was
+  `iconFontFamily` / `iconFontPackage`).
+
 * Variable stroke width: `stroke_width_range` / `--stroke-width-range` /
   `strokeWidthRange` emits a CFF2 font whose `wght` axis is the SVG stroke
   width (e.g. `Icon(..., weight: 1.33)`). Optional `default_stroke_width` /
