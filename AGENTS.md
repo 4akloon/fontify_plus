@@ -6,7 +6,7 @@ Instructions for coding agents working in **fontify_plus**. Human setup and deep
 
 Pure Dart CLI/API: SVG icons → OTF font + Flutter `IconData` class. Stroke outlining is on by default (fonts are fill-only). No Flutter SDK required for the package itself; `example/` is a Flutter app.
 
-Default branch: `master`. SDK floor: Dart `^3.10.0`.
+Default branch: `master`. SDK floor: Dart `^3.11.0`.
 
 ## Commands
 

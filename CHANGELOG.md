@@ -32,6 +32,7 @@
   `OS2Table` version groups; `.glyf` / `.loca` / `.cff` / `.cff2` / `.fvar`
   / `.stat` nullable; `tableMap` read-only. Static output without a stroke
   range stays byte-identical aside from the size wins above.
+* SDK floor is Dart 3.11 (`xml` 7).
 * Known limits: no fvar/STAT read-back yet (#12); OS/2 v2/v3 truncation
   (#13); interior-default metrics can overflow at the axis maximum
   (documented, not fixed).

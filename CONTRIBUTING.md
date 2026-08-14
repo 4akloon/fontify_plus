@@ -17,7 +17,7 @@ how it is laid out, and what a change is expected to look like before it lands.
 
 ## Prerequisites
 
-- Dart SDK 3.10 or newer. CI runs the matrix `3.10` and `stable`, so a change must
+- Dart SDK 3.11 or newer. CI runs the matrix `3.11` and `stable`, so a change must
   work on both.
 
 No Flutter SDK is needed. The package generates a Flutter-compatible class, but
@@ -115,7 +115,7 @@ Two properties of the format drive most of the design and are easy to forget:
 - Keep the subject line imperative and specific: *Fix stale CFF INDEX cache*,
   not *bug fixes*.
 - One logical change per PR.
-- CI must be green: format, analyze on 3.10 and stable, tests, and publish
+- CI must be green: format, analyze on 3.11 and stable, tests, and publish
   dry-run.
 - Update `CHANGELOG.md` for anything user-visible, including changed defaults.
 
